@@ -11,6 +11,11 @@
 
 Welcome to your Remotion project!
 
+This repository contains the existing Workflow Maps music-cut video. See
+[AGENTS.md](AGENTS.md) for Codex/project conventions, [CLAUDE.md](CLAUDE.md) for
+the shared animation guide, and [CODEX_SETUP.md](CODEX_SETUP.md) for the verified
+Codex setup and switching between agents.
+
 ## Commands
 
 **Install Dependencies**

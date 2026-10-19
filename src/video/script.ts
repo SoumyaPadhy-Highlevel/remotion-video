@@ -119,3 +119,37 @@ export const LOCKUP = { name: "Workflow", accent: "Maps", badge: "BETA", tagline
 
 /** Moments that get a white flash. */
 export const FLASHES = [M.D1, M.HIT, M.D2, M.D3, M.LOGO];
+
+/** First passage, sourced from the supplied staging location (20 October 2026). */
+export const STRUCTURE_OPENING = {
+  end: 31.01,
+  progress: ["Folders", "Workflows", "Assets", "Exact step"],
+  folder: "01 · Lead Capture",
+  workflow: "Program Application Submitted",
+  workflowNames: ["Program Application Submitted", "New Enquiry Form Submitted", "Program Payment Received", "Tag New Enquiries", "Training Video Engagement"],
+  assetNames: ["Program Application", "Coaching Program", "Coaching Program Application", "Coaching Program Enrolment"],
+  ui: { back: "Workflows list", title: "Workflow Maps", beta: "BETA", help: "Help", save: "Save", published: "Published", draft: "Draft", tags: "Tags", forms: "Forms", pipelines: "Pipelines", sameFolders: "Same folders.", sameWorkflows: "Same workflows.", connected: "Every connection." },
+  folders: [
+    "01 · Lead Capture", "02 · Consultation Booking", "03 · Sales Pipeline",
+    "04 · Client Onboarding & Learning", "05 · Retention & Feedback",
+  ],
+  captions: [
+    { a: 0, b: 3.2, title: "From your workflows list…", detail: "The folders you already know." },
+    { a: 3.2, b: 5.8, title: "…to one connected map.", detail: "Your workflows, folders and assets, together." },
+    { a: 5.8, b: 11.2, title: "Your folders become islands.", detail: "The same structure. A new perspective." },
+    { a: 11.2, b: 16.2, title: "Blue nodes are your workflows.", detail: "Each workflow lives inside its folder." },
+    { a: 16.2, b: 21.3, title: "Smaller nodes are the assets they use.", detail: "Connected to the workflows that depend on them." },
+    { a: 21.3, b: 26.5, title: "Select a workflow. See what’s inside.", detail: "Program Application Submitted · 4 assets" },
+    { a: 26.5, b: 31.01, title: "Follow an asset to the exact step.", detail: "Program Application → Order Submitted trigger" },
+  ],
+  labels: {
+    folders: "Same folders as your list",
+    folderCount: "5 workflows · 9 assets",
+    workflows: "Workflow",
+    assets: "Assets used in this workflow",
+    page: "Program Application",
+    product: "Coaching Program",
+    funnel: "Coaching Program Application",
+    enrolment: "Coaching Program Enrolment",
+  },
+};

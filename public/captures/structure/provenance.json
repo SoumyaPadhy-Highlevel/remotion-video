@@ -1,0 +1,37 @@
+{
+  "capturedOn": "2026-10-20",
+  "locationUrl": "https://staging.gohighlevel.com/v2/location/l66El8WIeXbm1VilK2Gq/automation/wf-grid",
+  "frontendVersionUrl": "https://maps-agent-router-v3.automation-workflows-frontend.gohighlevel.site",
+  "referencePullRequest": "https://github.com/GoHighLevel/automation-workflows-frontend/pull/4657",
+  "referenceCommit": "a9ccc333723e49ac3e8b4cc81fdfcf5dafcc8d6b",
+  "method": "Actual list and detail-panel browser captures; a frame-driven SVG reconstruction for the folder morph, continuous orthographic camera, workflow/asset geometry, animated connectors and selection. Not a continuous screen recording.",
+  "sourceViewport": {
+    "width": 1620,
+    "height": 880
+  },
+  "folder": {
+    "name": "01 \u00b7 Lead Capture",
+    "workflows": 5,
+    "assets": 9
+  },
+  "workflow": {
+    "name": "Program Application Submitted",
+    "assets": 4
+  },
+  "assetStep": {
+    "asset": "Program Application",
+    "type": "Funnel page",
+    "step": "Order Submitted",
+    "stepType": "trigger"
+  },
+  "files": {
+    "list.jpg": "Full workflow list; shell cropped at render time.",
+    "map-overview.jpg": "Saved folder layout in the actual 3D product view.",
+    "folder-selected.jpg": "Reference capture: Lead Capture folder contents.",
+    "workflow-focus.jpg": "Unselected workflow and linked assets, at close scale.",
+    "workflow-selected.jpg": "Actual workflow details and asset groups.",
+    "asset-expanded.jpg": "Actual expanded Program Application asset showing its trigger."
+  },
+  "reconstructionScope": "Five verified folder names, all five verified Lead Capture workflow names, and the four verified assets associated with Program Application Submitted. Other folders provide spatial context; this is an explanatory reconstruction, not an export of the complete live map layout.",
+  "icons": "Existing local @iconify-json/mdi package; corresponding product icon identifiers. Paths copied into src/video/StructureIcons.ts."
+}
