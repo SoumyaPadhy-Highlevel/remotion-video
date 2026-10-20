@@ -163,11 +163,11 @@ export const Message: React.FC<{ t: number }> = ({ t }) => {
     const mk = t < M.D2 ? prog(t, M.B2 + 0.6, M.B2 + 1.2, easeOutBack) : 0;
     o = mk * (1 - prog(t, M.D2, M.D2 + 0.3));
     scale = 1.45 * (0.85 + 0.15 * mk);
-  } else if (t >= 75.5 && t < 87.71) {
-    const mk = prog(t, 75.5, 75.9, easeOutBack);
+  } else if (t >= MESSAGE.from && t < MESSAGE.to) {
+    const mk = prog(t, MESSAGE.from, MESSAGE.from + 0.4, easeOutBack);
     left = 1290;
     top = 24;
-    o = mk * (1 - prog(t, 87.3, 87.7));
+    o = mk * (1 - prog(t, MESSAGE.to - 0.4, MESSAGE.to));
     scale = 0.8 * (0.85 + 0.15 * mk);
     origin = "100% 0";
     check = prog(t, MESSAGE.answeredAt, MESSAGE.answeredAt + 0.3);

@@ -8,18 +8,20 @@ import { clamp, easeIn, easeInOut, easeOut, easeOutBack, lerp, prog, win } from 
 export const RECEDES: [number, number, number][] = [
   [19.39, 23.4, 1], // Introducing
   [M.B2, M.D2 + 0.1, 1], // build to drop 2
-  ...[M.D2, 62.57, 74.18, 87.71, M.D3, 105.14].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
+  ...[M.D2, 74.18, M.D3].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
   [M.GAP, M.D3 + 0.1, 0.8], // one more thing
 ];
 
 /** Push-ins so panels read at 1080p: [start, end, scale, originX, originY] in window px. */
 export const ZOOMS: [number, number, number, number, number][] = [
-  [27.45, 33.0, 1.2, 1620, 0],
-  [38.85, 41.95, 1.2, 0, 0],
-  [54.75, 57.0, 1.2, 1620, 0],
-  [66.1, 73.8, 1.2, 1620, 0],
-  [75.5, 78.95, 1.12, 810, 0],
-];
+  [27.45, 33.0, 1.2, 1620, 0], // workflow drawer, then the asset drawer
+  [38.85, 41.95, 1.2, 0, 0], // search panel
+  [56.6, 63.1, 1.15, 1620, 0], // contact drawer: workflows, timeline
+  [66.6, 70.3, 1.12, 1620, 220], // run: the email step's details
+  [76.3, 80.9, 1.15, 0, 0], // cleanup panel
+  [101.9, 103.9, 1.15, 0, 0], // "Need your attention" card
+  [104.1, 107.0, 1.2, 1620, 0], // error executions in the drawer
+]
 
 export function windowAt(t: number) {
   let o = 1;
@@ -183,8 +185,8 @@ export function mascotAt(t: number): MascotState {
       m.y += 20 * sq;
     }
   }
-  // D2 – 62.57: linked workflows.
-  else if (t < 62.57) {
+  // D2 – 74.18: contact journey ("Why did Jordan get this email?").
+  else if (t < 74.18) {
     const k = prog(t, M.D2, M.D2 + 1.1, easeOut);
     m.x = lerp(1480, 1830, k);
     m.y = lerp(640, 960, k);
@@ -192,41 +194,23 @@ export function mascotAt(t: number): MascotState {
     m.r = -10;
     m.look = [-16, -8];
     m.streak = win(t, M.D2, M.D2 + 0.9, 0.1, 0.4);
-    if (t > 58.6 && t < 60.8) {
-      m.eyes = "star";
-      m.sparkle = win(t, 58.6, 60.8, 0.2, 0.5);
-    }
-  }
-  // 62.57 – 74.18: errors.
-  else if (t < 74.18) {
-    corner();
-    if (t < 63.9) m.streak = win(t, 62.57, 63.6, 0.1, 0.4);
-    if (t > 66.4 && t < 71.7) m.eyes = "worried";
-    if (t > 71.7) {
+    if (t > 56.4 && t < 66.8) m.eyes = "squint";
+    if (t > 69.9) {
       m.eyes = "happy";
-      m.sparkle = win(t, 71.8, 73.6, 0.2, 0.5);
+      m.sparkle = win(t, 69.9, 72.0, 0.2, 0.5);
     }
   }
-  // 74.18 – 87.71: contact journey.
-  else if (t < 87.71) {
-    corner();
-    if (t < 75.3) m.streak = win(t, 74.18, 75.2, 0.1, 0.4);
-    if (t > 86.2) {
-      m.eyes = "happy";
-      m.sparkle = win(t, 86.2, 87.6, 0.2, 0.4);
-    }
-  }
-  // 87.71 – GAP: organise.
+  // 74.18 – GAP: organise and document.
   else if (t < M.GAP) {
     corner();
-    if (t < 88.8) m.streak = win(t, 87.71, 88.7, 0.1, 0.4);
-    if (t > 90.5 && t < 91.9) {
+    if (t < 75.3) m.streak = win(t, 74.18, 75.2, 0.1, 0.4);
+    if (t > 84.3 && t < 85.8) {
       m.eyes = "wow";
       m.look = [-24, -10];
     }
-    if (t > 91.9) {
+    if (t > 93.2 && t < 95.4) {
       m.eyes = "happy";
-      m.sparkle = win(t, 91.9, 93.4, 0.2, 0.5);
+      m.sparkle = win(t, 93.2, 95.2, 0.2, 0.5);
     }
   }
   // GAP – D3: steps forward for "one more thing".
@@ -239,8 +223,8 @@ export function mascotAt(t: number): MascotState {
     m.look = [0, -6];
     m.eyes = t > 98.6 ? "wow" : t > 97.9 ? "squint" : "normal";
   }
-  // D3 – 105.14: colour.
-  else if (t < 105.14) {
+  // D3 – FIN: find what's broken.
+  else if (t < M.FIN) {
     const k = prog(t, M.D3, M.D3 + 1.0, easeOut);
     m.x = lerp(1180, 1830, k);
     m.y = lerp(600, 960, k);
@@ -248,16 +232,12 @@ export function mascotAt(t: number): MascotState {
     m.r = -10;
     m.look = [-16, -8];
     m.streak = win(t, M.D3, M.D3 + 0.9, 0.1, 0.4);
-    if (t > 100.8) {
-      m.eyes = "star";
-      m.sparkle = 0.5 + 0.5 * Math.sin(t * 3);
+    if (t > 101.0 && t < 107.4) m.eyes = "worried";
+    if (t >= 107.4 && t < 110.3) {
+      m.eyes = "happy";
+      m.sparkle = win(t, 107.5, 109.6, 0.2, 0.5);
     }
-  }
-  // 105.14 – FIN: notes.
-  else if (t < M.FIN) {
-    corner();
-    if (t < 106.2) m.streak = win(t, 105.14, 106.1, 0.1, 0.4);
-    if (t > 107.4) m.eyes = "happy";
+    if (t >= 110.3) m.eyes = "wow";
   }
   // FIN – LOGO: finale.
   else if (t < M.LOGO) {

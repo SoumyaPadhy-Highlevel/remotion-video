@@ -32,27 +32,27 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-const OPENING: Footage = { file: "opening-motion.mp4" }; // Claude Motion clip, 3.90–31.01 s
+const APP: Footage = { file: "app-motion.mp4" }; // one Claude Motion film for the whole app track, 3.90–131.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
-  { id: "02-list", label: "Workflows list", start: 3.9, end: M.D1, footage: { ...OPENING, from: 3.9 - 3.9 } },
-  { id: "03-drop", label: "Drop: list to map", start: M.D1, end: 19.39, footage: { ...OPENING, from: M.D1 - 3.9 } },
-  { id: "04-introducing", label: "Introducing", start: 19.39, end: 23.27, footage: { ...OPENING, from: 19.39 - 3.9 } },
-  { id: "05-assets", label: "Tour 1: workflows and assets", start: 23.27, end: 27.13, footage: { ...OPENING, from: 23.27 - 3.9 } },
-  { id: "06-steps", label: "Tour 2: exact step", start: 27.13, end: 31.01, footage: { ...OPENING, from: 27.13 - 3.9 } },
-  { id: "07-usage", label: "Tour 3: asset usage", start: 31.01, end: 34.88 },
-  { id: "08-folders", label: "Tour 4: folders", start: 34.88, end: 38.75 },
-  { id: "09-search", label: "Tour 5: search", start: 38.75, end: 42.1 },
-  { id: "10-filter", label: "Tour 6: filter", start: 42.1, end: M.B2 },
-  { id: "11-build", label: "Build to drop 2", start: M.B2, end: M.D2 },
-  { id: "12-linked", label: "Linked workflows", start: M.D2, end: 62.57 },
-  { id: "13-errors", label: "Errors", start: 62.57, end: 74.18 },
-  { id: "14-journey", label: "Contact journey", start: 74.18, end: 87.71 },
-  { id: "15-organise", label: "Organise", start: 87.71, end: M.GAP },
-  { id: "16-gap", label: "One more thing", start: M.GAP, end: M.D3 },
-  { id: "17-colour", label: "Colour", start: M.D3, end: 105.14 },
-  { id: "18-notes", label: "Notes", start: 105.14, end: M.FIN },
-  { id: "19-finale", label: "Finale", start: M.FIN, end: M.END },
+  { id: "02-list", label: "Workflows list", start: 3.9, end: M.D1, footage: { ...APP, from: 3.9 - 3.9 } },
+  { id: "03-drop", label: "Drop: list to map", start: M.D1, end: 19.39, footage: { ...APP, from: M.D1 - 3.9 } },
+  { id: "04-introducing", label: "Introducing", start: 19.39, end: 23.27, footage: { ...APP, from: 19.39 - 3.9 } },
+  { id: "05-assets", label: "Tour 1: workflows and assets", start: 23.27, end: 27.13, footage: { ...APP, from: 23.27 - 3.9 } },
+  { id: "06-steps", label: "Tour 2: exact step", start: 27.13, end: 31.01, footage: { ...APP, from: 27.13 - 3.9 } },
+  { id: "07-usage", label: "Tour 3: asset usage", start: 31.01, end: 34.88, footage: { ...APP, from: 31.01 - 3.9 } },
+  { id: "08-folders", label: "Tour 4: nested folders", start: 34.88, end: 38.75, footage: { ...APP, from: 34.88 - 3.9 } },
+  { id: "09-search", label: "Tour 5: search", start: 38.75, end: 42.1, footage: { ...APP, from: 38.75 - 3.9 } },
+  { id: "10-filter", label: "Tour 6: filter", start: 42.1, end: M.B2, footage: { ...APP, from: 42.1 - 3.9 } },
+  { id: "11-build", label: "Build to drop 2", start: M.B2, end: M.D2, footage: { ...APP, from: M.B2 - 3.9 } },
+  { id: "12-linked", label: "Contact journey: pick a contact", start: M.D2, end: 63.38, footage: { ...APP, from: M.D2 - 3.9 } },
+  { id: "13-errors", label: "Contact journey: the run", start: 63.38, end: 74.18, footage: { ...APP, from: 63.38 - 3.9 } },
+  { id: "14-journey", label: "Organise: cleanup", start: 74.18, end: 83.18, footage: { ...APP, from: 74.18 - 3.9 } },
+  { id: "15-organise", label: "Organise: colour, notes, save", start: 83.18, end: M.GAP, footage: { ...APP, from: 83.18 - 3.9 } },
+  { id: "16-gap", label: "One more thing", start: M.GAP, end: M.D3, footage: { ...APP, from: M.GAP - 3.9 } },
+  { id: "17-colour", label: "Errors", start: M.D3, end: 105.14, footage: { ...APP, from: M.D3 - 3.9 } },
+  { id: "18-notes", label: "Errors: failed step, deleted asset", start: 105.14, end: M.FIN, footage: { ...APP, from: 105.14 - 3.9 } },
+  { id: "19-finale", label: "Finale", start: M.FIN, end: M.END, footage: { ...APP, from: M.FIN - 3.9 } },
 ];
 
 /** Big headlines. `top`/`size` in px; `center` spans the full width. */
@@ -74,6 +74,24 @@ export const CAPTIONS: { a: number; b: number; html: string }[] = [
   { a: 23.3, b: 24.4, html: `Your folders become <span class="grad-text">islands.</span>` },
   { a: 24.45, b: 25.75, html: `Blue nodes are your <span class="grad-text">workflows.</span>` },
   { a: 25.8, b: 27.05, html: `Smaller nodes are the <span class="grad-text">assets they use.</span>` },
+  { a: 55.0, b: 56.6, html: `Pick any <span class="grad-text">contact.</span>` },
+  { a: 56.8, b: 59.9, html: `See every workflow <span class="grad-text">they’ve been in.</span>` },
+  { a: 60.1, b: 63.2, html: `Every run, <span class="grad-text">newest first.</span>` },
+  { a: 63.7, b: 66.5, html: `Open any run. See the <span class="grad-text">exact path.</span>` },
+  { a: 66.8, b: 69.9, html: `There’s the email <span class="grad-text">Jordan got.</span>` },
+  { a: 71.0, b: 74.0, html: `Step from <span class="grad-text">run to run.</span>` },
+  { a: 75.7, b: 78.6, html: `Find what you <span class="grad-text">don’t use.</span>` },
+  { a: 78.7, b: 81.0, html: `Clean up <span class="grad-text">in bulk.</span>` },
+  { a: 81.2, b: 83.1, html: `Drag workflows <span class="grad-text">where they belong.</span>` },
+  { a: 83.4, b: 86.0, html: `Colour-code <span class="grad-text">folders.</span>` },
+  { a: 86.4, b: 89.9, html: `Leave notes <span class="grad-text">for your team.</span>` },
+  { a: 90.3, b: 92.9, html: `Notes from the builder <span class="grad-text">show up too.</span>` },
+  { a: 93.2, b: 95.0, html: `Save once. <span class="grad-text">Everyone sees it.</span>` },
+  { a: 95.2, b: 96.8, html: `Save views to <span class="grad-text">come back to.</span>` },
+  { a: 100.9, b: 103.0, html: `Spot what needs <span class="grad-text">attention.</span>` },
+  { a: 104.2, b: 107.0, html: `See exactly which <span class="grad-text">runs failed.</span>` },
+  { a: 107.4, b: 110.0, html: `Jump straight to the <span class="grad-text">failed step.</span>` },
+  { a: 110.3, b: 112.8, html: `Catch deleted assets <span class="grad-text">still in use.</span>` },
 ];
 
 /** Chapter pills top-left of the window. `n` is the badge text. */
@@ -82,33 +100,27 @@ export const CHAPTERS: { a: number; b: number; n: string; text: string }[] = [
   { a: 27.13, b: 30.9, n: "2", text: "Down to the exact step" },
   { a: 31.01, b: 34.8, n: "3", text: "See everywhere an asset is used" },
   { a: 34.88, b: 38.6, n: "4", text: "Folders, and folders inside folders" },
-  { a: 38.75, b: 42.0, n: "5", text: "Search to the exact trigger" },
+  { a: 38.75, b: 42.0, n: "5", text: "Search across your map" },
   { a: 42.1, b: 44.5, n: "6", text: "Filter to what matters" },
-  { a: M.D2 + 1.3, b: 62.4, n: "★", text: "Linked workflows" },
-  { a: 63.9, b: 74.0, n: "★", text: "Errors" },
-  { a: 75.5, b: 87.5, n: "★", text: "Contact journey" },
-  { a: 89.0, b: 96.8, n: "★", text: "Organise" },
-  { a: M.D3 + 1.3, b: 105.0, n: "★", text: "Colour" },
-  { a: 106.3, b: 112.7, n: "★", text: "Notes" },
+  { a: M.D2 + 1.3, b: 74.0, n: "★", text: "Contact journey" },
+  { a: 75.5, b: 96.8, n: "★", text: "Organise and document" },
+  { a: M.D3 + 1.3, b: 112.7, n: "★", text: "Find what’s broken" },
 ];
 
 /** Full-screen title cards (the window recedes behind them). */
 export const TITLE_CARDS: { a: number; b: number; kicker: string; html: string }[] = [
   { a: 19.39, b: 23.2, kicker: "INTRODUCING", html: `Workflow <span class="grad-text">Maps</span>` },
-  { a: M.D2, b: M.D2 + 1.25, kicker: "SEE THE WHOLE CHAIN", html: `Linked <span class="grad-text">workflows</span>` },
-  { a: 62.57, b: 63.85, kicker: "FIND WHAT’S BROKEN", html: `Fix <span class="grad-text">errors</span> fast` },
-  { a: 74.18, b: 75.45, kicker: "TRACE ANY CONTACT", html: `Contact <span class="grad-text">journey</span>` },
-  { a: 87.71, b: 88.95, kicker: "ORGANISE IN MINUTES", html: `Make it <span class="grad-text">yours</span>` },
-  { a: M.D3, b: M.D3 + 1.25, kicker: "READ IT AT A GLANCE", html: `Colour-code <span class="grad-text">folders</span>` },
-  { a: 105.14, b: 106.35, kicker: "DOCUMENT AS YOU GO", html: `Leave <span class="grad-text">notes</span>` },
+  { a: M.D2, b: M.D2 + 1.25, kicker: "TRACE ANY CONTACT", html: `Contact <span class="grad-text">journey</span>` },
+  { a: 74.18, b: 75.45, kicker: "ORGANISE AND DOCUMENT", html: `Make it <span class="grad-text">yours</span>` },
+  { a: M.D3, b: M.D3 + 1.25, kicker: "FIND WHAT’S BROKEN", html: `Fix <span class="grad-text">errors</span> fast` },
 ];
 
 /** The three lines of the build before drop 2, one per bar from 47.05 s. */
-export const BUILD_LINES = ["Find the chain.", "Find the break.", "Find the why."];
+export const BUILD_LINES = ["Follow the contact.", "Organise the map.", "Fix what breaks."];
 export const BUILD_LINES_START = 47.05;
 
 /** Client message bubble: shown in the build, then again top-right during the journey. */
-export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "Why did Jordan get this email?", answeredAt: 86.2 };
+export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "Why did Jordan get this email?", answeredAt: 69.9, from: 54.3, to: 74.18 };
 
 /** Browser tabs that pile up above the window ("tab hell"). */
 export const TABS = {
