@@ -32,7 +32,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-const APP: Footage = { file: "app-motion-v5.mp4" }; // one Claude Motion film for the whole app track, from 3.90 s
+const APP: Footage = { file: "app-motion-v6.mp4" }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
   { id: "02-list", label: "Problem: tab after tab", start: 3.9, end: M.D1, footage: { ...APP, from: 3.9 - 3.9 } },
@@ -49,19 +49,16 @@ export const BEATS: { id: string; label: string; start: number; end: number; foo
   { id: "13-errors", label: "Organise: colour, notes, save, views", start: 72.46, end: 83.29, footage: { ...APP, from: 72.46 - 3.9 } },
   { id: "14-journey", label: "Troubleshoot: pick a contact", start: 83.29, end: 93.79, footage: { ...APP, from: 83.29 - 3.9 } },
   { id: "15-organise", label: "Troubleshoot: the run", start: 93.79, end: M.GAP, footage: { ...APP, from: 93.79 - 3.9 } },
-  { id: "16-gap", label: "One more thing", start: M.GAP, end: M.D3, footage: { ...APP, from: M.GAP - 3.9 } },
+  { id: "16-gap", label: "And when something breaks?", start: M.GAP, end: M.D3, footage: { ...APP, from: M.GAP - 3.9 } },
   { id: "17-colour", label: "Troubleshoot: errors", start: M.D3, end: 114.25, footage: { ...APP, from: M.D3 - 3.9 } },
   { id: "18-notes", label: "Troubleshoot: failed step, deleted asset", start: 114.25, end: M.FIN, footage: { ...APP, from: 114.25 - 3.9 } },
-  { id: "19-finale", label: "Finale", start: M.FIN, end: M.END, footage: { ...APP, from: M.FIN - 3.9 } },
+  { id: "19-finale", label: "Finale: the Assistant", start: M.FIN, end: M.END, footage: { ...APP, from: M.FIN - 3.9 } },
 ];
 
 /** Big headlines. `top`/`size` in px; `center` spans the full width. */
 export const HEADLINES: { a: number; b: number; html: string; top: number; size: number; center?: boolean }[] = [
   { a: 1.75, b: 3.85, html: `Your agency runs on<br/><span class="grad-text">hundreds of workflows.</span>`, top: 440, size: 96 },
-  { a: M.GAP + 0.45, b: M.D3 - 0.02, html: `One more <span class="grad-text">thing…</span>`, top: 440, size: 96 },
-  { a: M.FIN + 0.1, b: 125.31, html: `From tab after tab…`, top: 40, size: 64, center: true },
-  { a: 127.57, b: 131.51, html: `…to <span class="grad-text">one map.</span>`, top: 40, size: 64, center: true },
-  { a: 131.71, b: 135.11, html: `See every <span class="grad-text">connection.</span>`, top: 40, size: 64, center: true },
+  { a: M.GAP + 0.45, b: M.D3 - 0.02, html: `And when something <span class="grad-text">breaks?</span>`, top: 440, size: 96 },
 ];
 
 /** Captions centred above the window. */
@@ -76,12 +73,14 @@ export const CAPTIONS: { a: number; b: number; html: string }[] = [
   { a: 19.5, b: 21.3, html: `Your folders become <span class="grad-text">islands.</span>` },
   { a: 21.45, b: 23.25, html: `Blue nodes are your <span class="grad-text">workflows.</span>` },
   { a: 23.4, b: 25.15, html: `Smaller nodes are the <span class="grad-text">assets they use.</span>` },
-  { a: 25.4, b: 28.2, html: `Select a workflow. <span class="grad-text">See what’s inside.</span>` },
-  { a: 28.4, b: 30.9, html: `Down to the <span class="grad-text">exact trigger.</span>` },
-  { a: 31.2, b: 35.3, html: `Click any asset. See <span class="grad-text">everywhere it’s used.</span>` },
-  { a: 35.7, b: 41.1, html: `See how workflows <span class="grad-text">hand off to each other.</span>` },
+  { a: 25.35, b: 27.1, html: `Colour shows the <span class="grad-text">asset type.</span>` },
+  { a: 27.3, b: 29.05, html: `Lines show <span class="grad-text">what uses what.</span>` },
+  { a: 29.3, b: 31.4, html: `Select a workflow. <span class="grad-text">See what’s inside.</span>` },
+  { a: 31.55, b: 33.4, html: `Down to the <span class="grad-text">exact trigger.</span>` },
+  { a: 33.7, b: 37.4, html: `Click any asset. See <span class="grad-text">everywhere it’s used.</span>` },
+  { a: 37.8, b: 41.1, html: `Search anything. <span class="grad-text">Fly straight to it.</span>` },
   { a: 41.5, b: 44.0, html: `Filter to <span class="grad-text">what matters.</span>` },
-  { a: 45.4, b: 50.8, html: `Search anything. <span class="grad-text">Fly straight to it.</span>` },
+  { a: 45.4, b: 50.6, html: `See how workflows <span class="grad-text">hand off to each other.</span>` },
   // Organise
   { a: 63.91, b: 65.31, html: `Find what you <span class="grad-text">don’t use.</span>` },
   { a: 65.41, b: 66.81, html: `Clean up <span class="grad-text">in bulk.</span>` },
@@ -103,26 +102,32 @@ export const CAPTIONS: { a: number; b: number; html: string }[] = [
   { a: 113.31, b: 116.11, html: `See exactly which <span class="grad-text">runs failed.</span>` },
   { a: 116.51, b: 119.11, html: `Jump straight to the <span class="grad-text">failed step.</span>` },
   { a: 119.41, b: 121.91, html: `Catch deleted assets <span class="grad-text">still in use.</span>` },
+  // the Assistant (finale)
+  { a: 124.5, b: 127.4, html: `Ask your map <span class="grad-text">anything.</span>` },
+  { a: 127.6, b: 131.3, html: `It answers, and <span class="grad-text">shows you on the map.</span>` },
+  { a: 131.5, b: 135.0, html: `Straight to <span class="grad-text">what to fix first.</span>` },
 ];
 
 /** Chapter pills top-left of the window. `n` is the badge text. */
 export const CHAPTERS: { a: number; b: number; n: string; text: string }[] = [
-  { a: 19.43, b: 25.1, n: "1", text: "Plan · Every workflow, with its assets" },
-  { a: 25.25, b: 30.9, n: "2", text: "Plan · Down to the exact step" },
-  { a: 31.01, b: 35.4, n: "3", text: "Plan · Everywhere an asset is used" },
-  { a: 35.5, b: 41.2, n: "4", text: "Plan · Linked workflows" },
+  { a: 19.43, b: 29.0, n: "1", text: "Plan · Every workflow, with its assets" },
+  { a: 29.13, b: 33.4, n: "2", text: "Plan · Down to the exact step" },
+  { a: 33.5, b: 37.5, n: "3", text: "Plan · Everywhere an asset is used" },
+  { a: 37.6, b: 41.2, n: "4", text: "Plan · Search across your map" },
   { a: 41.3, b: 44.9, n: "5", text: "Plan · Filter to what matters" },
-  { a: 45.1, b: 50.9, n: "6", text: "Plan · Search across your map" },
+  { a: 45.1, b: 50.9, n: "6", text: "Plan · Linked workflows" },
   { a: M.D2 + 1.3, b: 83.11, n: "★", text: "Organise" },
   { a: 84.61, b: 105.91, n: "★", text: "Troubleshoot · Contact journey" },
   { a: M.D3 + 1.3, b: 121.81, n: "★", text: "Troubleshoot · Errors" },
+  { a: 124.45, b: 135.0, n: "★", text: "Assistant" },
 ];
 
 /** Full-screen title cards (the window recedes behind them). */
 export const TITLE_CARDS: { a: number; b: number; kicker: string; html: string }[] = [
   { a: M.D2, b: M.D2 + 1.25, kicker: "ORGANISE IT", html: `Make it <span class="grad-text">yours</span>` },
   { a: 83.29, b: 84.56, kicker: "TROUBLESHOOT IT", html: `Trace any <span class="grad-text">contact</span>` },
-  { a: M.D3, b: M.D3 + 1.25, kicker: "AND WHEN IT BREAKS", html: `Fix <span class="grad-text">errors</span> fast` },
+  { a: M.D3, b: M.D3 + 1.25, kicker: "TROUBLESHOOT IT", html: `Fix <span class="grad-text">errors</span> fast` },
+  { a: M.FIN, b: 124.3, kicker: "ONE MORE THING", html: `Just <span class="grad-text">ask</span> your map` },
 ];
 
 /** The first drop: "Workflow Maps" explodes on the drop (15.55 s, measured onset), kicks again on the wall of

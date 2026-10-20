@@ -11,18 +11,20 @@ export const RECEDES: [number, number, number][] = [
   [15.5, 17.55, 0.45], // behind the exploding title; the map still shows through
   [M.B2, M.D2 + 0.1, 1], // build to drop 2
   ...[M.D2, 83.29, M.D3].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
-  [M.GAP, M.D3 + 0.1, 0.8], // one more thing
+  [M.GAP, M.D3 + 0.1, 0.8], // "and when something breaks?"
+  [M.FIN - 0.05, 124.35, 0.9], // "One more thing: just ask your map"
 ];
 
 /** Push-ins so panels read at 1080p: [start, end, scale, originX, originY] in window px. */
 export const ZOOMS: [number, number, number, number, number][] = [
-  [26.0, 35.3, 1.2, 1620, 0], // workflow drawer, then the asset drawer
-  [45.6, 50.8, 1.2, 0, 0], // search panel
+  [29.6, 37.45, 1.2, 1620, 0], // workflow drawer, then the asset drawer
+  [37.95, 40.95, 1.2, 0, 0], // search panel
   [63.71, 66.71, 1.15, 0, 0], // cleanup panel
   [87.01, 93.51, 1.15, 1620, 0], // contact drawer: workflows, timeline
   [97.01, 100.71, 1.12, 1620, 220], // run: the email step's details
   [111.01, 113.01, 1.15, 0, 0], // "Need your attention" card
   [113.21, 116.11, 1.2, 1620, 0], // error executions in the drawer
+  [124.55, 131.35, 1.12, 0, 300], // the Assistant's answer
 ]
 
 export function windowAt(t: number) {
@@ -160,11 +162,11 @@ export function mascotAt(t: number): MascotState {
     m.s = lerp(0.56, 0.36, k);
     m.r = -10;
     m.look = [-16, -8];
-    if (t > 37.4 && t < 39.4) {
+    if (t > 47.6 && t < 49.6) {
       m.eyes = "wow";
-      m.sparkle = win(t, 37.4, 39.4, 0.2, 0.5);
+      m.sparkle = win(t, 47.6, 49.6, 0.2, 0.5);
     }
-    if (t > 48.0 && t < 49.4) m.eyes = "happy";
+    if (t > 39.8 && t < 41.1) m.eyes = "happy";
     if (t >= M.STOP) {
       m.eyes = "wow";
       m.r = -10 + (t > M.HIT ? Math.sin((t - M.HIT) * 40) * 4 * (1 - prog(t, M.HIT, M.HIT + 0.4)) : 0);
@@ -221,7 +223,7 @@ export function mascotAt(t: number): MascotState {
     m.s = lerp(0.38, 0.9, k);
     m.r = lerp(-10, 6, k);
     m.look = [0, -6];
-    m.eyes = t > 107.71 ? "wow" : t > 107.01 ? "squint" : "normal";
+    m.eyes = t > 107.01 ? "worried" : "normal";
   }
   // D3 – FIN: troubleshoot, find what's broken.
   else if (t < M.FIN) {
