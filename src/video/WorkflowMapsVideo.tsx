@@ -7,6 +7,7 @@ import { GLOBAL_CSS, loadFonts } from "./fonts";
 import { Mascot } from "./Mascot";
 import { FPS, M } from "./script";
 import { Background, BrowserTabs, Flash, Message, Titles } from "./Stage";
+import { Impact, ImpactBack } from "./Impact";
 
 loadFonts();
 
@@ -21,7 +22,9 @@ export const WorkflowMapsVideo: React.FC = () => {
       <Background />
       <BrowserTabs t={t} />
       <AppWindow t={t} />
+      <ImpactBack t={t} />
       <Titles t={t} />
+      <Impact t={t} />
       <Message t={t} />
       <Mascot t={t} st={mascotAt(t)} />
       <Flash t={t} />

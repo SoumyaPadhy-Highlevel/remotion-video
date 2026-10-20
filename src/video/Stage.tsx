@@ -43,7 +43,8 @@ const WorkflowIcon: React.FC<{ size: number; color: string }> = ({ size, color }
 );
 
 export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
-  const n = t >= TABS.a && t < TABS.b ? Math.min(TABS.names.length, 1 + Math.floor((t - TABS.a) / TABS.every)) : 0;
+  const n = t < TABS.b ? TABS.times.filter((x) => t >= x).length : 0;
+  const pop = n ? Math.min(1, (t - TABS.times[n - 1]) / 0.12) : 1;
   if (!n) return null;
   return (
     <div style={{ position: "absolute", left: 150, top: 70, width: 1620, height: 48, display: "flex", alignItems: "flex-end", gap: 2, paddingLeft: 10, boxSizing: "border-box" }}>
@@ -52,6 +53,7 @@ export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
           display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontSize: 12, fontWeight: 500, color: "#344054",
           overflow: "hidden", whiteSpace: "nowrap", height: 38, borderRadius: "10px 10px 0 0",
           background: i === n - 1 ? "#fff" : "#E4ECF7", boxShadow: "0 -1px 0 rgba(16,24,40,.06)", flex: "1 1 0", minWidth: 0, maxWidth: 220,
+          transform: i === n - 1 ? `translateY(${(1 - pop) * 14}px)` : undefined, opacity: i === n - 1 ? pop : 1,
         }}>
           <WorkflowIcon size={14} color={BLUE} />
           <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
@@ -159,11 +161,7 @@ export const Message: React.FC<{ t: number }> = ({ t }) => {
   let scale = 1;
   let origin = "0 0";
   let check = 0;
-  if (t >= M.B2 && t < M.D2 + 1.4) {
-    const mk = t < M.D2 ? prog(t, M.B2 + 0.6, M.B2 + 1.2, easeOutBack) : 0;
-    o = mk * (1 - prog(t, M.D2, M.D2 + 0.3));
-    scale = 1.45 * (0.85 + 0.15 * mk);
-  } else if (t >= MESSAGE.from && t < MESSAGE.to) {
+  if (t >= MESSAGE.from && t < MESSAGE.to) {
     const mk = prog(t, MESSAGE.from, MESSAGE.from + 0.4, easeOutBack);
     left = 1290;
     top = 24;

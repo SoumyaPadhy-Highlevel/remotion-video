@@ -15,7 +15,7 @@ export const AppWindow: React.FC<{ t: number }> = ({ t }) => {
       borderRadius: 18, background: "#fff", overflow: "hidden",
       boxShadow: "0 30px 80px rgba(16,44,102,.18), 0 6px 18px rgba(16,44,102,.10), 0 0 0 1px rgba(16,44,102,.06)",
       transformOrigin: `${w.zoomOrigin[0]}px ${w.zoomOrigin[1]}px`,
-      transform: `translateY(${w.translateY}px) scale(${w.scale * w.zoom})`,
+      transform: `translate(${w.translateX}px, ${w.translateY}px) scale(${w.scale * w.zoom})`,
       opacity: w.opacity, visibility: w.opacity < 0.01 ? "hidden" : "visible",
       filter: w.blur > 0.05 ? `blur(${w.blur.toFixed(2)}px)` : undefined,
     }}>
