@@ -32,13 +32,14 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
+const OPENING: Footage = { file: "opening-motion.mp4" }; // Claude Motion clip, 3.90–31.01 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
-  { id: "02-list", label: "Workflows list", start: 3.9, end: M.D1 },
-  { id: "03-drop", label: "Drop: list to map", start: M.D1, end: 19.39 },
-  { id: "04-introducing", label: "Introducing", start: 19.39, end: 23.27 },
-  { id: "05-assets", label: "Tour 1: workflows and assets", start: 23.27, end: 27.13 },
-  { id: "06-steps", label: "Tour 2: exact step", start: 27.13, end: 31.01 },
+  { id: "02-list", label: "Workflows list", start: 3.9, end: M.D1, footage: { ...OPENING, from: 3.9 - 3.9 } },
+  { id: "03-drop", label: "Drop: list to map", start: M.D1, end: 19.39, footage: { ...OPENING, from: M.D1 - 3.9 } },
+  { id: "04-introducing", label: "Introducing", start: 19.39, end: 23.27, footage: { ...OPENING, from: 19.39 - 3.9 } },
+  { id: "05-assets", label: "Tour 1: workflows and assets", start: 23.27, end: 27.13, footage: { ...OPENING, from: 23.27 - 3.9 } },
+  { id: "06-steps", label: "Tour 2: exact step", start: 27.13, end: 31.01, footage: { ...OPENING, from: 27.13 - 3.9 } },
   { id: "07-usage", label: "Tour 3: asset usage", start: 31.01, end: 34.88 },
   { id: "08-folders", label: "Tour 4: folders", start: 34.88, end: 38.75 },
   { id: "09-search", label: "Tour 5: search", start: 38.75, end: 42.1 },
@@ -65,11 +66,14 @@ export const HEADLINES: { a: number; b: number; html: string; top: number; size:
 
 /** Captions centred above the window. */
 export const CAPTIONS: { a: number; b: number; html: string }[] = [
-  { a: 4.7, b: 7.6, html: `312 workflows. <span class="grad-text">One long list.</span>` },
+  { a: 4.7, b: 7.6, html: `Folders full of workflows. <span class="grad-text">One long list.</span>` },
   { a: 7.95, b: 9.6, html: `Which workflow uses this tag?` },
   { a: 9.85, b: 11.55, html: `What breaks if you change it?` },
   { a: 13.58, b: M.D1 - 0.05, html: `What if you could <span class="grad-text">see it all?</span>` },
   { a: M.D1 + 1.1, b: 19.2, html: `Every workflow. Every asset. <span class="grad-text">One map.</span>` },
+  { a: 23.3, b: 24.4, html: `Your folders become <span class="grad-text">islands.</span>` },
+  { a: 24.45, b: 25.75, html: `Blue nodes are your <span class="grad-text">workflows.</span>` },
+  { a: 25.8, b: 27.05, html: `Smaller nodes are the <span class="grad-text">assets they use.</span>` },
 ];
 
 /** Chapter pills top-left of the window. `n` is the badge text. */

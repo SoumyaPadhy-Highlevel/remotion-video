@@ -5,9 +5,8 @@ import { AppWindow } from "./AppWindow";
 import { mascotAt } from "./choreography";
 import { GLOBAL_CSS, loadFonts } from "./fonts";
 import { Mascot } from "./Mascot";
-import { FPS, M, STRUCTURE_OPENING } from "./script";
+import { FPS, M } from "./script";
 import { Background, BrowserTabs, Flash, Message, Titles } from "./Stage";
-import { StructureOpening } from "./StructureOpening";
 
 loadFonts();
 
@@ -19,7 +18,6 @@ export const WorkflowMapsVideo: React.FC = () => {
     <AbsoluteFill style={{ background: "#F4F8FF", fontFamily: "Inter, system-ui, sans-serif", WebkitFontSmoothing: "antialiased", overflow: "hidden" }}>
       <style>{GLOBAL_CSS}</style>
       <Audio src={staticFile("music.mp3")} volume={(f) => 1 - clamp((f / FPS - (M.END - 1.3)) / 1.3)} />
-      {t < STRUCTURE_OPENING.end ? <StructureOpening /> : <>
       <Background />
       <BrowserTabs t={t} />
       <AppWindow t={t} />
@@ -27,7 +25,6 @@ export const WorkflowMapsVideo: React.FC = () => {
       <Message t={t} />
       <Mascot t={t} st={mascotAt(t)} />
       <Flash t={t} />
-      </>}
     </AbsoluteFill>
   );
 };
