@@ -18,7 +18,7 @@ export const WorkflowMapsVideo: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: "#F4F8FF", fontFamily: "Inter, system-ui, sans-serif", WebkitFontSmoothing: "antialiased", overflow: "hidden" }}>
       <style>{GLOBAL_CSS}</style>
-      <Audio src={staticFile("music-full.mp3")} volume={(f) => 1 - clamp((f / FPS - (M.END - 1.3)) / 1.3)} />
+      <Audio src={staticFile("music-long.mp3")} volume={(f) => 1 - clamp((f / FPS - (M.END - 1.3)) / 1.3)} />
       <Background />
       <BrowserTabs t={t} />
       <AppWindow t={t} />

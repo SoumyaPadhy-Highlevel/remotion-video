@@ -1,8 +1,8 @@
 // Beat-synced type layer: the kinetic "Workflow Maps" title on the first drop, the kinetic title cards and the
-// Plan / Organise / Troubleshoot pain lines in the intro. Type only — no particles.
+// three questions at the end of the intro. Type only — no particles.
 import React from "react";
 import { clamp, easeOut, lerp, prog } from "./anim";
-import { M, PAINS, TITLE_DROP } from "./script";
+import { M, QUESTIONS, TITLE_DROP } from "./script";
 
 const INK = "#0B1B3A";
 const BLUE = "#155EEF";
@@ -47,22 +47,24 @@ export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker
 
 export const Impact: React.FC<{ t: number }> = ({ t }) => {
   const D = TITLE_DROP;
-  // ── Pain lines (intro): each lands on a hit ──
-  const painOn = t >= PAINS.from && t < PAINS.to + 0.4;
+  // ── The three questions (end of the intro): each lands on a hit, the window recedes behind them ──
+  const Q = QUESTIONS;
+  const qOn = t >= Q.from - 0.1 && t < Q.to + 0.45;
+  const qOut = prog(t, Q.to, Q.to + 0.35);
   return (
     <div className="poppins" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       {/* the first drop: "Workflow Maps" in kinetic type, a pulse on the wall of sound, lifts away in the break */}
       <KineticTitle t={t} at={D.at} out={D.out} kicker="INTRODUCING" html={`Workflow <span class="grad-text">Maps</span>`} size={168} pulse={[D.wall]} />
-      {/* Plan / Organise / Troubleshoot */}
-      {painOn ? (
-        <div style={{ position: "absolute", left: 120, top: 250, display: "flex", flexDirection: "column", gap: 26 }}>
-          {PAINS.lines.map((p, i) => {
-            const a = prog(t, p.at, p.at + 0.32, easeOut) * (1 - prog(t, PAINS.to, PAINS.to + 0.35));
-            const punch = t >= p.at && t < p.at + 0.3 ? 0.12 * Math.pow(1 - (t - p.at) / 0.3, 2) : 0;
+      {qOn ? (
+        <div style={{ position: "absolute", left: 150, top: 230, width: 1300, display: "flex", flexDirection: "column", gap: 34 }}>
+          <div style={{ fontSize: 22, fontWeight: 600, color: BLUE, letterSpacing: `${lerp(0.4, 0.12, prog(t, Q.from, Q.from + 0.5, easeOut)).toFixed(3)}em`, opacity: prog(t, Q.from - 0.1, Q.from + 0.3) * (1 - qOut) }}>{Q.kicker}</div>
+          {Q.lines.map((p) => {
+            const a = prog(t, p.at, p.at + 0.32, easeOut) * (1 - qOut);
+            const punch = t >= p.at && t < p.at + 0.3 ? 0.06 * Math.pow(1 - (t - p.at) / 0.3, 2) : 0;
             return (
-              <div key={p.word} style={{ opacity: a, transform: `translateX(${(-40 * (1 - a)).toFixed(1)}px) scale(${(1 + punch).toFixed(3)})`, transformOrigin: "0 50%" }}>
-                <div style={{ fontSize: 92, fontWeight: 800, lineHeight: 1.0, color: INK }}><span className="grad-text">{p.word}</span></div>
-                <div style={{ fontSize: 30, fontWeight: 600, color: "#475467", marginTop: 6, fontFamily: "Inter, sans-serif" }}>{p.line}</div>
+              <div key={p.q} style={{ opacity: a, transform: `translateX(${(-40 * (1 - a)).toFixed(1)}px) scale(${(1 + punch).toFixed(3)})`, transformOrigin: "0 50%" }}>
+                <div style={{ fontSize: 70, fontWeight: 800, lineHeight: 1.05, color: INK, letterSpacing: "-0.02em" }}><span className="grad-text">{p.q}</span></div>
+                <div style={{ fontSize: 28, fontWeight: 500, color: "#475467", marginTop: 8, fontFamily: "Inter, sans-serif" }}>{p.line}</div>
               </div>
             );
           })}
