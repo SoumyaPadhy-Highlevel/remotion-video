@@ -32,7 +32,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-const APP: Footage = { file: "app-motion.mp4" }; // one Claude Motion film for the whole app track, 3.90–131.90 s
+const APP: Footage = { file: "app-motion-v3.mp4" }; // one Claude Motion film for the whole app track, 3.90–131.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
   { id: "02-list", label: "Workflows list", start: 3.9, end: M.D1, footage: { ...APP, from: 3.9 - 3.9 } },
