@@ -10,19 +10,19 @@ export const RECEDES: [number, number, number][] = [
   [9.5, 13.45, 0.6], // Plan / Organise / Troubleshoot over the chaos
   [15.5, 17.55, 0.45], // behind the exploding title; the map still shows through
   [M.B2, M.D2 + 0.1, 1], // build to drop 2
-  ...[M.D2, 74.18, M.D3].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
+  ...[M.D2, 83.29, M.D3].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
   [M.GAP, M.D3 + 0.1, 0.8], // one more thing
 ];
 
 /** Push-ins so panels read at 1080p: [start, end, scale, originX, originY] in window px. */
 export const ZOOMS: [number, number, number, number, number][] = [
-  [27.45, 33.0, 1.2, 1620, 0], // workflow drawer, then the asset drawer
-  [38.85, 41.95, 1.2, 0, 0], // search panel
-  [54.6, 57.6, 1.15, 0, 0], // cleanup panel
-  [77.9, 84.4, 1.15, 1620, 0], // contact drawer: workflows, timeline
-  [87.9, 91.6, 1.12, 1620, 220], // run: the email step's details
-  [101.9, 103.9, 1.15, 0, 0], // "Need your attention" card
-  [104.1, 107.0, 1.2, 1620, 0], // error executions in the drawer
+  [26.0, 35.3, 1.2, 1620, 0], // workflow drawer, then the asset drawer
+  [45.6, 50.8, 1.2, 0, 0], // search panel
+  [63.71, 66.71, 1.15, 0, 0], // cleanup panel
+  [87.01, 93.51, 1.15, 1620, 0], // contact drawer: workflows, timeline
+  [97.01, 100.71, 1.12, 1620, 220], // run: the email step's details
+  [111.01, 113.01, 1.15, 0, 0], // "Need your attention" card
+  [113.21, 116.11, 1.2, 1620, 0], // error executions in the drawer
 ]
 
 export function windowAt(t: number) {
@@ -160,11 +160,11 @@ export function mascotAt(t: number): MascotState {
     m.s = lerp(0.56, 0.36, k);
     m.r = -10;
     m.look = [-16, -8];
-    if (t > 35.6 && t < 37.6) {
+    if (t > 37.4 && t < 39.4) {
       m.eyes = "wow";
-      m.sparkle = win(t, 35.6, 37.6, 0.2, 0.5);
+      m.sparkle = win(t, 37.4, 39.4, 0.2, 0.5);
     }
-    if (t > 40.9 && t < 42.0) m.eyes = "happy";
+    if (t > 48.0 && t < 49.4) m.eyes = "happy";
     if (t >= M.STOP) {
       m.eyes = "wow";
       m.r = -10 + (t > M.HIT ? Math.sin((t - M.HIT) * 40) * 4 * (1 - prog(t, M.HIT, M.HIT + 0.4)) : 0);
@@ -177,8 +177,8 @@ export function mascotAt(t: number): MascotState {
     m.y = lerp(960, 640, k);
     m.s = lerp(0.36, 0.86, k);
     m.r = lerp(-10, -4, k);
-    m.look = t < 47 ? [-8, -14] : [-22, 0];
-    m.eyes = t > 51.9 ? "wow" : t > 49 ? "happy" : "normal";
+    m.look = t < 56.11 ? [-8, -14] : [-22, 0];
+    m.eyes = t > 61.01 ? "wow" : t > 58.11 ? "happy" : "normal";
     if (t > M.SIL) {
       const sq = prog(t, M.SIL, M.D2, easeIn);
       m.s *= 1 - 0.06 * sq;
@@ -186,7 +186,7 @@ export function mascotAt(t: number): MascotState {
     }
   }
   // D2 – 74.18: organise.
-  else if (t < 74.18) {
+  else if (t < 83.29) {
     const k = prog(t, M.D2, M.D2 + 1.1, easeOut);
     m.x = lerp(1480, 1830, k);
     m.y = lerp(640, 960, k);
@@ -194,23 +194,23 @@ export function mascotAt(t: number): MascotState {
     m.r = -10;
     m.look = [-16, -8];
     m.streak = win(t, M.D2, M.D2 + 0.9, 0.1, 0.4);
-    if (t > 63.8 && t < 65.4) {
+    if (t > 72.91 && t < 74.51) {
       m.eyes = "wow";
       m.look = [-24, -10];
     }
-    if (t > 71.1 && t < 73.0) {
+    if (t > 80.21 && t < 82.11) {
       m.eyes = "happy";
-      m.sparkle = win(t, 71.1, 73.0, 0.2, 0.5);
+      m.sparkle = win(t, 80.21, 82.11, 0.2, 0.5);
     }
   }
   // 74.18 – GAP: troubleshoot, the contact journey ("Why did Jordan get this email?").
   else if (t < M.GAP) {
     corner();
-    if (t < 75.3) m.streak = win(t, 74.18, 75.2, 0.1, 0.4);
-    if (t > 77.6 && t < 88.1) m.eyes = "squint";
-    if (t > 91.2) {
+    if (t < 84.41) m.streak = win(t, 83.29, 84.31, 0.1, 0.4);
+    if (t > 86.71 && t < 97.21) m.eyes = "squint";
+    if (t > 100.31) {
       m.eyes = "happy";
-      m.sparkle = win(t, 91.2, 93.3, 0.2, 0.5);
+      m.sparkle = win(t, 100.31, 102.41, 0.2, 0.5);
     }
   }
   // GAP – D3: steps forward for "one more thing".
@@ -221,7 +221,7 @@ export function mascotAt(t: number): MascotState {
     m.s = lerp(0.38, 0.9, k);
     m.r = lerp(-10, 6, k);
     m.look = [0, -6];
-    m.eyes = t > 98.6 ? "wow" : t > 97.9 ? "squint" : "normal";
+    m.eyes = t > 107.71 ? "wow" : t > 107.01 ? "squint" : "normal";
   }
   // D3 – FIN: troubleshoot, find what's broken.
   else if (t < M.FIN) {
@@ -232,23 +232,23 @@ export function mascotAt(t: number): MascotState {
     m.r = -10;
     m.look = [-16, -8];
     m.streak = win(t, M.D3, M.D3 + 0.9, 0.1, 0.4);
-    if (t > 101.0 && t < 107.4) m.eyes = "worried";
-    if (t >= 107.4 && t < 110.3) {
+    if (t > 110.11 && t < 116.51) m.eyes = "worried";
+    if (t >= 116.51 && t < 119.41) {
       m.eyes = "happy";
-      m.sparkle = win(t, 107.5, 109.6, 0.2, 0.5);
+      m.sparkle = win(t, 116.61, 118.71, 0.2, 0.5);
     }
-    if (t >= 110.3) m.eyes = "wow";
+    if (t >= 119.41) m.eyes = "wow";
   }
   // FIN – LOGO: finale.
   else if (t < M.LOGO) {
     corner();
-    if (t > 116.29 && t < 118.44) m.eyes = "squint";
-    if (t > 118.44) {
+    if (t > 125.4 && t < 127.55) m.eyes = "squint";
+    if (t > 127.55) {
       m.eyes = "star";
-      m.sparkle = win(t, 118.44, 121, 0.2, 0.6);
+      m.sparkle = win(t, 127.55, 130.11, 0.2, 0.6);
     }
-    if (t > 120.15 && t < 122.57) {
-      const k = prog(t, 120.15, 122.4, easeInOut);
+    if (t > 129.26 && t < 131.68) {
+      const k = prog(t, 129.26, 131.51, easeInOut);
       m.y = 960 - Math.abs(Math.sin(k * Math.PI * 2)) * 70;
       m.eyes = "happy";
       m.sparkle = 0.6;
