@@ -2,7 +2,7 @@
 import React from "react";
 import { Img, staticFile } from "remotion";
 import { easeIn, easeOut, easeOutBack, prog, win } from "./anim";
-import { BUILD_LINES, BUILD_LINES_START, CAPTIONS, CHAPTERS, FLASHES, HEADLINES, LOCKUP, M, MESSAGE, TABS, TITLE_CARDS } from "./script";
+import { BUILD_LINES, BUILD_LINES_START, CAPTIONS, CHAPTERS, FLASHES, HEADLINES, LOCKUP, M, MESSAGE, TABS, TITLE_CARDS, WALLS } from "./script";
 
 const INK = "#0B1B3A";
 const BLUE = "#155EEF";
@@ -118,7 +118,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       {card ? (
         <div style={{
           position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center",
-          transform: `scale(${0.9 + 0.1 * prog(t, card.a, card.a + 0.5, easeOutBack)})`, ...hidden(win(t, card.a, card.b, 0.18, 0.3)),
+          transform: `scale(${(0.9 + 0.1 * prog(t, card.a, card.a + 0.5, easeOutBack)) * (1 + WALLS.reduce((k, w) => k + (t >= w && t < w + 0.4 ? 0.05 * Math.pow(1 - (t - w) / 0.4, 2) : 0), 0))})`, ...hidden(win(t, card.a, card.b, 0.18, 0.3)),
         }}>
           <div style={{ fontSize: 30, fontWeight: 600, color: BLUE, letterSpacing: ".06em" }}>{card.kicker}</div>
           <div dangerouslySetInnerHTML={html(card.html)} style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.05, marginTop: 10 }} />

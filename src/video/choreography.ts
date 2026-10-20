@@ -1,5 +1,5 @@
 // Motion of the app window and the mascot, as pure functions of time t (seconds).
-import { M } from "./script";
+import { M, DROPS } from "./script";
 import { clamp, easeIn, easeInOut, easeOut, easeOutBack, lerp, prog, win } from "./anim";
 
 // ── App window ───────────────────────────────────────────────────────────────
@@ -47,6 +47,8 @@ export function windowAt(t: number) {
     o *= 1 - 0.45 * k;
   }
   if (t >= M.HIT && t < M.HIT + 0.35) s *= 1 + 0.02 * (1 - (t - M.HIT) / 0.35);
+  // punch on each drop: a quick 4 % kick that settles in 0.45 s
+  for (const d of DROPS) if (t >= d && t < d + 0.45) s *= 1 + 0.04 * Math.pow(1 - (t - d) / 0.45, 2);
   if (t >= M.LOGO - 0.4) {
     const k = prog(t, M.LOGO - 0.4, M.LOGO + 0.6, easeInOut);
     o *= 1 - k;

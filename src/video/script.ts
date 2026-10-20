@@ -70,10 +70,16 @@ export const CAPTIONS: { a: number; b: number; html: string }[] = [
   { a: 7.95, b: 9.6, html: `Which workflow uses this tag?` },
   { a: 9.85, b: 11.55, html: `What breaks if you change it?` },
   { a: 13.58, b: M.D1 - 0.05, html: `What if you could <span class="grad-text">see it all?</span>` },
-  { a: M.D1 + 1.1, b: 19.2, html: `Every workflow. Every asset. <span class="grad-text">One map.</span>` },
+  { a: M.D1 + 0.03, b: 19.2, html: `Every workflow. Every asset. <span class="grad-text">One map.</span>` }, // lands with the drop
   { a: 23.3, b: 24.4, html: `Your folders become <span class="grad-text">islands.</span>` },
   { a: 24.45, b: 25.75, html: `Blue nodes are your <span class="grad-text">workflows.</span>` },
   { a: 25.8, b: 27.05, html: `Smaller nodes are the <span class="grad-text">assets they use.</span>` },
+  { a: 27.4, b: 29.2, html: `Select a workflow. <span class="grad-text">See what’s inside.</span>` },
+  { a: 29.4, b: 30.9, html: `Down to the <span class="grad-text">exact trigger.</span>` },
+  { a: 31.2, b: 34.7, html: `Click any asset. See <span class="grad-text">everywhere it’s used.</span>` },
+  { a: 35.0, b: 38.6, html: `Drop folders <span class="grad-text">into folders.</span>` },
+  { a: 38.9, b: 41.9, html: `Search anything. <span class="grad-text">Fly straight to it.</span>` },
+  { a: 42.2, b: 44.0, html: `Filter to <span class="grad-text">what matters.</span>` },
   { a: 55.0, b: 56.6, html: `Pick any <span class="grad-text">contact.</span>` },
   { a: 56.8, b: 59.9, html: `See every workflow <span class="grad-text">they’ve been in.</span>` },
   { a: 60.1, b: 63.2, html: `Every run, <span class="grad-text">newest first.</span>` },
@@ -132,6 +138,10 @@ export const TABS = {
 
 /** Final lockup. */
 export const LOCKUP = { name: "Workflow", accent: "Maps", badge: "BETA", tagline: "See every connection." };
+
+/** Drops: the window punches in on the drop, title cards kick on the wall of sound that follows (measured onsets). */
+export const DROPS = [M.D1 + 0.03, M.D2, M.D3, 118.46];
+export const WALLS = [15.82, 53.38, 99.93];
 
 /** Moments that get a white flash. */
 export const FLASHES = [M.D1, M.HIT, M.D2, M.D3, M.LOGO];
