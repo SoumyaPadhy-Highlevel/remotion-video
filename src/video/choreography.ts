@@ -7,8 +7,7 @@ import { clamp, easeIn, easeInOut, easeOut, easeOutBack, lerp, prog, win } from 
 
 /** Moments the window recedes (shrinks, dims, blurs) behind a title. [start, end, depth] */
 export const RECEDES: [number, number, number][] = [
-  ...INTRO_CARDS.map((c): [number, number, number] => [c.a - 0.05, c.b, 0.9]), // the intro's statement cards
-  [46.4, 51.95, 0.6], // the three questions over the pile
+  ...INTRO_CARDS.map((c): [number, number, number] => [c.a - 0.05, c.b, c.depth ?? 0.9]), // the intro's statement cards
   [54.25, 56.3, 0.45], // behind the exploding title; the map still shows through
   [M.B2, M.D2 + 0.1, 1], // build to drop 2
   ...[M.D2, 122.04, M.D3].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
@@ -136,18 +135,16 @@ export function mascotAt(t: number): MascotState {
       m.r = -8 + Math.sin(t * 26) * 5;
     }
     if (t >= 46.4 && t < 52.1) {
-      const k2 = prog(t, 46.4, 46.95, easeOut);
-      m.x = lerp(1780, 1640, k2);
-      m.y = lerp(930, 760, k2);
-      m.s = lerp(0.42, 0.56, k2);
-      m.eyes = "worried";
-      m.r = -6 + Math.sin(t * 30) * 2;
+      // "What if we could change all of this…" → watches the map take shape from its corner, more and more wide-eyed
+      m.eyes = t < 48.85 ? "squint" : "wow";
+      m.look = [-22, -6];
+      m.sparkle = win(t, 50.5, 52.1, 0.6, 0.3) * 0.5;
     }
     if (t >= 52.1) {
       const k3 = prog(t, 52.1, 52.85, easeOut);
-      m.x = lerp(1640, 1700, k3);
-      m.y = lerp(760, 880, k3);
-      m.s = lerp(0.56, 0.5, k3);
+      m.x = lerp(1780, 1700, k3);
+      m.y = lerp(930, 880, k3);
+      m.s = lerp(0.42, 0.5, k3);
       m.r = -16;
       m.eyes = t > 52.74 ? "wow" : "normal";
       m.look = [-16, -6];

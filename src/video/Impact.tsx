@@ -1,8 +1,8 @@
 // Beat-synced type layer: the kinetic "Workflow Maps" title on the first drop, the kinetic title cards and the
-// three questions at the end of the intro. Type only — no particles.
+// suspense lines before the reveal. Type only — no particles.
 import React from "react";
-import { clamp, easeOut, lerp, prog } from "./anim";
-import { INTRO_CARDS, M, QUESTIONS, TITLE_DROP } from "./script";
+import { clamp, lerp } from "./anim";
+import { INTRO_CARDS, M, TITLE_DROP } from "./script";
 
 const INK = "#0B1B3A";
 const BLUE = "#155EEF";
@@ -18,7 +18,7 @@ const parts = (html: string) => {
 
 /** Kinetic type: letters rise in one after another (expo ease, a little blur and tilt), the accent word sweeps in
  *  as one piece, the kicker's tracking closes up; on `out` the letters lift away in the same order. */
-export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker: string; html: string; size: number; pulse?: number[] }> = ({ t, at, out, kicker, html, size, pulse = [] }) => {
+export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker: string; html: string; size: number; pulse?: number[]; offsetY?: number }> = ({ t, at, out, kicker, html, size, pulse = [], offsetY = 0 }) => {
   if (t < at - 0.05 || t > out + 0.6) return null;
   const ex = (x: number) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp(x)));
   const total = parts(html).reduce((n, p) => n + p.text.length, 0);
@@ -36,7 +36,7 @@ export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker
   const pul = pulse.reduce((s, w) => s + (t >= w && t < w + 0.35 ? 0.045 * Math.pow(1 - (t - w) / 0.35, 2) : 0), 0);
   const kp = ex((t - at) / 0.5), kq = clamp((t - out) / 0.25);
   return (
-    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", transform: `scale(${(1 + pul).toFixed(4)})` }}>
+    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", transform: `translateY(${offsetY}px) scale(${(1 + pul).toFixed(4)})` }}>
       {kicker ? <div style={{ fontSize: Math.max(22, size * 0.2), fontWeight: 600, color: BLUE, letterSpacing: `${lerp(0.5, 0.08, kp).toFixed(3)}em`, opacity: kp * (1 - kq) }}>{kicker}</div> : null}
       <div style={{ fontSize: size, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.12, marginTop: size * 0.05, color: INK, maxWidth: 1500 }}>
         {parts(html).map((pt, j) => pt.text.split(/(\s+)/).map((w, wi) => /^\s+$/.test(w)
@@ -49,31 +49,13 @@ export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker
 
 export const Impact: React.FC<{ t: number }> = ({ t }) => {
   const D = TITLE_DROP;
-  // ── The three questions (end of the intro): each lands on a hit, the window recedes behind them ──
-  const Q = QUESTIONS;
-  const qOn = t >= Q.from - 0.1 && t < Q.to + 0.45;
-  const qOut = prog(t, Q.to, Q.to + 0.35);
   return (
     <div className="poppins" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       {/* the first drop: "Workflow Maps" in kinetic type, a pulse on the wall of sound, lifts away in the break */}
       <KineticTitle t={t} at={D.at} out={D.out} kicker="INTRODUCING" html={`Workflow <span class="grad-text">Maps</span>`} size={168} pulse={[D.wall]} />
       {/* the intro's statement cards (say), before each visual (show) */}
-      {INTRO_CARDS.map((c) => <KineticTitle key={c.a} t={t} at={c.a} out={c.b - 0.3} kicker="" html={c.html} size={92} />)}
-      {qOn ? (
-        <div style={{ position: "absolute", left: 150, top: 230, width: 1300, display: "flex", flexDirection: "column", gap: 34 }}>
-          <div style={{ fontSize: 22, fontWeight: 600, color: BLUE, letterSpacing: `${lerp(0.4, 0.12, prog(t, Q.from, Q.from + 0.5, easeOut)).toFixed(3)}em`, opacity: prog(t, Q.from - 0.1, Q.from + 0.3) * (1 - qOut) }}>{Q.kicker}</div>
-          {Q.lines.map((p) => {
-            const a = prog(t, p.at, p.at + 0.32, easeOut) * (1 - qOut);
-            const punch = t >= p.at && t < p.at + 0.3 ? 0.06 * Math.pow(1 - (t - p.at) / 0.3, 2) : 0;
-            return (
-              <div key={p.q} style={{ opacity: a, transform: `translateX(${(-40 * (1 - a)).toFixed(1)}px) scale(${(1 + punch).toFixed(3)})`, transformOrigin: "0 50%" }}>
-                <div style={{ fontSize: 70, fontWeight: 800, lineHeight: 1.05, color: INK, letterSpacing: "-0.02em" }}><span className="grad-text">{p.q}</span></div>
-                <div style={{ fontSize: 28, fontWeight: 500, color: "#475467", marginTop: 8, fontFamily: "Inter, sans-serif" }}>{p.line}</div>
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
+      {INTRO_CARDS.map((c) => <KineticTitle key={c.a} t={t} at={c.a} out={c.b - 0.3} kicker="" html={c.html} size={c.y ? 64 : 92} offsetY={c.y ?? 0} />)}
+
     </div>
   );
 };

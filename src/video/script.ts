@@ -33,7 +33,8 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-const APP: Footage = { file: "app-motion-v9.mp4" }; // one Claude Motion film for the whole app track, from 3.90 s
+export const APP_FILE = "app-motion-v13.mp4";
+const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
   { id: "02-list", label: "Problem: it grew, they connect, nobody can see it", start: 3.9, end: M.D1, footage: { ...APP, from: 3.9 - 3.9 } },
@@ -64,8 +65,7 @@ export const HEADLINES: { a: number; b: number; html: string; top: number; size:
 
 /** Captions centred above the window. */
 export const CAPTIONS: { a: number; b: number; html: string }[] = [
-  // the problem is told by INTRO_CARDS (statement first) and by callouts inside the app visuals (then show); one closing line here
-  { a: 52.3, b: M.D1 - 0.05, html: `What if you could <span class="grad-text">see it all?</span>` },
+  // the problem is told by INTRO_CARDS (statement first) and by callouts inside the app visuals (then show)
   // one map (after the title explodes and clears on the 17.67 s hit)
   { a: 56.42, b: 58.1, html: `Every workflow. Every asset. <span class="grad-text">One map.</span>` },
   // Plan: the structure, one bar each (19.43, 21.37, 23.31 s)
@@ -142,22 +142,16 @@ export const BURSTS = [
 ];
 /** The problem, "say, then show": a short statement over the receded window, then the visual on its own (its explanation is in
  * callouts inside the app footage). One card per idea; each sits on a bar line of the placeholder track. */
-export const INTRO_CARDS: { a: number; b: number; html: string }[] = [
+export const INTRO_CARDS: { a: number; b: number; html: string; depth?: number; y?: number }[] = [
   { a: 3.9, b: 5.75, html: `It started <span class="grad-text">simple.</span>` },
   { a: 13.56, b: 15.4, html: `Then workflows started <span class="grad-text">calling each other.</span>` },
   { a: 25.19, b: 27.0, html: `And one form can start <span class="grad-text">many workflows.</span>` },
   { a: 34.88, b: 36.75, html: `Now multiply that <span class="grad-text">by a hundred.</span>` },
   { a: 40.69, b: 42.55, html: `The only way to know? <span class="grad-text">Open every workflow.</span>` },
+  // the suspense before the reveal: over the chaos, then high above the map slowly forming in the window (light recede)
+  { a: 46.55, b: 48.8, html: `What if we could change <span class="grad-text">all of this…</span>` },
+  { a: 49.1, b: 52.65, html: `…and reimagine how you <span class="grad-text">see your workflows?</span>`, depth: 0.3, y: -330 },
 ];
-/** The three questions nobody can answer today (deck slide 7), each on a hit; the window recedes behind them. */
-export const QUESTIONS = {
-  from: 46.5, to: 51.95, kicker: "THREE QUESTIONS NOBODY CAN ANSWER TODAY",
-  lines: [
-    { at: 47.29, q: "What’s connected to what?", line: "One workflow quietly hands contacts to another." },
-    { at: 48.85, q: "What breaks if I change this?", line: "Edit a form, and nothing tells you which workflows it affects." },
-    { at: 50.8, q: "What fires from this one asset?", line: "One form submit can start four workflows." },
-  ],
-};
 /** Window jolts on the scramble's hits. */
 export const SHAKES = [43.05, 43.41, 43.89, 44.975, 45.595];
 
@@ -172,7 +166,7 @@ export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "
 export const TABS = {
   // one tab per workflow opened: the hand-off pair, then "open every workflow" on the hits; gone at the implosion
   times: [15.5, 19.4, 37.225, 37.845, 38.8, 39.54, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
-  b: 52.1,
+  b: 48.85,
   names: ["Program Payment Received", "Grant Course Access", "New Enquiry Form Submitted", "Create Opportunity from Enquiry", "Client Feedback Submitted", "wait for tag", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],
 }
 
@@ -225,24 +219,30 @@ export const STRUCTURE_OPENING = {
 // statement; then the visual plays on its own at `speed` until the next card. Everything above keeps its times; the
 // renderer maps the output time onto them with editTime(). The music under this part is a placeholder.
 // ─────────────────────────────────────────────────────────────────────────────
-export type FeatureCard = { at: number; kicker: string; html: string; speed?: number };
+/** `top`: the line sits above the window (the scene pauses briefly while it lands, then plays under it) instead of a full card. */
+/** `end`: play only to this timeline time, then cut to the next card. `panels`: instead of a card, a multi-panel shot
+ * (PANELS). `clip`: instead of a card, a stretch of film shown in the window ([from, to] film seconds; film = timeline − 3.9).
+ * `atOut`: this shot starts at that output (music) time; the play before it is stretched or squeezed to land there. */
+export type FeatureCard = { at: number; kicker: string; html: string; speed?: number; top?: boolean; end?: number; panels?: keyof typeof PANELS; clip?: [number, number]; atOut?: number };
 const g = (s: string) => `<span class="grad-text">${s}</span>`;
+/** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
+export const LINKS_DROP = 100.86;
 export const FEATURE_CARDS: FeatureCard[] = [
-  { at: 58.15, kicker: "HOW TO READ THE MAP", html: `Your folders become ${g("islands.")}` },
-  { at: 60.1, kicker: "HOW TO READ THE MAP", html: `Blue nodes are your ${g("workflows.")}` },
-  { at: 62.05, kicker: "HOW TO READ THE MAP", html: `Smaller nodes are the ${g("assets they use.")}` },
-  { at: 64.0, kicker: "HOW TO READ THE MAP", html: `Colour shows the ${g("asset type.")}` },
-  { at: 65.95, kicker: "HOW TO READ THE MAP", html: `Lines show ${g("what uses what.")}` },
+  { at: 58.15, kicker: "HOW TO READ THE MAP", html: `Your folders become ${g("islands.")}`, top: true },
+  { at: 60.1, kicker: "HOW TO READ THE MAP", html: `Blue nodes are your ${g("workflows.")}`, top: true },
+  { at: 62.05, kicker: "HOW TO READ THE MAP", html: `Smaller nodes are the ${g("assets they use.")}`, top: true },
+  { at: 64.0, kicker: "HOW TO READ THE MAP", html: `Colour shows the ${g("asset type.")}`, top: true, speed: 0.42 },
+  { at: 65.95, kicker: "HOW TO READ THE MAP", html: `Lines show ${g("what uses what.")}`, top: true },
   { at: 67.9, kicker: "PLAN IT", html: `Select a workflow. See what’s inside, ${g("down to the exact trigger.")}` },
-  { at: 72.3, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}` },
-  { at: 76.4, kicker: "PLAN IT", html: `Search anything. ${g("Fly straight to it.")}` },
-  { at: 80.1, kicker: "PLAN IT", html: `Filter to ${g("what matters.")}` },
-  { at: 83.9, kicker: "PLAN IT", html: `See how workflows ${g("hand off to each other.")}` },
-  { at: 102.55, kicker: "ORGANISE IT", html: `Find what you don’t use. ${g("Clean it up in bulk.")}` },
-  { at: 105.65, kicker: "ORGANISE IT", html: `Drag workflows and folders ${g("where they belong.")}` },
-  { at: 111.35, kicker: "ORGANISE IT", html: `Colour-code ${g("folders.")}` },
-  { at: 113.45, kicker: "ORGANISE IT", html: `Leave notes for your team. ${g("Builder notes show up too.")}` },
-  { at: 118.85, kicker: "ORGANISE IT", html: `Save once, everyone sees it. ${g("Save views to come back to.")}` },
+  { at: 72.3, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, end: 76.3 },
+  { at: 83.9, kicker: "PLAN IT", html: `See how workflows ${g("hand off to each other.")}`, end: 89.7 },
+  // on the second drop: zoomed out, every hand-off draws in (film scene "links"; its drop is 1.6 s in)
+  { at: 89.7, kicker: "PLAN IT", html: `Every hand-off, ${g("across your whole map.")}`, top: true, clip: [180.36, 185.86], atOut: LINKS_DROP - 1.6, end: 89.7 },
+  // search and filter, side by side; then the ORGANISE IT title (timeline 100.6–102.1)
+  { at: 100.6, kicker: "PLAN IT", html: `Find anything, ${g("fast.")}`, panels: "duo", end: 102.1 },
+  // Organise, shortened: one main move (drag workflows, then drop a folder into a folder), then the three-panel shot
+  { at: 105.65, kicker: "ORGANISE IT", html: `Move workflows and folders, ${g("right on the map.")}`, end: 111.25 },
+  { at: 121.95, kicker: "ORGANISE IT", html: `And keep it tidy, ${g("right on the map.")}`, panels: "trio" },
   { at: 124.05, kicker: "TROUBLESHOOT IT", html: `Pick any contact. See every workflow ${g("they’ve been in.")}` },
   { at: 129.15, kicker: "TROUBLESHOOT IT", html: `Every run, ${g("newest first.")}` },
   { at: 132.75, kicker: "TROUBLESHOOT IT", html: `Open any run. See the exact path, ${g("and the email Jordan got.")}` },
@@ -254,19 +254,49 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: 166.25, kicker: "ASSISTANT", html: `It answers on the map, ${g("down to what to fix first.")}`, speed: 1 },
 ];
 const PLAY_SPEED = 0.85;
+/** Multi-panel shots: each panel is a crop of the app footage (`src` in film seconds); labels and animations go one after
+ * another while all panels stay on screen. `crop` is [x, y, w, h] in window px; `size` is the panel's [w, h]. */
+export type PanelShot = { dur: number; size: [number, number]; outro?: { at: number; html: string }; panels: { at: number; label: string; src: [number, number]; crop: [number, number, number, number] }[] };
+export const PANELS: Record<"trio" | "duo", PanelShot> = {
+  trio: {
+    dur: 8.8, size: [600, 469],
+    outro: { at: 6.9, html: `All of it, ${g("right on the map.")}` },
+    panels: [
+      { at: 0.6, label: "Colour-code folders", src: [107.6, 109.5], crop: [560, 250, 620, 485] },
+      { at: 2.2, label: "Leave sticky notes", src: [109.5, 112.6], crop: [640, 200, 560, 438] },
+      { at: 3.8, label: "Rename workflows", src: [176.05, 178.9], crop: [590, 390, 440, 344] },
+    ],
+  },
+  duo: {
+    dur: 7.4, size: [900, 560],
+    panels: [
+      { at: 0.6, label: "Search anything, fly straight to it", src: [72.5, 76.2], crop: [0, 50, 1240, 772] },
+      { at: 2.8, label: "Filter to what matters", src: [76.2, 80.0], crop: [60, 40, 1240, 772] },
+    ],
+  },
+};
 /** How long a card holds: enough to read it (≈ 30 ms a character), 1.6–2.6 s. */
-const cardDur = (c: FeatureCard) => Math.min(2.6, Math.max(1.6, 1.0 + c.html.replace(/<[^>]+>/g, "").length * 0.03));
-/** The edit, in output time: a hold per card, then the visual at its speed. */
+const cardDur = (c: FeatureCard) => (c.panels ? PANELS[c.panels].dur : c.clip ? c.clip[1] - c.clip[0] : c.top ? 0.8 : Math.min(2.6, Math.max(1.6, 1.0 + c.html.replace(/<[^>]+>/g, "").length * 0.03)));
+type Seg = { n0: number; n1: number; hold: boolean; src: number; speed: number; card?: FeatureCard; until?: number; panels?: keyof typeof PANELS; clip?: [number, number] };
+/** The edit, in output time: a hold (card, panel shot or film clip) per entry, then the visual at its speed. */
 export const EDIT = (() => {
-  const out: { n0: number; n1: number; hold: boolean; src: number; speed: number; card?: FeatureCard }[] = [];
+  const out: Seg[] = [];
   let n = FEATURE_CARDS[0].at;
   FEATURE_CARDS.forEach((c, i) => {
+    if (c.atOut != null) {
+      // land this shot on its music moment: stretch (or squeeze) the play before it
+      const p = out[out.length - 1], span = (p.n1 - p.n0) * p.speed;
+      p.n1 = c.atOut; p.speed = span / (c.atOut - p.n0);
+      if (out[out.length - 2]?.until) out[out.length - 2].until = c.atOut;
+      n = c.atOut;
+    }
     const d = cardDur(c);
-    out.push({ n0: n, n1: n + d, hold: true, src: c.at, speed: 0, card: c });
+    out.push({ n0: n, n1: n + d, hold: true, src: c.at, speed: 0, card: c, panels: c.panels, clip: c.clip });
     n += d;
-    const next = i + 1 < FEATURE_CARDS.length ? FEATURE_CARDS[i + 1].at : M.END;
+    const next = c.end ?? (i + 1 < FEATURE_CARDS.length ? FEATURE_CARDS[i + 1].at : M.END);
     const sp = c.speed ?? PLAY_SPEED;
     out.push({ n0: n, n1: n + (next - c.at) / sp, hold: false, src: c.at, speed: sp });
+    out[out.length - 2].until = c.clip ? n : n + (next - c.at) / sp;   // a top line stays until the next card
     n += (next - c.at) / sp;
   });
   return out;
