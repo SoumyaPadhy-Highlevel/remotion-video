@@ -1,6 +1,6 @@
 import { Composition } from "remotion";
 import { WorkflowMapsVideo } from "./video/WorkflowMapsVideo";
-import { FPS, M } from "./video/script";
+import { EDIT_END, FPS } from "./video/script";
 import { StructureOpeningPreview } from "./video/StructureOpening";
 
 export const MyComposition = () => {
@@ -9,7 +9,7 @@ export const MyComposition = () => {
     <Composition
       id="WorkflowMaps"
       component={WorkflowMapsVideo}
-      durationInFrames={Math.round(M.END * FPS)}
+      durationInFrames={Math.round(EDIT_END * FPS)}
       fps={FPS}
       width={1920}
       height={1080}

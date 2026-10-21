@@ -65,13 +65,17 @@ export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
 };
 
 // ── Titles ───────────────────────────────────────────────────────────────────
+/** Chapter pills are off: the statement cards name each section. */
+const SHOW_CHAPTERS = false;
+
 export const Titles: React.FC<{ t: number }> = ({ t }) => {
   const logoO = t < 3.9 ? prog(t, 0.2, 0.8, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
   const pillO = t < 3.9 ? prog(t, 0.5, 1.0, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
 
   const hl = HEADLINES.find((h) => win(t, h.a, h.b, 0.5, 0.35) > 0);
-  const cap = CAPTIONS.find((c) => win(t, c.a, c.b, 0.3, 0.25) > 0);
-  const chap = CHAPTERS.find((c) => win(t, c.a, c.b, 0.3, 0.3) > 0);
+  // after the intro the statement cards carry the text (WorkflowMapsVideo), so no caption or chapter pill competes with the visuals
+  const cap = CAPTIONS.find((c) => c.a < M.D1 && win(t, c.a, c.b, 0.3, 0.25) > 0);
+  const chap = SHOW_CHAPTERS ? CHAPTERS.find((c) => win(t, c.a, c.b, 0.3, 0.3) > 0) : undefined;
   const card = TITLE_CARDS.find((c) => win(t, c.a, c.b, 0.18, 0.3) > 0);
   const buildOn = t >= M.B2 && t < M.D2;
   const lk = prog(t, M.LOGO, M.LOGO + 0.7, easeOutBack) * (1 - prog(t, M.END - 0.9, M.END));

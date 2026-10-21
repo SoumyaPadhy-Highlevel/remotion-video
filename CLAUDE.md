@@ -1,7 +1,10 @@
 # Workflow Maps demo video (Remotion)
 
-A 2:48 product video for HighLevel Workflow Maps on `public/music-long.mp3` ("And Still", uncut, with 12 bars added to the
-intro so the problem gets ~35 s before the drop at 38.77 s). Composition id: `WorkflowMaps` (1920×1080, 30 fps, 5049 frames).
+A 3:04 product video for HighLevel Workflow Maps on `public/music-intro2.mp3` ("And Still", uncut, with 20 placeholder bars
+added to the intro so the problem gets ~50 s before the drop at 54.27 s). Composition id: `WorkflowMaps` (1920×1080, 30 fps, 5514 frames).
+The intro is "say, then show": `INTRO_CARDS` (statements over the receded window), then the visual with callouts inside the footage.
+After the intro the output is an edit of that timeline: `FEATURE_CARDS` (script.ts) freeze the scene behind a statement, then the
+visual plays at 0.85× with no caption on top. All other times stay on the timeline; `editTime()` maps output time onto it (~4:14).
 The app window plays one Claude Motion film (`public/footage/app-motion-vN.mp4`, from 3.9 s); every beat uses `from = start − 3.9`.
 Give each re-render a new file name (browsers cache half-written files).
 
