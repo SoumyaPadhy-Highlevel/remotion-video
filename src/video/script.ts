@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v13.mp4";
+export const APP_FILE = "app-motion-v14.mp4";
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -144,7 +144,7 @@ export const BURSTS = [
  * callouts inside the app footage). One card per idea; each sits on a bar line of the placeholder track. */
 export const INTRO_CARDS: { a: number; b: number; html: string; depth?: number; y?: number }[] = [
   { a: 3.9, b: 5.75, html: `It started <span class="grad-text">simple.</span>` },
-  { a: 13.56, b: 15.4, html: `Then workflows started <span class="grad-text">calling each other.</span>` },
+  { a: 11.62, b: 13.35, html: `Then workflows started <span class="grad-text">calling each other.</span>` },
   { a: 25.19, b: 27.0, html: `And one form can start <span class="grad-text">many workflows.</span>` },
   { a: 34.88, b: 36.75, html: `Now multiply that <span class="grad-text">by a hundred.</span>` },
   { a: 40.69, b: 42.55, html: `The only way to know? <span class="grad-text">Open every workflow.</span>` },
@@ -165,7 +165,7 @@ export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "
 /** Browser tabs that pile up above the window ("tab hell"). */
 export const TABS = {
   // one tab per workflow opened: the hand-off pair, then "open every workflow" on the hits; gone at the implosion
-  times: [15.5, 19.4, 37.225, 37.845, 38.8, 39.54, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
+  times: [13.5, 19.4, 37.225, 37.845, 38.8, 39.54, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
   b: 48.85,
   names: ["Program Payment Received", "Grant Course Access", "New Enquiry Form Submitted", "Create Opportunity from Enquiry", "Client Feedback Submitted", "wait for tag", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],
 }
@@ -237,7 +237,7 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: 72.3, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, end: 76.3 },
   { at: 83.9, kicker: "PLAN IT", html: `See how workflows ${g("hand off to each other.")}`, end: 89.7 },
   // on the second drop: zoomed out, every hand-off draws in (film scene "links"; its drop is 1.6 s in)
-  { at: 89.7, kicker: "PLAN IT", html: `Every hand-off, ${g("across your whole map.")}`, top: true, clip: [180.36, 185.86], atOut: LINKS_DROP - 1.6, end: 89.7 },
+  { at: 89.7, kicker: "PLAN IT", html: `Follow every hand-off, ${g("workflow to workflow.")}`, top: true, clip: [180.36, 185.86], atOut: LINKS_DROP - 1.6, end: 89.7 },
   // search and filter, side by side; then the ORGANISE IT title (timeline 100.6–102.1)
   { at: 100.6, kicker: "PLAN IT", html: `Find anything, ${g("fast.")}`, panels: "duo", end: 102.1 },
   // Organise, shortened: one main move (drag workflows, then drop a folder into a folder), then the three-panel shot
@@ -256,15 +256,17 @@ export const FEATURE_CARDS: FeatureCard[] = [
 const PLAY_SPEED = 0.85;
 /** Multi-panel shots: each panel is a crop of the app footage (`src` in film seconds); labels and animations go one after
  * another while all panels stay on screen. `crop` is [x, y, w, h] in window px; `size` is the panel's [w, h]. */
-export type PanelShot = { dur: number; size: [number, number]; outro?: { at: number; html: string }; panels: { at: number; label: string; src: [number, number]; crop: [number, number, number, number] }[] };
+/** `clip`: play that entry of PANEL_CLIPS (cursor-less footage) instead of `src`; `cursor`: one cursor travels the panels in turn. */
+export type PanelShot = { dur: number; size: [number, number]; cursor?: boolean; outro?: { at: number; html: string }; panels: { at: number; label: string; src: [number, number]; crop: [number, number, number, number]; clip?: number }[] };
 export const PANELS: Record<"trio" | "duo", PanelShot> = {
+  // one cursor browses the three panels and does each action in turn (panel footage has no cursor of its own)
   trio: {
-    dur: 8.8, size: [600, 469],
-    outro: { at: 6.9, html: `All of it, ${g("right on the map.")}` },
+    dur: 10.6, size: [600, 469], cursor: true,
+    outro: { at: 9.2, html: `All of it, ${g("right on the map.")}` },
     panels: [
-      { at: 0.6, label: "Colour-code folders", src: [107.6, 109.5], crop: [560, 250, 620, 485] },
-      { at: 2.2, label: "Leave sticky notes", src: [109.5, 112.6], crop: [640, 200, 560, 438] },
-      { at: 3.8, label: "Rename workflows", src: [176.05, 178.9], crop: [590, 390, 440, 344] },
+      { at: 0.3, label: "Colour-code folders", src: [107.6, 109.5], crop: [560, 250, 620, 485], clip: 0 },
+      { at: 2.7, label: "Leave sticky notes", src: [109.5, 112.6], crop: [600, 270, 700, 547], clip: 1 },
+      { at: 6.3, label: "Rename workflows", src: [176.5, 178.9], crop: [590, 390, 440, 344], clip: 2 },
     ],
   },
   duo: {

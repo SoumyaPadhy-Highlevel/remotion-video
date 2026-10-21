@@ -121,7 +121,7 @@ export function mascotAt(t: number): MascotState {
     m.s = lerp(0.78, 0.42, k);
     m.r = lerp(0, -8, k);
     m.look = t < 13.5 ? [-6, 10 + Math.sin(t * 2) * 3] : [-14, -4];
-    if (t > 11.65 && t < 13.2) m.eyes = "wow";
+    if (t > 8.6 && t < 10.4) m.eyes = "wow";
     if (t > 20.0 && t < 23.2) m.eyes = "happy";
     if (t >= 23.3 && t < 25.1) {
       m.eyes = "squint";
