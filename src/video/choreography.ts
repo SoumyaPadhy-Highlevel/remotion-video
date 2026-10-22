@@ -27,7 +27,11 @@ export const ZOOMS: [number, number, number, number, number][] = [
   [163.3, 170.1, 1.12, 0, 300], // the Assistant's answer
 ]
 
-export function windowAt(t: number) {
+/** How far the window recedes behind a title right now (0–1, depth included). */
+export const recedeAt = (t: number) => RECEDES.reduce((m, [a, b, depth]) => Math.max(m, win(t, a, b, 0.45, 0.45) * depth), 0);
+
+/** `plate`: no receding behind titles (the editor's base layer keeps a clean still of the platform; the titles carry a wash). */
+export function windowAt(t: number, plate = false) {
   let o = 1;
   let ty = 0;
   let s = 1;
@@ -44,7 +48,7 @@ export function windowAt(t: number) {
   }
   if (t >= 11.65 && t < M.D1) s *= 1 + 0.025 * prog(t, 11.65, M.D1 - 0.1, easeIn);
   if (t >= M.D1 && t < M.D1 + 0.6) s *= 1 + 0.03 * (1 - prog(t, M.D1, M.D1 + 0.6, easeOut));
-  for (const [a, b, depth] of RECEDES) {
+  for (const [a, b, depth] of plate ? [] : RECEDES) {
     const k = win(t, a, b, 0.45, 0.45) * depth;
     s *= 1 - 0.12 * k;
     blur = Math.max(blur, 7 * k);

@@ -7,8 +7,8 @@ import { BEATS, FPS } from "./script";
 
 export const WINDOW = { left: 150, top: 118, width: 1620, height: 880 };
 
-export const AppWindow: React.FC<{ t: number }> = ({ t }) => {
-  const w = windowAt(t);
+export const AppWindow: React.FC<{ t: number; plate?: boolean }> = ({ t, plate }) => {
+  const w = windowAt(t, plate);
   return (
     <div style={{
       position: "absolute", left: WINDOW.left, top: WINDOW.top, width: WINDOW.width, height: WINDOW.height,

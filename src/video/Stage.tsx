@@ -70,6 +70,7 @@ export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
 // ── Titles ───────────────────────────────────────────────────────────────────
 /** Chapter pills are off: the statement cards name each section. */
 const SHOW_CHAPTERS = false;
+const SHOW_BUILD_LINES = false;
 
 export const Titles: React.FC<{ t: number }> = ({ t }) => {
   const logoO = t < 3.9 ? prog(t, 0.2, 0.8, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
@@ -80,7 +81,8 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
   const cap = CAPTIONS.find((c) => c.a < M.D1 && win(t, c.a, c.b, 0.3, 0.25) > 0);
   const chap = SHOW_CHAPTERS ? CHAPTERS.find((c) => win(t, c.a, c.b, 0.3, 0.3) > 0) : undefined;
   const card = TITLE_CARDS.find((c) => win(t, c.a, c.b, 0.18, 0.3) > 0);
-  const buildOn = t >= M.B2 && t < M.D2;
+  // the build lines sit in timeline 93–100.6, which the edit skips; only a faint ghost leaked into the panel shot's fade, so they're off
+  const buildOn = SHOW_BUILD_LINES && t >= M.B2 && t < M.D2;
   const lk = prog(t, M.LOGO, M.LOGO + 0.7, easeOutBack) * (1 - prog(t, M.END - 0.9, M.END));
 
   return (

@@ -26,7 +26,8 @@
     "dev": "remotion studio",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
-    "lint": "eslint src && tsc"
+    "lint": "eslint src && tsc",
+    "resolve:export": "esbuild scripts/resolve-export.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-export.cjs && node out/.resolve-export.cjs && python3 scripts/resolve_fcpxml.py"
   },
   "allowScripts": {
     "esbuild": false
