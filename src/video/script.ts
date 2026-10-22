@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v15.mp4";
+export const APP_FILE = "app-motion-v18.mp4";
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -131,7 +131,7 @@ export const TITLE_CARDS: { a: number; b: number; kicker: string; html: string }
 
 /** The first drop: "Workflow Maps" explodes on the drop (15.55 s, measured onset), kicks again on the wall of
  * sound (15.82 s) and clears in the break (17.14 s) so the map takes over on the 17.67 s hit. */
-export const TITLE_DROP = { at: 54.3, wall: 54.57, out: 55.89 };
+export const TITLE_DROP = { at: 54.3, wall: 54.57, out: 57.75 };   // held until the map build takes over (58.15)
 /** Particle bursts on the other big hits (measured onsets). */
 export const BURSTS = [
   { at: 100.86, x: 960, y: 540, n: 44, p: 760 },
@@ -146,7 +146,6 @@ export const INTRO_CARDS: { a: number; b: number; html: string; depth?: number; 
   { a: 3.9, b: 5.75, html: `It started <span class="grad-text">simple.</span>` },
   { a: 11.62, b: 13.35, html: `Then workflows started <span class="grad-text">calling each other.</span>` },
   { a: 25.19, b: 27.0, html: `And one form can start <span class="grad-text">many workflows.</span>` },
-  { a: 34.88, b: 36.75, html: `Now multiply that <span class="grad-text">by a hundred.</span>` },
   { a: 40.69, b: 42.55, html: `The only way to know? <span class="grad-text">Open every workflow.</span>` },
   // the suspense before the reveal: over the chaos, then high above the map slowly forming in the window (light recede)
   { a: 46.55, b: 48.8, html: `What if we could change <span class="grad-text">all of this…</span>` },
@@ -165,11 +164,11 @@ export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "
 /** Browser tabs that pile up above the window ("tab hell"). */
 export const TABS = {
   // one tab per workflow opened: the hand-off pair, then "open every workflow" on the hits; gone at the implosion
-  times: [13.5, 18.7, 37.225, 37.845, 38.8, 39.54, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
+  times: [13.5, 18.7, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
   b: 48.85,
   /** the hand-off: flipping back and forth between the two open workflows ([time, tab index]) */
   flips: [[22.0, 0], [22.75, 1], [23.5, 0], [24.25, 1]] as [number, number][],
-  names: ["Continue Client Journey", "Tag workflow", "New Enquiry Form Submitted", "Create Opportunity from Enquiry", "Client Feedback Submitted", "wait for tag", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],
+  names: ["Continue Client Journey", "Tag workflow", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],
 }
 
 /** Final lockup. */
@@ -225,16 +224,42 @@ export const STRUCTURE_OPENING = {
 /** `end`: play only to this timeline time, then cut to the next card. `panels`: instead of a card, a multi-panel shot
  * (PANELS). `clip`: instead of a card, a stretch of film shown in the window ([from, to] film seconds; film = timeline − 3.9).
  * `atOut`: this shot starts at that output (music) time; the play before it is stretched or squeezed to land there. */
-export type FeatureCard = { at: number; kicker: string; html: string; speed?: number; top?: boolean; end?: number; panels?: keyof typeof PANELS; clip?: [number, number]; atOut?: number };
+export type FeatureCard = { at: number; kicker: string; html: string; speed?: number; top?: boolean; build?: boolean; end?: number; panels?: keyof typeof PANELS; clip?: [number, number]; atOut?: number };
 const g = (s: string) => `<span class="grad-text">${s}</span>`;
+/** "How the map works" (timeline 58.15–67.65): the window shrinks to the right on a zoomed map while the left panel walks
+ * the steps, and each list item flies across and lands where its node appears in the film. Times are seconds from `at` and
+ * must match the film's map scene (BL / islAt there). World positions are the map's (shared-body.js). */
+export const BUILD = {
+  at: 58.15, end: 67.65, speed: 0.6,
+  win: { left: 680, top: 214, width: 1180 },
+  cams: [{ wx: 5.0, wz: 4.2, sx: 834, sy: 486, z: 0.62 }, { wx: 5.2, wz: 4.3, sx: 900, sy: 470, z: 0.86 }],
+  steps: [
+    { a: 0.6, label: "Folders become islands", head: "Workflows list · Home", count: "7 folders" },
+    { a: 2.95, label: "Workflows become blue nodes", head: "01 · Lead Capture", count: "5 workflows" },
+    { a: 5.75, label: "Assets become coloured nodes", head: "What Lead Capture’s workflows use", count: "" },
+  ],
+  done: 8.7, release: [8.95, 9.5] as [number, number],
+  // [step, name, land time, world x, y, z, colour, kind]
+  items: [
+    ...([["01 · Lead Capture", "#3b82f6", [0, 0, 10, 8]], ["02 · Consultation Booking", "#14b8a6", [11.5, 0, 18, 5.5]], ["03 · Sales Pipeline", "#a855f7", [0, -7.5, 8, -1.5]],
+      ["04 · Client Onboarding & Learning", "#22c55e", [9.5, -7, 17.5, -1.5]], ["05 · Retention & Feedback", "#f97316", [-7.5, 0, -1.5, 6]],
+      ["07 · Contact Segmentation", "#06b6d4", [0, 9.5, 7, 15]], ["08 · Tag-Based Routing", "#f43f5e", [-7, 7.5, -1.5, 13]]] as [string, string, number[]][])
+      .map(([n, c, r], i) => ({ step: 0, name: n, land: 1.25 + 0.28 * i, x: (r[0] + r[2]) / 2, y: 0, z: (r[1] + r[3]) / 2, color: c, kind: "folder" })),
+    ...([["Program Application Submitted", 3.95, 5.2, 3.6], ["Tag New Enquiries", 4.25, 8.5, 6.3], ["New Enquiry Form Submitted", 4.55, 1.8, 6.2],
+      ["Program Payment Received", 4.85, 8.3, 1.3], ["Training Video Engagement", 5.15, 1.9, 1.4]] as [string, number, number, number][])
+      .map(([n, l, x, z]) => ({ step: 1, name: n, land: l, x, y: 0.45, z, color: "#2455d6", kind: "workflow" })),
+    // assets, grouped under the workflow that uses them (staging: Tag New Enquiries uses the follow-up tag and the Coaching
+    // Enquiry form); tag first, then form, then funnel
+    ...([["follow-up", "Tag", "#a855f7", 6.75, 9.3, 4.3, "Tag New Enquiries"], ["Coaching Enquiry", "Form", "#14b8a6", 7.35, 6.2, 5.2, "Tag New Enquiries"],
+      ["Coaching Program Application", "Funnel", "#f97316", 7.95, 7.5, 3.9, "Program Application Submitted"]] as [string, string, string, number, number, number, string][])
+      .map(([n, k, c, l, x, z, w]) => ({ step: 2, name: n, land: l, x, y: 0.25, z, color: c, kind: k, group: w })),
+  ],
+};
 /** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
 export const LINKS_DROP = 100.86;
 export const FEATURE_CARDS: FeatureCard[] = [
-  { at: 58.15, kicker: "HOW TO READ THE MAP", html: `Your folders become ${g("islands.")}`, top: true },
-  { at: 60.1, kicker: "HOW TO READ THE MAP", html: `Blue nodes are your ${g("workflows.")}`, top: true },
-  { at: 62.05, kicker: "HOW TO READ THE MAP", html: `Smaller nodes are the ${g("assets they use.")}`, top: true },
-  { at: 64.0, kicker: "HOW TO READ THE MAP", html: `Colour shows the ${g("asset type.")}`, top: true, speed: 0.42 },
-  { at: 65.95, kicker: "HOW TO READ THE MAP", html: `Lines show ${g("what uses what.")}`, top: true },
+  // how the map works: the list is built into the map beside a shrunk window (BUILD; film scene "map"), no card
+  { at: BUILD.at, kicker: "HOW THE MAP WORKS", html: "", build: true, speed: BUILD.speed, end: BUILD.end + 0.25 },
   { at: 67.9, kicker: "PLAN IT", html: `Select a workflow. See what’s inside, ${g("down to the exact trigger.")}` },
   { at: 72.3, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, end: 76.3 },
   { at: 83.9, kicker: "PLAN IT", html: `See how workflows ${g("hand off to each other.")}`, end: 89.7 },
@@ -280,7 +305,7 @@ export const PANELS: Record<"trio" | "duo", PanelShot> = {
   },
 };
 /** How long a card holds: enough to read it (≈ 30 ms a character), 1.6–2.6 s. */
-const cardDur = (c: FeatureCard) => (c.panels ? PANELS[c.panels].dur : c.clip ? c.clip[1] - c.clip[0] : c.top ? 0.8 : Math.min(2.6, Math.max(1.6, 1.0 + c.html.replace(/<[^>]+>/g, "").length * 0.03)));
+const cardDur = (c: FeatureCard) => (c.build ? 0 : c.panels ? PANELS[c.panels].dur : c.clip ? c.clip[1] - c.clip[0] : c.top ? 0.8 : Math.min(2.6, Math.max(1.6, 1.0 + c.html.replace(/<[^>]+>/g, "").length * 0.03)));
 type Seg = { n0: number; n1: number; hold: boolean; src: number; speed: number; card?: FeatureCard; until?: number; panels?: keyof typeof PANELS; clip?: [number, number] };
 /** The edit, in output time: a hold (card, panel shot or film clip) per entry, then the visual at its speed. */
 export const EDIT = (() => {
@@ -306,6 +331,13 @@ export const EDIT = (() => {
   return out;
 })();
 export const EDIT_END = EDIT[EDIT.length - 1].n1;
+/** Cut from the intro (timeline = music time here): "Now multiply that by a hundred" and its grid, exactly 3 bars, so the
+ * music is cut by the same 3 bars and everything after stays on its beat. Output time before the cut is unchanged; after
+ * it, output = music time − CUT_LEN. `tn` everywhere else in the code is the uncut ("music") output time. */
+export const INTRO_CUT: [number, number] = [34.88, 40.69];
+export const CUT_LEN = INTRO_CUT[1] - INTRO_CUT[0];
+export const uncut = (out: number) => (out < INTRO_CUT[0] ? out : out + CUT_LEN);
+export const VIDEO_END = EDIT_END - CUT_LEN;
 /** Output time → timeline time (and the card being held, if any). */
 export const editTime = (tn: number): { t: number; seg?: (typeof EDIT)[number] } => {
   if (tn < EDIT[0].n0) return { t: tn };

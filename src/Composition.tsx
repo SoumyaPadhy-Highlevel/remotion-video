@@ -1,7 +1,8 @@
 import { Composition } from "remotion";
 import { WorkflowMapsVideo } from "./video/WorkflowMapsVideo";
-import { EDIT_END, FPS } from "./video/script";
+import { FPS, VIDEO_END } from "./video/script";
 import { StructureOpeningPreview } from "./video/StructureOpening";
+import { MapBuildMock } from "./video/MapBuildMock";
 
 export const MyComposition = () => {
   return (
@@ -9,7 +10,7 @@ export const MyComposition = () => {
     <Composition
       id="WorkflowMaps"
       component={WorkflowMapsVideo}
-      durationInFrames={Math.round(EDIT_END * FPS)}
+      durationInFrames={Math.round(VIDEO_END * FPS)}
       fps={FPS}
       width={1920}
       height={1080}
@@ -22,6 +23,7 @@ export const MyComposition = () => {
       width={1920}
       height={1080}
     />
+    <Composition id="MapBuild-Mock" component={MapBuildMock} durationInFrames={1} fps={30} width={1920} height={1080} />
     </>
   );
 };
