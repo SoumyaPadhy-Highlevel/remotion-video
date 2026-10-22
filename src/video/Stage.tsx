@@ -47,13 +47,16 @@ export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
   const n = t < TABS.b ? TABS.times.filter((x) => t >= x).length : 0;
   const pop = n ? Math.min(1, (t - TABS.times[n - 1]) / 0.12) : 1;
   if (!n) return null;
+  // the active tab: the last one opened, unless a later flip switched back to an earlier one
+  let active = n - 1;
+  TABS.flips.forEach(([at, i]) => { if (t >= at && at >= TABS.times[n - 1] && i < n) active = i; });
   return (
     <div style={{ position: "absolute", left: 150, top: 70, width: 1620, height: 48, display: "flex", alignItems: "flex-end", gap: 2, paddingLeft: 10, boxSizing: "border-box" }}>
       {TABS.names.slice(0, n).map((name, i) => (
         <div key={name} style={{
           display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontSize: 12, fontWeight: 500, color: "#344054",
           overflow: "hidden", whiteSpace: "nowrap", height: 38, borderRadius: "10px 10px 0 0",
-          background: i === n - 1 ? "#fff" : "#E4ECF7", boxShadow: "0 -1px 0 rgba(16,24,40,.06)", flex: "1 1 0", minWidth: 0, maxWidth: 220,
+          background: i === active ? "#fff" : "#E4ECF7", boxShadow: "0 -1px 0 rgba(16,24,40,.06)", flex: "1 1 0", minWidth: 0, maxWidth: 220,
           transform: i === n - 1 ? `translateY(${(1 - pop) * 14}px)` : undefined, opacity: i === n - 1 ? pop : 1,
         }}>
           <WorkflowIcon size={14} color={BLUE} />

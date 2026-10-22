@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v14.mp4";
+export const APP_FILE = "app-motion-v15.mp4";
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -165,9 +165,11 @@ export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "
 /** Browser tabs that pile up above the window ("tab hell"). */
 export const TABS = {
   // one tab per workflow opened: the hand-off pair, then "open every workflow" on the hits; gone at the implosion
-  times: [13.5, 19.4, 37.225, 37.845, 38.8, 39.54, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
+  times: [13.5, 18.7, 37.225, 37.845, 38.8, 39.54, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
   b: 48.85,
-  names: ["Program Payment Received", "Grant Course Access", "New Enquiry Form Submitted", "Create Opportunity from Enquiry", "Client Feedback Submitted", "wait for tag", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],
+  /** the hand-off: flipping back and forth between the two open workflows ([time, tab index]) */
+  flips: [[22.0, 0], [22.75, 1], [23.5, 0], [24.25, 1]] as [number, number][],
+  names: ["Continue Client Journey", "Tag workflow", "New Enquiry Form Submitted", "Create Opportunity from Enquiry", "Client Feedback Submitted", "wait for tag", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],
 }
 
 /** Final lockup. */
@@ -237,7 +239,7 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: 72.3, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, end: 76.3 },
   { at: 83.9, kicker: "PLAN IT", html: `See how workflows ${g("hand off to each other.")}`, end: 89.7 },
   // on the second drop: zoomed out, every hand-off draws in (film scene "links"; its drop is 1.6 s in)
-  { at: 89.7, kicker: "PLAN IT", html: `Follow every hand-off, ${g("workflow to workflow.")}`, top: true, clip: [180.36, 185.86], atOut: LINKS_DROP - 1.6, end: 89.7 },
+  { at: 89.7, kicker: "PLAN IT", html: `All your interconnected workflows, ${g("visualized.")}`, top: true, clip: [180.36, 185.86], atOut: LINKS_DROP - 1.6, end: 89.7 },
   // search and filter, side by side; then the ORGANISE IT title (timeline 100.6–102.1)
   { at: 100.6, kicker: "PLAN IT", html: `Find anything, ${g("fast.")}`, panels: "duo", end: 102.1 },
   // Organise, shortened: one main move (drag workflows, then drop a folder into a folder), then the three-panel shot
