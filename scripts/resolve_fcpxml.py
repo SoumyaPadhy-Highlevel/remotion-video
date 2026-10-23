@@ -7,58 +7,24 @@ Tracks: V1 base (cut per section) · V2 panel + client message · V3 titles, one
 section) · V5 flashes · V6 editable text (Resolve text clips, same words and times, disabled) · A1 music (cut per section).
 Needs Pillow. Usage: python3 scripts/resolve_fcpxml.py [out/resolve]
 """
-import csv, json, os, subprocess, sys, tempfile, urllib.parse
+import csv, json, os, sys, urllib.parse
 from xml.sax.saxutils import escape
-from PIL import Image
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from resolve_common import activity as _activity, place as _place, runs
 
 OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else "out/resolve")
 MEDIA = os.path.join(OUT, "media")
 S = json.load(open(os.path.join(OUT, ".script.json")))
 FPS, END = S["fps"], S["end"]
-FFMPEG = os.path.join(os.path.dirname(__file__), "..", "node_modules", ".bin", "remotion")
 
 FILES = {"base": "01-base.mp4", "panel": "03-panel-message.mov", "titles": "02-titles.mov", "mascot": "04-mascot.mov", "flash": "05-flash.mov", "music": "06-music-edit.wav"}
 
 
 def activity(name):
-    """Per-frame visible amount (sum of alpha on a 64×36 thumbnail) of an alpha pass."""
-    with tempfile.TemporaryDirectory() as d:
-        subprocess.run([FFMPEG, "ffmpeg", "-y", "-loglevel", "error", "-i", os.path.join(MEDIA, FILES[name]), "-vf", "scale=64:36",
-                        "-pix_fmt", "rgba", "-f", "image2", "-c:v", "png", os.path.join(d, "a%05d.png")], check=True)
-        n = len(os.listdir(d))
-        return [sum(Image.open(os.path.join(d, "a%05d.png" % (i + 1))).getchannel("A").getdata()) for i in range(n)]
+    return _activity(os.path.join(MEDIA, FILES[name]))
 
 
-def runs(act, lo, hi, thr=300):
-    """Active stretches [f0, f1) inside [lo, hi)."""
-    out, f0 = [], None
-    for f in range(max(0, lo), min(hi, len(act))):
-        on = act[f] > thr
-        if on and f0 is None: f0 = f
-        if not on and f0 is not None: out.append([f0, f]); f0 = None
-    if f0 is not None: out.append([f0, min(hi, len(act))])
-    return out
-
-
-def place(items, act, kind):
-    """Snap each scripted item to the frames its pass actually shows it; leftovers become their own clips."""
-    clips, last = [], 0
-    for i, it in enumerate(items):
-        a, b = round(it["a"] * FPS), round(it["b"] * FPS)
-        nxt = round(items[i + 1]["a"] * FPS) if i + 1 < len(items) else END
-        r = runs(act, max(last, a - 20), min(max(b + 40, a + 1), nxt + 6, END))
-        if not r: print(f"  ! {kind}: nothing visible for {it['name']} ({a / FPS:.2f}–{b / FPS:.2f} s)"); continue
-        f0, f1 = max(last, r[0][0] - 1), min(END, r[-1][1] + 1)
-        clips.append(dict(it, f0=f0, f1=f1)); last = f1
-    covered = [False] * END
-    for c in clips:
-        for f in range(c["f0"], c["f1"]): covered[f] = True
-    for f0, f1 in runs(act, 0, END):
-        free = [f for f in range(f0, f1) if not covered[f]]
-        if len(free) > 3:
-            print(f"  + {kind}: unscripted overlay {free[0] / FPS:.2f}–{(free[-1] + 1) / FPS:.2f} s")
-            clips.append({"name": f"{kind} · overlay", "kind": kind, "text": "", "f0": free[0], "f1": free[-1] + 1})
-    return sorted(clips, key=lambda c: c["f0"])
+place = lambda items, act, kind: _place(items, act, kind, FPS, END)
 
 
 print("reading alpha: titles, panel, flash…")
@@ -108,7 +74,7 @@ for f, v in S["markers"] + [[c["f0"], f'{c["kind"]}: {c["text"]}'] for c in T if
     marks[home(f)].append(f'<marker start="{tc(f)}" duration="{tc(1)}" value="{escape(v[:120])}"/>')
 spine = []
 for i, s in enumerate(secs):
-    inner = "".join("\n          " + x for x in marks[i] + kids[i])
+    inner = "".join("\n          " + x for x in kids[i] + marks[i])   # anchored clips, then markers (FCPXML order)
     spine.append(f'        <asset-clip ref="{ID["base"]}" name="{escape(s["name"])}" offset="{tc(s["f0"])}" start="{tc(s["f0"])}" duration="{tc(s["f1"] - s["f0"])}">{inner}\n        </asset-clip>')
 xml = f'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE fcpxml>

@@ -25,6 +25,6 @@ export function loadFonts() {
 }
 
 export const GLOBAL_CSS = `
-.poppins { font-family: Poppins, Inter, sans-serif; }
-.grad-text { background: linear-gradient(90deg, #155EEF 0%, #2E90FA 60%, #22CCEE 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.poppins { font-family: var(--font-head, Poppins), Inter, sans-serif; }
+.grad-text { background: linear-gradient(90deg, var(--grad-a, #155EEF) 0%, var(--grad-b, #2E90FA) 60%, var(--grad-c, #22CCEE) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 `;

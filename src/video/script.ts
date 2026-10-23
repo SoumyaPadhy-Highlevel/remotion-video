@@ -338,6 +338,15 @@ export const INTRO_CUT: [number, number] = [34.88, 40.69];
 export const CUT_LEN = INTRO_CUT[1] - INTRO_CUT[0];
 export const uncut = (out: number) => (out < INTRO_CUT[0] ? out : out + CUT_LEN);
 export const VIDEO_END = EDIT_END - CUT_LEN;
+/** Music: "Percussion Drums" by Infraction (no-copyright) under the intro, then the original track (music-full.mp3, 145.08 s,
+ * uncut) placed so its first drop (15.52 s into it) lands on the video's drop: it starts at output 38.75 − CUT_LEN = 32.94 s.
+ * The two cross-fade over `xfade` (output seconds), inside the original's own build-up. Before the original's outro it
+ * loops back to its drop on a bar line (`loopAfter`). The video's drops and markers stay where they were (same alignment as music-intro2). */
+export const MUSIC = {
+  intro: "music-percussion.mp3", main: "music-full.mp3", mainAt: 38.75 - CUT_LEN, xfade: [40.6, 44.6] as [number, number],
+  /** the original fades out from ~140 s; 64 bars after its drop (139.52 s in) it jumps back to the drop (15.52 s) and carries on */
+  drop: 15.52, loopAfter: 15.52 + 64 * 1.9375,
+};
 /** Output time → timeline time (and the card being held, if any). */
 export const editTime = (tn: number): { t: number; seg?: (typeof EDIT)[number] } => {
   if (tn < EDIT[0].n0) return { t: tn };

@@ -5,9 +5,10 @@ import React from "react";
 import { clamp, easeInOut, easeOut, prog } from "./anim";
 import { WINDOW } from "./AppWindow";
 import { BUILD } from "./script";
+import { md, useCfg } from "./config";
 
-const INK = "#0B1B3A";
-const BLUE = "#155EEF";
+const INK = "var(--ink, #0B1B3A)";
+const BLUE = "var(--accent, #155EEF)";
 const S = BUILD.win.width / WINDOW.width;
 
 /** Window split (0 = normal, 1 = shrunk right), on timeline time. */
@@ -81,7 +82,10 @@ const cardRows = (k: number) => {
 };
 const cardH = (k: number) => cardRows(k).h;
 
-export const BuildOverlay: React.FC<{ t: number }> = ({ t }) => {
+/** `part` (editor export): "panel" = the left panel only, a number = that one flying item only; default both. */
+export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number }> = ({ t, part = "all" }) => {
+  const { text, show } = useCfg(), T = text.mapBuild;
+  const stepText = [[T.step1, T.step1List, T.step1Count], [T.step2, T.step2List, T.step2Count], [T.step3, T.step3List, T.step3Count]];
   const b = t - BUILD.at;
   if (b < 0 || b > BUILD.release[1] + 0.05) return null;
   const panelIn = prog(b, 0.45, 0.95, easeOut), panelOut = prog(b, BUILD.release[0] - 0.1, BUILD.release[1] - 0.1, easeInOut);
@@ -102,13 +106,12 @@ export const BuildOverlay: React.FC<{ t: number }> = ({ t }) => {
   };
   return (
     <div style={{ position: "absolute", inset: 0, pointerEvents: "none", fontFamily: "Inter, sans-serif" }}>
-      <div style={{ position: "absolute", inset: 0, opacity: po, transform: `translateX(${(-40 * (1 - panelIn) - 60 * panelOut).toFixed(1)}px)` }}>
+      {(part === "all" || part === "panel") && show.mapBuildPanel ? <div style={{ position: "absolute", inset: 0, opacity: po, transform: `translateX(${(-40 * (1 - panelIn) - 60 * panelOut).toFixed(1)}px)` }}>
         <div style={{ position: "absolute", left: PANEL.left, top: PANEL.top, display: "flex", alignItems: "center", gap: 14, fontSize: 18, fontWeight: 600, letterSpacing: 3, color: BLUE }}>
-          <span style={{ width: 44, height: 2, background: BLUE, opacity: 0.6 }} />HOW THE MAP WORKS
+          <span style={{ width: 44, height: 2, background: BLUE, opacity: 0.6 }} />{T.kicker}
         </div>
-        <div className="poppins" style={{ position: "absolute", left: PANEL.left, top: PANEL.top + 40, fontSize: 54, lineHeight: 1.06, fontWeight: 700, color: INK, letterSpacing: -1.5 }}>
-          Your list,<br /><span className="grad-text">drawn as a map.</span>
-        </div>
+        <div className="poppins" style={{ position: "absolute", left: PANEL.left, top: PANEL.top + 40, fontSize: 54, lineHeight: 1.06, fontWeight: 700, color: INK, letterSpacing: -1.5 }}
+          dangerouslySetInnerHTML={{ __html: md(T.headline) }} />
         {BUILD.steps.map((s, j) => {
           const state = allDone || j < st ? "done" : j === st && b >= s.a - 0.6 ? "active" : "next";
           const pill = j === st && !allDone ? prog(b, s.a - 0.05, s.a + 0.3, easeOut) : 0;
@@ -120,7 +123,7 @@ export const BuildOverlay: React.FC<{ t: number }> = ({ t }) => {
                 )}
               </div>
               <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 1.5, color: state === "active" ? BLUE : "#98A2B3", width: 26 }}>0{j + 1}</span>
-              <span style={{ fontSize: 24 + 3 * pill, fontWeight: pill > 0.5 ? 600 : 500, color: state === "active" ? INK : allDone ? "#475467" : "#98A2B3" }}>{s.label}</span>
+              <span style={{ fontSize: 24 + 3 * pill, fontWeight: pill > 0.5 ? 600 : 500, color: state === "active" ? INK : allDone ? "#475467" : "#98A2B3" }}>{stepText[j][0]}</span>
             </div>
           );
         })}
@@ -131,7 +134,7 @@ export const BuildOverlay: React.FC<{ t: number }> = ({ t }) => {
           }}>
             <div style={{ height: HEAD_H, display: "flex", alignItems: "center", gap: 8, padding: "0 14px", fontSize: 14, color: "#475467", background: "#F9FAFB" }}>
               {k === 0 ? null : k === 2 ? <Node s={18} /> : <Folder c="#3B82F6" />}
-              <span style={{ fontWeight: 600, color: "#101828" }}>{BUILD.steps[k].head}</span><span style={{ marginLeft: "auto" }}>{BUILD.steps[k].count}</span>
+              <span style={{ fontWeight: 600, color: "#101828" }}>{stepText[k][1]}</span><span style={{ marginLeft: "auto" }}>{stepText[k][2]}</span>
             </div>
             {cardRows(k).out.map((r) => {
               if (!("it" in r)) return (
@@ -155,9 +158,10 @@ export const BuildOverlay: React.FC<{ t: number }> = ({ t }) => {
             })}
           </div>
         ))}
-      </div>
+      </div> : null}
       {/* flights: lift out of the row, arc across, shrink into the node, and a ring where it lands */}
       {BUILD.items.map((it, i) => {
+        if ((part !== "all" && part !== i) || !show.flights) return null;
         const t0 = it.land - FLY, u = (b - t0) / FLY;
         if (u < -0.05 || u > 1.6) return null;
         const [x0, y0] = rowCenter(it as Item), [x1, y1] = target(it);

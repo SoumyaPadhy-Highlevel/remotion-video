@@ -12,7 +12,8 @@
     "@remotion/cli": "4.0.537",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "remotion": "4.0.537"
+    "remotion": "4.0.537",
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.537",
@@ -27,7 +28,8 @@
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
-    "resolve:export": "esbuild scripts/resolve-export.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-export.cjs && node out/.resolve-export.cjs && python3 scripts/resolve_fcpxml.py"
+    "resolve:export": "esbuild scripts/resolve-export.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-export.cjs && node out/.resolve-export.cjs && python3 scripts/resolve_fcpxml.py",
+    "resolve:dissect": "esbuild scripts/resolve-export.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-export.cjs && node out/.resolve-export.cjs out/resolve-dissect && esbuild scripts/resolve-dissect.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-dissect.cjs && node out/.resolve-dissect.cjs && python3 scripts/resolve_dissect.py"
   },
   "allowScripts": {
     "esbuild": false

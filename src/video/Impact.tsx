@@ -3,9 +3,10 @@
 import React from "react";
 import { clamp, lerp } from "./anim";
 import { INTRO_CARDS, M, TITLE_DROP } from "./script";
+import { introCardHtml, md, useCfg } from "./config";
 
-const INK = "#0B1B3A";
-const BLUE = "#155EEF";
+const INK = "var(--ink, #0B1B3A)";
+const BLUE = "var(--accent, #155EEF)";
 /** Splits `Plain <span class="grad-text">Accent</span>` into parts. */
 const parts = (html: string) => {
   const out: { text: string; accent: boolean }[] = [];
@@ -48,13 +49,13 @@ export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker
 };
 
 export const Impact: React.FC<{ t: number }> = ({ t }) => {
-  const D = TITLE_DROP;
+  const D = TITLE_DROP, cfg = useCfg(), { text, show, style } = cfg;
   return (
     <div className="poppins" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       {/* the first drop: "Workflow Maps" in kinetic type, a pulse on the wall of sound, lifts away in the break */}
-      <KineticTitle t={t} at={D.at} out={D.out} kicker="INTRODUCING" html={`Workflow <span class="grad-text">Maps</span>`} size={168} pulse={[D.wall]} />
+      {show.titleDrop ? <KineticTitle t={t} at={D.at} out={D.out} kicker={text.titleDrop.kicker} html={md(text.titleDrop.title)} size={style.sizes.titleDrop} pulse={[D.wall]} /> : null}
       {/* the intro's statement cards (say), before each visual (show) */}
-      {INTRO_CARDS.map((c) => <KineticTitle key={c.a} t={t} at={c.a} out={c.b - 0.3} kicker="" html={c.html} size={c.y ? 64 : 92} offsetY={c.y ?? 0} />)}
+      {show.introCards && INTRO_CARDS.map((c, i) => <KineticTitle key={c.a} t={t} at={c.a} out={c.b - 0.3} kicker="" html={introCardHtml(cfg, i)} size={c.y ? style.sizes.introCardRaised : style.sizes.introCard} offsetY={c.y ?? 0} />)}
 
     </div>
   );

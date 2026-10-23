@@ -3,10 +3,11 @@ import React from "react";
 import { Img, staticFile } from "remotion";
 import { easeIn, easeOut, easeOutBack, prog, win } from "./anim";
 import { KineticTitle } from "./Impact";
-import { BUILD_LINES, BUILD_LINES_START, CAPTIONS, CHAPTERS, FLASHES, HEADLINES, LOCKUP, M, MESSAGE, TABS, TITLE_CARDS, WALLS } from "./script";
+import { cardText, md, useCfg } from "./config";
+import { BUILD_LINES, BUILD_LINES_START, CAPTIONS, CHAPTERS, FLASHES, HEADLINES, M, MESSAGE, TABS, TITLE_CARDS, WALLS } from "./script";
 
-const INK = "#0B1B3A";
-const BLUE = "#155EEF";
+const INK = "var(--ink, #0B1B3A)";
+const BLUE = "var(--accent, #155EEF)";
 const hidden = (o: number): React.CSSProperties => ({ opacity: o, visibility: o <= 0.001 ? "hidden" : "visible" });
 const html = (h: string) => ({ __html: h });
 
@@ -44,7 +45,8 @@ const WorkflowIcon: React.FC<{ size: number; color: string }> = ({ size, color }
 );
 
 export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
-  const n = t < TABS.b ? TABS.times.filter((x) => t >= x).length : 0;
+  const { text, show } = useCfg();
+  const n = show.browserTabs && t < TABS.b ? TABS.times.filter((x) => t >= x).length : 0;
   const pop = n ? Math.min(1, (t - TABS.times[n - 1]) / 0.12) : 1;
   if (!n) return null;
   // the active tab: the last one opened, unless a later flip switched back to an earlier one
@@ -52,8 +54,8 @@ export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
   TABS.flips.forEach(([at, i]) => { if (t >= at && at >= TABS.times[n - 1] && i < n) active = i; });
   return (
     <div style={{ position: "absolute", left: 150, top: 70, width: 1620, height: 48, display: "flex", alignItems: "flex-end", gap: 2, paddingLeft: 10, boxSizing: "border-box" }}>
-      {TABS.names.slice(0, n).map((name, i) => (
-        <div key={name} style={{
+      {TABS.names.slice(0, n).map((_, i) => text.browserTabs[i] ?? TABS.names[i]).map((name, i) => (
+        <div key={i} style={{
           display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontSize: 12, fontWeight: 500, color: "#344054",
           overflow: "hidden", whiteSpace: "nowrap", height: 38, borderRadius: "10px 10px 0 0",
           background: i === active ? "#fff" : "#E4ECF7", boxShadow: "0 -1px 0 rgba(16,24,40,.06)", flex: "1 1 0", minWidth: 0, maxWidth: 220,
@@ -73,27 +75,30 @@ const SHOW_CHAPTERS = false;
 const SHOW_BUILD_LINES = false;
 
 export const Titles: React.FC<{ t: number }> = ({ t }) => {
-  const logoO = t < 3.9 ? prog(t, 0.2, 0.8, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
-  const pillO = t < 3.9 ? prog(t, 0.5, 1.0, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
+  const cfg = useCfg(), { text, show, style } = cfg;
+  const logoO = show.opening && t < 3.9 ? prog(t, 0.2, 0.8, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
+  const pillO = show.opening && t < 3.9 ? prog(t, 0.5, 1.0, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
 
-  const hl = HEADLINES.find((h) => win(t, h.a, h.b, 0.5, 0.35) > 0);
+  // the two headlines: the opening one and "And when something breaks?", each with its own text and switch
+  const hi = HEADLINES.findIndex((h, i) => (i === 0 ? show.opening : show.breaksHeadline) && win(t, h.a, h.b, 0.5, 0.35) > 0);
+  const hl = hi >= 0 ? { ...HEADLINES[hi], html: md(hi === 0 ? text.opening.headline : text.breaksHeadline) } : undefined;
   // after the intro the statement cards carry the text (WorkflowMapsVideo), so no caption or chapter pill competes with the visuals
   const cap = CAPTIONS.find((c) => c.a < M.D1 && win(t, c.a, c.b, 0.3, 0.25) > 0);
   const chap = SHOW_CHAPTERS ? CHAPTERS.find((c) => win(t, c.a, c.b, 0.3, 0.3) > 0) : undefined;
-  const card = TITLE_CARDS.find((c) => win(t, c.a, c.b, 0.18, 0.3) > 0);
+  const card = show.titleCards ? TITLE_CARDS.find((c) => win(t, c.a, c.b, 0.18, 0.3) > 0) : undefined;
   // the build lines sit in timeline 93–100.6, which the edit skips; only a faint ghost leaked into the panel shot's fade, so they're off
   const buildOn = SHOW_BUILD_LINES && t >= M.B2 && t < M.D2;
-  const lk = prog(t, M.LOGO, M.LOGO + 0.7, easeOutBack) * (1 - prog(t, M.END - 0.9, M.END));
+  const lk = show.lockup ? prog(t, M.LOGO, M.LOGO + 0.7, easeOutBack) * (1 - prog(t, M.END - 0.9, M.END)) : 0;
 
   return (
     <div className="poppins" style={{ position: "absolute", inset: 0, color: INK }}>
       {/* Opening brand */}
       <Img src={staticFile("brand/highlevel-logo-dark.png")} style={{ position: "absolute", left: 110, top: 78, height: 64, ...hidden(logoO) }} />
       <div style={{
-        position: "absolute", left: 110, top: 170, height: 56, padding: "0 34px", borderRadius: 999, background: "#4A90F7", color: INK,
+        position: "absolute", left: 110, top: 170, height: 56, padding: "0 34px", borderRadius: 999, background: "var(--pill, #4A90F7)", color: INK,
         fontSize: 26, fontWeight: 600, display: "flex", alignItems: "center", letterSpacing: ".02em",
         transform: `translateY(${(1 - prog(t, 0.5, 1.0, easeOut)) * 20}px)`, ...hidden(pillO),
-      }}>WORKFLOWS</div>
+      }}>{text.opening.pill}</div>
 
       {/* Headline */}
       {hl ? (
@@ -127,7 +132,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       ) : null}
 
       {/* Title card */}
-      {card ? <KineticTitle t={t} at={card.a} out={card.b - 0.25} kicker={card.kicker} html={card.html} size={120} pulse={WALLS} /> : null}
+      {card ? <KineticTitle t={t} at={card.a} out={card.b - 0.25} {...cardText(cfg, card)} size={style.sizes.titleCard} pulse={WALLS} /> : null}
 
       {/* Build lines before drop 2 */}
       <div style={{ position: "absolute", left: 120, top: 300, fontWeight: 800, fontSize: 84, lineHeight: 1.12 }}>
@@ -145,11 +150,11 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       {/* Logo lockup */}
       <div style={{ position: "absolute", left: 0, right: 0, top: 300, display: "flex", flexDirection: "column", alignItems: "center", transform: `scale(${0.9 + 0.1 * lk})`, ...hidden(lk) }}>
         <Img src={staticFile("brand/highlevel-logo-dark.png")} style={{ height: 70 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 32, fontSize: 132, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1 }}>
-          {LOCKUP.name} <span className="grad-text">{LOCKUP.accent}</span>
-          <span style={{ fontSize: 30, fontWeight: 700, color: "#fff", background: "#7F56D9", borderRadius: 12, padding: "8px 14px", letterSpacing: ".04em", alignSelf: "flex-start", marginTop: 14 }}>{LOCKUP.badge}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 32, fontSize: style.sizes.lockup, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1 }}>
+          {text.lockup.name} <span className="grad-text">{text.lockup.accent}</span>
+          <span style={{ fontSize: 30, fontWeight: 700, color: "#fff", background: "var(--badge, #7F56D9)", borderRadius: 12, padding: "8px 14px", letterSpacing: ".04em", alignSelf: "flex-start", marginTop: 14 }}>{text.lockup.badge}</span>
         </div>
-        <div style={{ marginTop: 32, fontSize: 44, fontWeight: 600, color: "#344054" }}>{LOCKUP.tagline}</div>
+        <div style={{ marginTop: 32, fontSize: 44, fontWeight: 600, color: "#344054" }}>{text.lockup.tagline}</div>
       </div>
     </div>
   );
@@ -157,6 +162,8 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
 
 // ── Client message bubble ────────────────────────────────────────────────────
 export const Message: React.FC<{ t: number }> = ({ t }) => {
+  const { text, show } = useCfg();
+  if (!show.clientMessage) return null;
   let o = 0;
   let left = 980;
   let top = 250;
@@ -179,10 +186,10 @@ export const Message: React.FC<{ t: number }> = ({ t }) => {
       display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 16, background: "#fff",
       boxShadow: "0 18px 50px rgba(16,24,40,.16), 0 0 0 1px rgba(16,24,40,.06)", fontFamily: "Inter, sans-serif",
     }}>
-      <div style={{ width: 40, height: 40, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, background: "#FEF0C7", color: "#B54708", flexShrink: 0 }}>{MESSAGE.initials}</div>
+      <div style={{ width: 40, height: 40, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, background: "#FEF0C7", color: "#B54708", flexShrink: 0 }}>{text.clientMessage.initials}</div>
       <div>
-        <div style={{ fontSize: 12, lineHeight: "16px", fontWeight: 600, color: "#667085" }}>{MESSAGE.who}</div>
-        <div style={{ fontSize: 16, lineHeight: "24px", fontWeight: 600, color: "#101828" }}>{MESSAGE.text}</div>
+        <div style={{ fontSize: 12, lineHeight: "16px", fontWeight: 600, color: "#667085" }}>{text.clientMessage.from}</div>
+        <div style={{ fontSize: 16, lineHeight: "24px", fontWeight: 600, color: "#101828" }}>{text.clientMessage.text}</div>
       </div>
       <div style={{ marginLeft: 8, marginTop: 4, width: 28, height: 28, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", background: "#12B76A", opacity: check }}>
         <svg width={16} height={16} viewBox="0 0 24 24"><path fill="none" stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 6L9 17l-5-5" /></svg>
