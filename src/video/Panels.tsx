@@ -9,6 +9,7 @@ import { APP_FILE, FPS, PanelShot } from "./script";
 import { WINDOW } from "./AppWindow";
 import { KineticTitle } from "./Impact";
 import { md, useCfg } from "./config";
+import { Callout } from "./Callout";
 
 const GAP = 30, TOP = 300;
 const BLUE = "var(--accent, #155EEF)", INK = "var(--ink, #0B1B3A)";
@@ -105,7 +106,7 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
 export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number; dur: number; callout?: [number, number]; pop?: number }> = ({ film, lt, kicker, html, fade, dur, callout, pop }) => {
   const { show, style } = useCfg();
   const capOut = callout || pop != null ? 0 : 1;
-  const lines = html.split(/<br\s*\/?>/), co = prog(lt, 1.05, 1.4, easeOut);
+  const co = prog(lt, 1.05, 1.4, easeOut);
   return <>
     <div style={{
       position: "absolute", left: WINDOW.left, top: WINDOW.top, width: WINDOW.width, height: WINDOW.height, borderRadius: 18, background: "#fff", overflow: "hidden", opacity: fade,
@@ -119,17 +120,10 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
       <div style={{ fontSize: 17, fontWeight: 600, color: BLUE, letterSpacing: "0.12em", marginBottom: 2 }}>{kicker}</div>
       <div style={{ fontSize: style.sizes.topLine, fontWeight: 700, letterSpacing: "-0.01em", color: INK }} dangerouslySetInnerHTML={{ __html: html }} />
     </div>
-    {callout && show.panelCaptions ? <div className="poppins" style={{
-      position: "absolute", left: WINDOW.left + callout[0], top: WINDOW.top + callout[1], padding: "16px 24px 18px", borderRadius: 16, background: "#fff",
-      boxShadow: "0 18px 40px rgba(16,44,102,.22), 0 0 0 1px rgba(16,44,102,.08)", opacity: fade * co, transform: `translateY(${((1 - co) * 14).toFixed(1)}px) scale(${(0.94 + 0.06 * co).toFixed(3)})`, transformOrigin: "60px 0",
-    }}>
-      <div style={{ position: "absolute", left: 104, top: -9, width: 18, height: 18, background: "#fff", transform: "rotate(45deg)", boxShadow: "-1px -1px 0 rgba(16,44,102,.08)" }} />
-      {lines.map((l, i) => { const k = i === 0 ? 1 : prog(lt, 1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1), easeOut); return (
-        <div key={i} style={{ position: "relative", fontSize: i === 0 ? style.sizes.topLine * 0.6 : style.sizes.topLine * 0.82, fontWeight: i === 0 ? 600 : 800, letterSpacing: "-0.01em", color: INK, whiteSpace: "nowrap",
-          lineHeight: 1.25, marginTop: i ? 4 : 0, opacity: k, transform: `translateY(${((1 - k) * 10).toFixed(1)}px)` }} dangerouslySetInnerHTML={{ __html: l }} />); })}
-    </div> : null}
+    {callout && show.panelCaptions ? <Callout x={WINDOW.left + callout[0] + 113} y={WINDOW.top + callout[1] - 9} html={html} k={co} opacity={fade}
+      lineK={(i) => prog(lt, 1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1), easeOut)} /> : null}
     {pop != null && show.panelCaptions ? <div className="poppins" style={{ position: "absolute", inset: 0, opacity: fade }}>
-      <KineticTitle t={lt} at={pop} out={dur + 1} kicker="" html={html} size={style.sizes.panelCaption + 6} pulse={[pop + 0.45]} offsetY={-478} />
+      <KineticTitle t={lt} at={pop} out={dur - 0.35} kicker="" html={html} size={style.sizes.panelCaption + 6} pulse={[pop + 0.45]} offsetY={-478} />
     </div> : null}
   </>;
 };

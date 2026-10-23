@@ -34,6 +34,13 @@ export const MyComposition = () => {
             whatIf: "What if we could change *all of this…*",
             reimagine: "…and reimagine how you *see your workflows?*",
           },
+          introCallouts: {
+            buriedInFolders: "As you grow, workflows end up\nBuried in *folders, inside folders.*",
+            handsOffContact: "This step hands the contact to another workflow.\nWhat happens next lives *in another tab.*",
+            flipBackAndForth: "Nothing connects the two.\nSo you *flip back and forth.*",
+            oneFormFourWorkflows: "The same form\nStarts *four workflows,* in four folders.",
+            fourWorkflowsBreak: "Delete the form, and nothing warns you.\n*Four workflows break.*",
+          },
           titleDrop: {
             kicker: "INTRODUCING",
             title: "Workflow *Maps*",
@@ -62,6 +69,10 @@ export const MyComposition = () => {
             linkedCanvas: {
               kicker: "PLAN IT",
               text: "All your linked workflows. *One canvas.*",
+            },
+            traceJourney: {
+              kicker: "PLAN IT",
+              text: "Follow one contact *across every workflow.*",
             },
             findAnything: {
               kicker: "PLAN IT",
@@ -200,6 +211,7 @@ export const MyComposition = () => {
         show: {
           opening: true,
           introCards: true,
+          introCallouts: true,
           titleDrop: true,
           featureCards: true,
           topLines: true,
@@ -294,6 +306,11 @@ export const MyComposition = () => {
           },
           pushInEase: {
             in: 0.6,
+            out: 0.5,
+          },
+          introCallouts: {
+            push: 1.08,
+            in: 0.8,
             out: 0.5,
           },
           titles: {

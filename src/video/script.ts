@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v22.mp4";
+export const APP_FILE = "app-motion-v24.mp4";   // v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -150,6 +150,23 @@ export const INTRO_CARDS: { a: number; b: number; html: string; depth?: number; 
   // the suspense before the reveal: over the chaos, then high above the map slowly forming in the window (light recede)
   { a: 46.55, b: 48.8, html: `What if we could change <span class="grad-text">all of this…</span>` },
   { a: 49.1, b: 52.65, html: `…and reimagine how you <span class="grad-text">see your workflows?</span>`, depth: 0.3, y: -330 },
+];
+/** The problem's explanations: white callouts in the app window, next to what they explain (window px). `x, y` is where the
+ * pointer's tip touches and `side` the card edge it sits on (`ax`: tip's distance from the card's left, for top/bottom);
+ * `side: "none"` places the card's top-left at `x, y`. Shown from `a` to `b` (timeline); the scene holds still at `hold` for
+ * `dur` s while the window pushes in toward `focus`. Each hold's time comes out of the rest of its stretch between two intro
+ * cards, which plays a little faster (introTime), so the cards stay on the music. The film (v23 on) no longer draws these. */
+export type IntroCallout = { a: number; hold: number; dur: number; b: number; html: string; x: number; y: number; side: "top" | "bottom" | "left" | "right" | "none"; ax?: number; focus: [number, number] };
+export const INTRO_CALLOUTS: IntroCallout[] = [
+  // the list, drilled into 02 › 06: points at the workflow row
+  { a: 9.95, hold: 10.75, dur: 1.4, b: 11.45, html: `As you grow, workflows end up<br/>Buried in <span class="grad-text">folders, inside folders.</span>`, x: 380, y: 412, side: "top", focus: [420, 330] },
+  // Continue Client Journey: under its Add to Workflow step (the panel on the right shows Tag workflow)
+  { a: 14.85, hold: 15.6, dur: 1.3, b: 16.95, html: `This step hands the contact to another workflow.<br/>What happens next lives <span class="grad-text">in another tab.</span>`, x: 840, y: 432, side: "top", ax: 560, focus: [840, 0] },
+  // the two tabs flipping: points up at the tab strip
+  { a: 22.15, hold: 24.45, dur: 1.1, b: 25.05, html: `Nothing connects the two.<br/>So you <span class="grad-text">flip back and forth.</span>`, x: 200, y: 6, side: "top", ax: 104, focus: [200, 0] },
+  // one form, four workflows: under the Coaching Enquiry form
+  { a: 28.6, hold: 29.5, dur: 0.9, b: 30.95, html: `The same form<br/>Starts <span class="grad-text">four workflows,</span> in four folders.`, x: 810, y: 490, side: "top", ax: 300, focus: [810, 0] },
+  { a: 32.3, hold: 33.25, dur: 0.9, b: 34.3, html: `Delete the form, and nothing warns you.<br/><span class="grad-text">Four workflows break.</span>`, x: 810, y: 490, side: "top", ax: 300, focus: [810, 0] },
 ];
 /** Window jolts on the scramble's hits. */
 export const SHAKES = [43.05, 43.41, 43.89, 44.975, 45.595];
@@ -275,8 +292,11 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: 73.93, kicker: "PLAN IT", html: `This is an ${g("Add to Workflow")} action.<br/>What happens to the contact ${g("next?")}`, top: true, clip: [185.86, 189.14],
     end: 73.93, callout: [214, 720] },
   { at: 73.93, kicker: "PLAN IT", html: `What if you could see ${g("all of it in one interface?")}`, over: true, end: 73.93 },
-  { at: 73.93, kicker: "PLAN IT", html: `All your linked workflows. ${g("One canvas.")}`, top: true, clip: [189.14, 201.55],
+  { at: 73.93, kicker: "PLAN IT", html: `All your linked workflows. ${g("One canvas.")}`, top: true, clip: [189.14, 199.74],
     atOut: LINKS_DROP - 1.6 + 5.5 - 12.41, end: 73.93, pop: 8.51 },
+  // straight on (same film, no fade): one contact's journey across the linked workflows. It adds 6.57 s to the video, which
+  // puts the "Fix errors fast" title on the soundtrack's loop back to its main drop (output 2:51.99)
+  { at: 73.93, kicker: "PLAN IT", html: `Follow one contact ${g("across every workflow.")}`, top: true, clip: [199.74, 208.12], end: 73.93 },
   // search and filter, side by side; then the ORGANISE IT title (timeline 100.6–102.1)
   { at: 100.6, kicker: "PLAN IT", html: `Find anything, ${g("fast.")}`, panels: "duo", end: 102.1 },
   // Organise, shortened: one main move (drag workflows, then drop a folder into a folder), then the three-panel shot
@@ -361,9 +381,37 @@ export const INTRO_CUT: [number, number] = [40.69 - (38.75 - MUSIC.originalAt), 
 export const CUT_LEN = INTRO_CUT[1] - INTRO_CUT[0];
 export const uncut = (out: number) => (out < INTRO_CUT[0] ? out : out + CUT_LEN);
 export const VIDEO_END = EDIT_END - CUT_LEN;
+/** The intro's callout holds, in (uncut) output time. A stretch runs from an intro card's end to the next card (or the intro
+ * cut); its holds freeze the scene and the rest of it plays faster by the same amount, so both ends stay where they were.
+ * `o0..o1` the callout on screen, `h0..h1` the hold. */
+export const INTRO_HOLDS = (() => {
+  const ends = [...INTRO_CARDS.map((c) => c.b), 0].sort((x, y) => x - y), starts = [...INTRO_CARDS.map((c) => c.a), INTRO_CUT[0]];
+  const groups = new Map<number, IntroCallout[]>();
+  INTRO_CALLOUTS.forEach((c) => { const s0 = Math.max(...ends.filter((e) => e <= c.a)); groups.set(s0, [...(groups.get(s0) ?? []), c]); });
+  return [...groups].map(([s0, cs]) => {
+    const s1 = Math.min(...starts.filter((a) => a > s0)), held = cs.reduce((m, c) => m + c.dur, 0), v = (s1 - s0) / (s1 - s0 - held);
+    // output time of a timeline moment in this stretch (before the hold at that moment, if any)
+    const out = (T: number) => s0 + (T - s0) / v + cs.filter((c) => c.hold < T).reduce((m, c) => m + c.dur, 0);
+    return { s0, s1, v, callouts: cs.map((c) => ({ c, o0: out(c.a), h0: out(c.hold), h1: out(c.hold) + c.dur, o1: out(c.b) })) };
+  });
+})();
+/** Intro output time → timeline time, with the callout holds. */
+export const introTime = (tn: number) => {
+  const st = INTRO_HOLDS.find((s) => tn >= s.s0 && tn < s.s1);
+  if (!st) return tn;
+  let o = st.s0, T = st.s0;
+  for (const h of st.callouts) {
+    if (tn < h.h0) break;
+    if (tn < h.h1) return h.c.hold;
+    o = h.h1; T = h.c.hold;
+  }
+  return T + (tn - o) * st.v;
+};
+/** The intro callout on screen at output time tn, if any. */
+export const introCalloutAt = (tn: number) => INTRO_HOLDS.flatMap((s) => s.callouts).find((h) => tn >= h.o0 && tn < h.o1);
 /** Output time → timeline time (and the card being held, if any). */
 export const editTime = (tn: number): { t: number; seg?: (typeof EDIT)[number] } => {
-  if (tn < EDIT[0].n0) return { t: tn };
+  if (tn < EDIT[0].n0) return { t: introTime(tn) };
   for (const s of EDIT) if (tn < s.n1) return { t: s.hold ? s.src : s.src + (tn - s.n0) * s.speed, seg: s };
   const last = EDIT[EDIT.length - 1];
   return { t: last.src + (last.n1 - last.n0) * last.speed + (tn - last.n1) };

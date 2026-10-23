@@ -5,7 +5,7 @@ import { AppWindow } from "./AppWindow";
 import { mascotAt, recedeAt } from "./choreography";
 import { GLOBAL_CSS, loadFonts } from "./fonts";
 import { Mascot } from "./Mascot";
-import { EDIT, editTime, FPS, M, MUSIC, PANELS, uncut, VIDEO_END } from "./script";
+import { EDIT, editTime, FPS, introCalloutAt, M, MUSIC, PANELS, uncut, VIDEO_END } from "./script";
 import { Background, BrowserTabs, Flash, Message, Titles } from "./Stage";
 import { Impact, ImpactBack, KineticTitle } from "./Impact";
 import { ClipWindow, Panels } from "./Panels";
@@ -40,8 +40,13 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
   // that clip's last frame behind it (receded) instead of the window, so the clip doesn't fade out into it
   const si = seg ? EDIT.indexOf(seg) : -1;
   const overSeg = seg?.hold && seg.card?.over ? seg : undefined, overClip = overSeg ? EDIT[si - 2] : undefined;
-  const intoOver = !!seg?.clip && !!EDIT[si + 2]?.card?.over;
-  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, seg.n0, seg.n1, 0.2, intoOver ? 0.001 : 0.25) : overSeg ? 1 : 0;
+  // clips that continue the same film play straight on; a clip into a panel shot hands over its last frame under the panels
+  // (no flash of the window between them)
+  const prevS = EDIT[si - 2], nextS = EDIT[si + 2];
+  const contIn = !!seg?.clip && prevS?.clip?.[1] === seg.clip[0], contOut = !!seg?.clip && nextS?.clip?.[0] === seg.clip[1];
+  const intoOver = !!seg?.clip && !!nextS?.card?.over, intoPanels = !!seg?.clip && !!nextS?.panels;
+  const fromClip = seg?.panels && prevS?.clip && tn < seg.n0 + 0.4 ? prevS : undefined;
+  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, seg.n0, seg.n1, contIn ? 0.001 : 0.2, intoOver || contOut || intoPanels ? 0.001 : 0.25) : overSeg ? 1 : 0;
   const k = seg?.hold && !seg.card?.top && !seg.panels && !seg.clip ? win(tn, seg.n0, seg.n1, 0.3, 0.35) : 0;
   const cards = EDIT.filter((s) => s.hold && !s.card?.top && !s.card?.build && !s.panels && !s.clip && tn >= s.n0 - 0.05 && tn < s.n1 + 0.4);
   const top = EDIT.find((s) => s.hold && s.card?.top && !s.clip && tn >= s.n0 && tn < (s.until ?? s.n1));
@@ -50,6 +55,8 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
   // while the map is built beside the shrunk window, the mascot waits small under the window's bottom-right corner
   const sp = splitAt(t);
   const st = sp > 0 ? { ...st1, x: st1.x + (1790 - st1.x) * sp, y: st1.y + (968 - st1.y) * sp, s: st1.s + (0.32 - st1.s) * sp } : st1;
+  // the mascot bobs (as behind a statement card) while an intro callout holds the scene still
+  const ih = introCalloutAt(tn), held = ih && tn >= ih.h0 && tn < ih.h1 ? ih.h0 : seg?.hold && !seg.card?.top ? seg.n0 : undefined;
   return (
     <CfgProvider cfg={cfg}>
     <AbsoluteFill
@@ -75,10 +82,10 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
       <Freeze frame={Math.round(t * FPS)}>
         {/* the editor's titles carry a wash in place of the window's recede */}
         {layer === "titles" ? <div style={{ position: "absolute", inset: 0, background: "#EEF4FF", opacity: 0.6 * Math.max(k, t >= M.B2 && t < M.D2 + 0.1 ? 0 : recedeAt(t)) * (1 - trio) }} /> : null}
-        <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: plate ? undefined : `scale(${(1 - motion.recedeCards.shrink * k).toFixed(4)})`, opacity: (plate ? 1 : 1 - motion.recedeCards.dim * k) * (1 - trio), filter: k > 0.02 && !plate ? `blur(${(motion.recedeCards.blur * k).toFixed(2)}px)` : undefined }}>
+        <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: plate ? undefined : `scale(${(1 - motion.recedeCards.shrink * k).toFixed(4)})`, opacity: (plate ? 1 : 1 - motion.recedeCards.dim * k) * (1 - trio) * (fromClip ? 0 : 1), filter: k > 0.02 && !plate ? `blur(${(motion.recedeCards.blur * k).toFixed(2)}px)` : undefined }}>
           {L("base") ? <div style={{ position: "absolute", inset: 0, ...splitStyle(t) }}>
             <BrowserTabs t={t} />
-            <AppWindow t={t} plate={plate} />
+            <AppWindow t={t} tn={tn} plate={plate} />
           </div> : layer === "tabs" ? <div style={{ position: "absolute", inset: 0, ...splitStyle(t) }}><BrowserTabs t={t} /></div> : null}
           {L("panel") ? <BuildOverlay t={t} /> : layer === "buildpanel" ? <BuildOverlay t={t} part="panel" /> : layer === "flight" ? <BuildOverlay t={t} part={item} /> : null}
           {L("titles") ? <>
@@ -88,11 +95,14 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
           </> : null}
           {L("panel") || layer === "message" ? <Message t={t} /> : null}
         </div>
-        {L("mascot") && show.mascot ? <Mascot t={t} st={{ ...(seg?.hold && !seg.card?.top ? { ...st, y: st.y - motion.mascotBob * Math.sin((tn - seg.n0) * 3.2) } : st), s: st.s * show.mascotSize }} /> : null}
+        {L("mascot") && show.mascot ? <Mascot t={t} st={{ ...(held != null ? { ...st, y: st.y - motion.mascotBob * Math.sin((tn - held) * 3.2) } : st), s: st.s * show.mascotSize }} /> : null}
         {L("flash") && show.flashes ? <Flash t={t} /> : null}
       </Freeze>
       {/* the statement before each feature (say), on output time */}
       <div className="poppins" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {fromClip?.clip && (L("base") || layer === "panels") ? <div style={{ position: "absolute", inset: 0, opacity: 1 - trio }}>
+          <ClipWindow film={fromClip.clip[1] - 1 / FPS} lt={fromClip.n1 - fromClip.n0} {...cardText(cfg, fromClip.card!)} fade={1} dur={fromClip.n1 - fromClip.n0} callout={fromClip.card!.callout} pop={fromClip.card!.pop} />
+        </div> : null}
         {seg?.panels && (L("base") || layer === "panels") ? <Panels cfg={PANELS[seg.panels]} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={trio} /> : null}
         {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.clip[0] + (tn - seg.n0)} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0}
           callout={seg.card!.callout} pop={seg.card!.pop} /> : null}

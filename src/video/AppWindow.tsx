@@ -2,15 +2,24 @@
 // 1620×880). The window's own motion (rise, push-ins, receding behind titles) lives here.
 import React from "react";
 import { OffthreadVideo, Sequence, staticFile } from "remotion";
+import { easeInOut, easeOut, prog } from "./anim";
+import { Callout } from "./Callout";
 import { windowAt } from "./choreography";
-import { useCfg } from "./config";
-import { BEATS, FPS } from "./script";
+import { introCalloutHtml, useCfg } from "./config";
+import { BEATS, FPS, INTRO_CALLOUTS, introCalloutAt } from "./script";
 
 export const WINDOW = { left: 150, top: 118, width: 1620, height: 880 };
 
-export const AppWindow: React.FC<{ t: number; plate?: boolean }> = ({ t, plate }) => {
+/** `tn`: output time, for the intro's callouts (they hold while the timeline `t` stands still) and their push-in. */
+export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean }> = ({ t, tn, plate }) => {
   const cfg = useCfg();
   const w = windowAt(t, plate, cfg.motion);
+  const co = tn != null && cfg.show.introCallouts ? introCalloutAt(tn) : undefined, P = cfg.motion.introCallouts;
+  if (co && !plate) {
+    const k = Math.min(prog(tn!, co.o0, co.o0 + P.in, easeInOut), 1 - prog(tn!, co.o1 - P.out, co.o1, easeInOut));
+    w.zoom *= 1 + (P.push - 1) * k;
+    w.zoomOrigin = co.c.focus;
+  }
   return (
     <div style={{
       position: "absolute", left: WINDOW.left, top: WINDOW.top, width: WINDOW.width, height: WINDOW.height,
@@ -33,6 +42,11 @@ export const AppWindow: React.FC<{ t: number; plate?: boolean }> = ({ t, plate }
           </Sequence>
         );
       })}
+      {co && !plate ? (() => {
+        const lt = tn! - co.o0;
+        return <Callout x={co.c.x} y={co.c.y} side={co.c.side} ax={co.c.ax} html={introCalloutHtml(cfg, INTRO_CALLOUTS.indexOf(co.c))}
+          k={prog(lt, 0, 0.35, easeOut)} opacity={1 - prog(tn!, co.o1 - 0.3, co.o1)} lineK={(i) => prog(lt, 0.45 + 0.5 * (i - 1), 0.8 + 0.5 * (i - 1), easeOut)} />;
+      })() : null}
     </div>
   );
 };

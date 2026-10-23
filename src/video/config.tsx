@@ -7,7 +7,7 @@
 import React, { createContext, useContext } from "react";
 import { z } from "zod";
 import { zColor } from "@remotion/zod-types";
-import { BUILD, FEATURE_CARDS, HEADLINES, INTRO_CARDS, LOCKUP, MESSAGE, PANELS, TABS, TITLE_CARDS } from "./script";
+import { BUILD, FEATURE_CARDS, HEADLINES, INTRO_CALLOUTS, INTRO_CARDS, LOCKUP, MESSAGE, PANELS, TABS, TITLE_CARDS } from "./script";
 import { ZOOMS } from "./zooms";
 
 // ── markup ──
@@ -19,11 +19,12 @@ export const md = (s: string) => s.replace(/\*([^*]+)\*/g, '<span class="grad-te
 
 // ── names for the cards (order as in script.ts) ──
 const INTRO_KEYS = ["startedSimple", "callingEachOther", "oneFormManyWorkflows", "openEveryWorkflow", "whatIf", "reimagine"] as const;
-const FEATURE_KEYS = ["selectWorkflow", "clickAsset", "rememberHandOff", "linkedQuestion", "whatIfOneView", "linkedCanvas", "findAnything", "moveWorkflows", "keepTidy", "pickContact",
+const FEATURE_KEYS = ["selectWorkflow", "clickAsset", "rememberHandOff", "linkedQuestion", "whatIfOneView", "linkedCanvas", "traceJourney", "findAnything", "moveWorkflows", "keepTidy", "pickContact",
   "everyRun", "openRun", "stepRunToRun", "needsAttention", "failedStep", "deletedAssets", "askYourMap", "answersOnMap"] as const;
 const TITLE_CARD_KEYS = ["makeItYours", "traceContact", "fixErrors", "justAsk"] as const;
+export const CALLOUT_KEYS = ["buriedInFolders", "handsOffContact", "flipBackAndForth", "oneFormFourWorkflows", "fourWorkflowsBreak"] as const;
 const FEATURES = FEATURE_CARDS.filter((c) => !c.build);
-if (FEATURES.length !== FEATURE_KEYS.length || INTRO_CARDS.length !== INTRO_KEYS.length || TITLE_CARDS.length !== TITLE_CARD_KEYS.length) {
+if (FEATURES.length !== FEATURE_KEYS.length || INTRO_CARDS.length !== INTRO_KEYS.length || TITLE_CARDS.length !== TITLE_CARD_KEYS.length || INTRO_CALLOUTS.length !== CALLOUT_KEYS.length) {
   throw new Error("config.tsx: the card names no longer match script.ts (cards were added or removed)");
 }
 
@@ -34,6 +35,7 @@ const obj = <K extends readonly string[], V extends z.ZodTypeAny>(keys: K, v: V)
 export const textSchema = z.object({
   opening: z.object({ pill: str("The pill under the logo"), headline: str("Opening headline (*words* = gradient)") }),
   introCards: obj(INTRO_KEYS, str("Intro statement (*words* = gradient)")),
+  introCallouts: obj(CALLOUT_KEYS, str("Intro callout: small line, line break, big line (*words* = gradient)")),
   titleDrop: z.object({ kicker: str("Above the title"), title: str("The title on the drop") }),
   featureCards: obj(FEATURE_KEYS, card),
   panelShots: z.object({ searchLabel: z.string(), filterLabel: z.string(), colourLabel: z.string(), notesLabel: z.string(), renameLabel: z.string(), tidyOutro: str("Line at the end of the organise trio") }),
@@ -60,7 +62,7 @@ export const styleSchema = z.object({
   }),
 });
 export const showSchema = z.object({
-  opening: z.boolean(), introCards: z.boolean(), titleDrop: z.boolean(), featureCards: z.boolean().describe("Full-screen statement cards"),
+  opening: z.boolean(), introCards: z.boolean(), introCallouts: z.boolean().describe("White callouts in the intro's visuals"), titleDrop: z.boolean(), featureCards: z.boolean().describe("Full-screen statement cards"),
   topLines: z.boolean().describe("Lines above the window"), panelCaptions: z.boolean(), titleCards: z.boolean(), breaksHeadline: z.boolean(),
   mapBuildPanel: z.boolean(), flights: z.boolean().describe("Map build: items flying into the map"), clientMessage: z.boolean(),
   browserTabs: z.boolean(), flashes: z.boolean(), lockup: z.boolean(), mascot: z.boolean(),
@@ -82,6 +84,7 @@ export const motionSchema = z.object({
   shake: z.object({ x: num(0, 60, 0.5, "Shake on the intro's hits (px)"), y: num(0, 60, 0.5), duration: num(0.05, 1, 0.01) }),
   pushIns: obj(PUSH_KEYS, pushIn),
   pushInEase: z.object({ in: num(0.05, 3, 0.05, "Seconds to push in"), out: num(0.05, 3, 0.05, "Seconds to pull back") }),
+  introCallouts: z.object({ push: num(1, 1.4, 0.01, "Push-in while an intro callout is up (1.08 = 8% closer)"), in: num(0.05, 3, 0.05, "Seconds to push in"), out: num(0.05, 3, 0.05, "Seconds to pull back") }),
   titles: z.object({
     rise: num(0, 3, 0.01, "How far each letter rises in (em)"), tilt: num(0, 45, 0.5, "Degrees"), blur: num(0, 40, 0.5),
     letterDelay: num(0, 0.2, 0.001, "Max delay between letters (s)"), duration: num(0.05, 3, 0.01, "Each letter's entrance (s)"),
@@ -109,6 +112,7 @@ export const DEFAULT_CFG: Cfg = {
   text: {
     opening: { pill: "WORKFLOWS", headline: toMarkup(HEADLINES[0].html) },
     introCards: Object.fromEntries(INTRO_KEYS.map((k, i) => [k, toMarkup(INTRO_CARDS[i].html)])) as TextCfg["introCards"],
+    introCallouts: Object.fromEntries(CALLOUT_KEYS.map((k, i) => [k, toMarkup(INTRO_CALLOUTS[i].html)])) as TextCfg["introCallouts"],
     titleDrop: { kicker: "INTRODUCING", title: "Workflow *Maps*" },
     featureCards: Object.fromEntries(FEATURE_KEYS.map((k, i) => [k, cardOf(FEATURES[i])])) as TextCfg["featureCards"],
     panelShots: { searchLabel: PANELS.duo.panels[0].label, filterLabel: PANELS.duo.panels[1].label, colourLabel: PANELS.trio.panels[0].label,
@@ -135,6 +139,7 @@ export const DEFAULT_CFG: Cfg = {
     shake: { x: 9, y: 5, duration: 0.22 },
     pushIns: Object.fromEntries(PUSH_KEYS.map((k, i) => [k, { on: true, scale: ZOOMS[i][2], focusX: ZOOMS[i][3], focusY: ZOOMS[i][4] }])) as MotionCfg["pushIns"],
     pushInEase: { in: 0.6, out: 0.5 },
+    introCallouts: { push: 1.08, in: 0.8, out: 0.5 },
     titles: { rise: 0.85, tilt: 7, blur: 8, letterDelay: 0.032, duration: 0.45, exitLift: 0.45, pulse: 0.045, topLineSlide: 24 },
     flights: { duration: 0.55, arcHeight: 70, shrink: 0.45 },
     mascotBob: 8,
@@ -146,7 +151,7 @@ export const DEFAULT_CFG: Cfg = {
     windowRadius: 18,
   },
   show: {
-    opening: true, introCards: true, titleDrop: true, featureCards: true, topLines: true, panelCaptions: true, titleCards: true, breaksHeadline: true,
+    opening: true, introCards: true, introCallouts: true, titleDrop: true, featureCards: true, topLines: true, panelCaptions: true, titleCards: true, breaksHeadline: true,
     mapBuildPanel: true, flights: true, clientMessage: true, browserTabs: true, flashes: true, lockup: true, mascot: true, mascotSize: 1,
   },
 };
@@ -165,6 +170,7 @@ export const cardText = (cfg: Cfg, c: { kicker: string; html: string }) => {
   return { kicker: c.kicker, html: c.html };
 };
 export const introCardHtml = (cfg: Cfg, i: number) => md(cfg.text.introCards[INTRO_KEYS[i]]);
+export const introCalloutHtml = (cfg: Cfg, i: number) => md(cfg.text.introCallouts[CALLOUT_KEYS[i]]);
 
 /** CSS variables for the colours and fonts (each component falls back to the same values). */
 export const styleVars = (s: StyleCfg): React.CSSProperties => ({
