@@ -10,7 +10,7 @@ import { Background, BrowserTabs, Flash, Message, Titles } from "./Stage";
 import { Impact, ImpactBack, KineticTitle } from "./Impact";
 import { ClipWindow, Panels } from "./Panels";
 import { DEFAULT_MUSIC, MusicSettings } from "./musicProps";
-import { Cfg, CfgProvider, cardText, DEFAULT_CFG, ShowCfg, StyleCfg, styleVars, TextCfg } from "./config";
+import { Cfg, CfgProvider, cardText, DEFAULT_CFG, FxCfg, MotionCfg, ShowCfg, StyleCfg, styleVars, TextCfg } from "./config";
 import { BuildOverlay, splitAt, splitStyle } from "./Build";
 
 loadFonts();
@@ -26,10 +26,11 @@ export type Layer = "all" | "base" | "titles" | "panel" | "flash" | "mascot" | "
   // single pieces for the full breakdown (scripts/resolve-dissect.ts): titles without the wash, the panel shots only,
   // the map-build panel only, one flying item (`item`), the client message only
   | "titles-clean" | "panels" | "buildpanel" | "flight" | "message" | "tabs";
-export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?: MusicSettings; text?: TextCfg; style?: StyleCfg; show?: ShowCfg }> = ({
+export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?: MusicSettings; text?: TextCfg; style?: StyleCfg; show?: ShowCfg; motion?: MotionCfg; fx?: FxCfg }> = ({
   layer = "all", item = 0, music = DEFAULT_MUSIC, text = DEFAULT_CFG.text, style = DEFAULT_CFG.style, show = DEFAULT_CFG.show,
+  motion = DEFAULT_CFG.motion, fx = DEFAULT_CFG.fx,
 }) => {
-  const cfg: Cfg = { text, style, show };
+  const cfg: Cfg = { text, style, show, motion, fx };
   const L = (k: Layer) => layer === "all" || layer === k || (k === "titles" && layer === "titles-clean");
   const plate = layer === "base";
   const frame = useCurrentFrame();
@@ -51,28 +52,26 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
       style={{ ...styleVars(style), background: L("base") ? "#F4F8FF" : "transparent", fontFamily: "var(--font-body, Inter), system-ui, sans-serif", WebkitFontSmoothing: "antialiased", overflow: "hidden" }}
     >
       <style>{GLOBAL_CSS}</style>
-      {/* music: percussion under the intro, cross-fading into the original track, whose first drop lands on the video's drop.
-          Every time and level comes from the `music` props (editable in Studio's Props panel). */}
+      {/* music: the one soundtrack file, its main drop on the video's drop; if the video outruns it, it jumps back to the drop
+          on a bar line before its outro. Level, nudge, loop and end fade come from the `music` props (Studio's Props panel). */}
       {L("audio") ? (() => {
-        const m = music, ramp = (x: number, a: number, b: number) => clamp((x - a) / Math.max(0.01, b - a));
+        const m = music, at = m.offset, loop = m.loopToDrop;
+        const endVol = (o: number) => 1 - clamp((o - (VIDEO_END - m.endFade)) / Math.max(0.01, m.endFade));
         return <>
-          <Sequence durationInFrames={Math.round(Math.max(m.percussionFadeOutEnd, 0.1) * FPS)} layout="none">
-            <Audio src={staticFile(MUSIC.intro)} volume={(f) => m.percussionVolume * (1 - ramp(f / FPS, m.percussionFadeOutStart, m.percussionFadeOutEnd))} />
+          <Sequence from={Math.round(Math.max(0, at) * FPS)} durationInFrames={loop ? Math.round((MUSIC.loopAfter + Math.min(0, at)) * FPS) + 4 : undefined} layout="none">
+            <Audio src={staticFile(MUSIC.file)} trimBefore={at < 0 ? Math.round(-at * FPS) : undefined}
+              volume={(f) => m.volume * endVol(f / FPS + Math.max(0, at)) * (loop ? 1 - clamp((f / FPS - (MUSIC.loopAfter + Math.min(0, at))) / 0.13) : 1)} />
           </Sequence>
-          <Sequence from={Math.round(m.originalStart * FPS)} durationInFrames={Math.round(MUSIC.loopAfter * FPS) + 4} layout="none">
-            <Audio src={staticFile(MUSIC.main)} volume={(f) => m.originalVolume * ramp(f / FPS + m.originalStart, m.originalFadeInStart, m.originalFadeInEnd) * (1 - clamp((f / FPS - MUSIC.loopAfter) / 0.13))} />
-          </Sequence>
-          {/* bar-aligned loop: back to the drop, until the end */}
-          <Sequence from={Math.round((m.originalStart + MUSIC.loopAfter) * FPS)} layout="none">
-            <Audio src={staticFile(MUSIC.main)} trimBefore={Math.round(MUSIC.drop * FPS)} volume={(f) => m.originalVolume * (1 - ramp(f / FPS + m.originalStart + MUSIC.loopAfter, VIDEO_END - m.endFade, VIDEO_END))} />
-          </Sequence>
+          {loop ? <Sequence from={Math.round((MUSIC.loopAfter + at) * FPS)} layout="none">
+            <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(MUSIC.drop * FPS)} volume={(f) => m.volume * endVol(f / FPS + MUSIC.loopAfter + at)} />
+          </Sequence> : null}
         </>;
       })() : null}
       {L("base") ? <Background /> : null}
       <Freeze frame={Math.round(t * FPS)}>
         {/* the editor's titles carry a wash in place of the window's recede */}
         {layer === "titles" ? <div style={{ position: "absolute", inset: 0, background: "#EEF4FF", opacity: 0.6 * Math.max(k, t >= M.B2 && t < M.D2 + 0.1 ? 0 : recedeAt(t)) * (1 - trio) }} /> : null}
-        <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: plate ? undefined : `scale(${(1 - 0.1 * k).toFixed(4)})`, opacity: (plate ? 1 : 1 - 0.5 * k) * (1 - trio), filter: k > 0.02 && !plate ? `blur(${(7 * k).toFixed(2)}px)` : undefined }}>
+        <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: plate ? undefined : `scale(${(1 - motion.recedeCards.shrink * k).toFixed(4)})`, opacity: (plate ? 1 : 1 - motion.recedeCards.dim * k) * (1 - trio), filter: k > 0.02 && !plate ? `blur(${(motion.recedeCards.blur * k).toFixed(2)}px)` : undefined }}>
           {L("base") ? <div style={{ position: "absolute", inset: 0, ...splitStyle(t) }}>
             <BrowserTabs t={t} />
             <AppWindow t={t} plate={plate} />
@@ -85,7 +84,7 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
           </> : null}
           {L("panel") || layer === "message" ? <Message t={t} /> : null}
         </div>
-        {L("mascot") && show.mascot ? <Mascot t={t} st={{ ...(seg?.hold && !seg.card?.top ? { ...st, y: st.y - 8 * Math.sin((tn - seg.n0) * 3.2) } : st), s: st.s * show.mascotSize }} /> : null}
+        {L("mascot") && show.mascot ? <Mascot t={t} st={{ ...(seg?.hold && !seg.card?.top ? { ...st, y: st.y - motion.mascotBob * Math.sin((tn - seg.n0) * 3.2) } : st), s: st.s * show.mascotSize }} /> : null}
         {L("flash") && show.flashes ? <Flash t={t} /> : null}
       </Freeze>
       {/* the statement before each feature (say), on output time */}
@@ -95,7 +94,7 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
         {L("titles") && show.featureCards && cards.map((s) => <KineticTitle key={s.n0} t={tn} at={s.n0} out={s.n1 - 0.3} {...cardText(cfg, s.card!)} size={style.sizes.featureCard} />)}
         {/* or, where the visual is light, the line sits above the window and the animation plays under it */}
         {top && L("titles") && show.topLines ? (() => {
-          const o = win(tn, top.n0, top.until!, 0.3, 0.3), y = (1 - clamp((tn - top.n0) / 0.4)) * 24, tx = cardText(cfg, top.card!);
+          const o = win(tn, top.n0, top.until!, 0.3, 0.3), y = (1 - clamp((tn - top.n0) / 0.4)) * motion.titles.topLineSlide, tx = cardText(cfg, top.card!);
           return (
             <div style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: o, transform: `translateY(${y.toFixed(1)}px)` }}>
               <div style={{ fontSize: 17, fontWeight: 600, color: "var(--accent, #155EEF)", letterSpacing: "0.12em", marginBottom: 2 }}>{tx.kicker}</div>

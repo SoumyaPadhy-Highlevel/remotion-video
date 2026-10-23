@@ -66,7 +66,6 @@ const icon = (it: (typeof BUILD.items)[number], s?: number) => (it.kind === "fol
 const PANEL = { left: 110, top: 214 };
 const STEP0 = 410, STEP_H = 54, CARD_X = 160, CARD_W = 440, HEAD_H = 42;
 const ROW_H = [38, 42, 44], GROUP_H = 36;
-const FLY = 0.55;   // seconds in the air
 type Item = (typeof BUILD.items)[number] & { group?: string };
 const groupOf = (it: Item) => it.group;
 /** Rows of a step's card, with a header row (the workflow) before each group of assets. */
@@ -84,7 +83,7 @@ const cardH = (k: number) => cardRows(k).h;
 
 /** `part` (editor export): "panel" = the left panel only, a number = that one flying item only; default both. */
 export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number }> = ({ t, part = "all" }) => {
-  const { text, show } = useCfg(), T = text.mapBuild;
+  const { text, show, motion } = useCfg(), T = text.mapBuild, FLY = motion.flights.duration;
   const stepText = [[T.step1, T.step1List, T.step1Count], [T.step2, T.step2List, T.step2Count], [T.step3, T.step3List, T.step3Count]];
   const b = t - BUILD.at;
   if (b < 0 || b > BUILD.release[1] + 0.05) return null;
@@ -173,9 +172,9 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
         ) : null;
         if (u < 0 || u >= 1) return <React.Fragment key={i}>{ringEl}</React.Fragment>;
         const e = easeInOut(clamp(u));
-        const cx = (x0 + x1) / 2, cy = Math.min(y0, y1) - 70;
+        const cx = (x0 + x1) / 2, cy = Math.min(y0, y1) - motion.flights.arcHeight;
         const x = (1 - e) * (1 - e) * x0 + 2 * (1 - e) * e * cx + e * e * x1, y = (1 - e) * (1 - e) * y0 + 2 * (1 - e) * e * cy + e * e * y1;
-        const sc = 1 - 0.45 * e, fade = 1 - prog(u, 0.82, 1), textO = 1 - prog(u, 0.55, 0.85);
+        const sc = 1 - motion.flights.shrink * e, fade = 1 - prog(u, 0.82, 1), textO = 1 - prog(u, 0.55, 0.85);
         return (
           <React.Fragment key={i}>
             <svg width={1920} height={1080} style={{ position: "absolute", left: 0, top: 0, overflow: "visible", opacity: 0.5 * (1 - prog(u, 0.7, 1)) }}>

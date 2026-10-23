@@ -1,6 +1,7 @@
 // Motion of the app window and the mascot, as pure functions of time t (seconds).
 import { M, DROPS, INTRO_CARDS, SHAKES, TITLE_DROP } from "./script";
 import { shakeAt } from "./Impact";
+import { DEFAULT_CFG, MotionCfg, PUSH_KEYS } from "./config";
 import { clamp, easeIn, easeInOut, easeOut, easeOutBack, lerp, prog, win } from "./anim";
 
 // ── App window ───────────────────────────────────────────────────────────────
@@ -15,23 +16,15 @@ export const RECEDES: [number, number, number][] = [
   [M.FIN - 0.05, 163.1, 0.9], // "One more thing: just ask your map"
 ];
 
-/** Push-ins so panels read at 1080p: [start, end, scale, originX, originY] in window px. */
-export const ZOOMS: [number, number, number, number, number][] = [
-  [68.35, 76.2, 1.2, 1620, 0], // workflow drawer, then the asset drawer
-  [76.7, 79.7, 1.2, 0, 0], // search panel
-  [102.46, 105.46, 1.15, 0, 0], // cleanup panel
-  [125.76, 132.26, 1.15, 1620, 0], // contact drawer: workflows, timeline
-  [135.76, 139.46, 1.12, 1620, 220], // run: the email step's details
-  [149.76, 151.76, 1.15, 0, 0], // "Need your attention" card
-  [151.96, 154.86, 1.2, 1620, 0], // error executions in the drawer
-  [163.3, 170.1, 1.12, 0, 300], // the Assistant's answer
-]
+export { ZOOMS } from "./zooms";
+import { ZOOMS } from "./zooms";
 
 /** How far the window recedes behind a title right now (0–1, depth included). */
 export const recedeAt = (t: number) => RECEDES.reduce((m, [a, b, depth]) => Math.max(m, win(t, a, b, 0.45, 0.45) * depth), 0);
 
 /** `plate`: no receding behind titles (the editor's base layer keeps a clean still of the platform; the titles carry a wash). */
-export function windowAt(t: number, plate = false) {
+export function windowAt(t: number, plate = false, m: MotionCfg = DEFAULT_CFG.motion) {
+  const W = m.window;
   let o = 1;
   let ty = 0;
   let s = 1;
@@ -43,38 +36,41 @@ export function windowAt(t: number, plate = false) {
   } else if (t < 4.7) {
     const k = prog(t, 3.9, 4.6, easeOut);
     o = k;
-    ty = (1 - k) * 160;
-    s = 0.94 + 0.06 * k;
+    ty = (1 - k) * W.riseDistance;
+    s = W.riseStartScale + (1 - W.riseStartScale) * k;
   }
-  if (t >= 11.65 && t < M.D1) s *= 1 + 0.025 * prog(t, 11.65, M.D1 - 0.1, easeIn);
-  if (t >= M.D1 && t < M.D1 + 0.6) s *= 1 + 0.03 * (1 - prog(t, M.D1, M.D1 + 0.6, easeOut));
+  if (t >= 11.65 && t < M.D1) s *= 1 + W.introPush * prog(t, 11.65, M.D1 - 0.1, easeIn);
+  if (t >= M.D1 && t < M.D1 + 0.6) s *= 1 + W.firstDropPunch * (1 - prog(t, M.D1, M.D1 + 0.6, easeOut));
   for (const [a, b, depth] of plate ? [] : RECEDES) {
     const k = win(t, a, b, 0.45, 0.45) * depth;
-    s *= 1 - 0.12 * k;
-    blur = Math.max(blur, 7 * k);
-    o *= 1 - 0.45 * k;
+    s *= 1 - m.recedeIntro.shrink * k;
+    blur = Math.max(blur, m.recedeIntro.blur * k);
+    o *= 1 - m.recedeIntro.dim * k;
   }
-  if (t >= M.HIT && t < M.HIT + 0.35) s *= 1 + 0.02 * (1 - (t - M.HIT) / 0.35);
+  if (t >= M.HIT && t < M.HIT + 0.35) s *= 1 + W.hitPunch * (1 - (t - M.HIT) / 0.35);
   // punch on each drop: a quick 4 % kick that settles in 0.45 s
-  for (const d of DROPS) if (t >= d && t < d + 0.45) s *= 1 + 0.04 * Math.pow(1 - (t - d) / 0.45, 2);
+  for (const d of DROPS) if (t >= d && t < d + W.dropPunchTime) s *= 1 + W.dropPunch * Math.pow(1 - (t - d) / W.dropPunchTime, 2);
   if (t >= M.LOGO - 0.4) {
     const k = prog(t, M.LOGO - 0.4, M.LOGO + 0.6, easeInOut);
     o *= 1 - k;
-    s *= 1 - 0.15 * k;
-    blur = Math.max(blur, 10 * k);
+    s *= 1 - W.endShrink * k;
+    blur = Math.max(blur, W.endBlur * k);
   }
   let zs = 1;
   let zx = 810;
   let zy = 440;
-  for (const [a, b, sc, ox, oy] of ZOOMS) {
-    const k = Math.min(prog(t, a, a + 0.6, easeInOut), 1 - prog(t, b - 0.5, b, easeInOut));
+  ZOOMS.forEach(([a, b], i) => {
+    const pz = m.pushIns[PUSH_KEYS[i]];
+    if (!pz?.on) return;
+    const sc = pz.scale, ox = pz.focusX, oy = pz.focusY;
+    const k = Math.min(prog(t, a, a + m.pushInEase.in, easeInOut), 1 - prog(t, b - m.pushInEase.out, b, easeInOut));
     if (k > 0) {
       zs = 1 + (sc - 1) * k;
       zx = ox;
       zy = oy;
     }
-  }
-  const [jx, jy] = shakeAt(t, [...SHAKES, TITLE_DROP.at]);
+  });
+  const [jx, jy] = shakeAt(t, [...SHAKES, TITLE_DROP.at], m.shake);
   return { opacity: o, translateY: ty + jy, translateX: jx, scale: s, zoom: zs, zoomOrigin: [zx, zy] as [number, number], blur };
 }
 

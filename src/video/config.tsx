@@ -8,6 +8,7 @@ import React, { createContext, useContext } from "react";
 import { z } from "zod";
 import { zColor } from "@remotion/zod-types";
 import { BUILD, FEATURE_CARDS, HEADLINES, INTRO_CARDS, LOCKUP, MESSAGE, PANELS, TABS, TITLE_CARDS } from "./script";
+import { ZOOMS } from "./zooms";
 
 // ── markup ──
 const ACCENT = /<span class="grad-text">(.*?)<\/span>/g;
@@ -65,10 +66,43 @@ export const showSchema = z.object({
   browserTabs: z.boolean(), flashes: z.boolean(), lockup: z.boolean(), mascot: z.boolean(),
   mascotSize: z.number().min(0.2).max(3).step(0.05).describe("1 = as designed"),
 });
+// ── phase 2: how things move and look (when they happen stays in script.ts until phase 3) ──
+const num = (min: number, max: number, step: number, d?: string) => (d ? z.number().min(min).max(max).step(step).describe(d) : z.number().min(min).max(max).step(step));
+export const PUSH_KEYS = ["drawers", "search", "cleanup", "contactDrawer", "runDetails", "needsAttention", "errorExecutions", "assistant"] as const;
+const pushIn = z.object({ on: z.boolean(), scale: num(1, 1.6, 0.01, "1.2 = 20% closer"), focusX: num(0, 1620, 1, "Point to push toward, window px"), focusY: num(0, 880, 1) });
+export const motionSchema = z.object({
+  window: z.object({
+    riseDistance: num(0, 600, 1, "The window rises in at 0:03.9 from this far below (px)"), riseStartScale: num(0.5, 1, 0.01),
+    introPush: num(0, 0.2, 0.001, "Slow push during the intro (0.025 = 2.5%)"),
+    firstDropPunch: num(0, 0.2, 0.001), dropPunch: num(0, 0.2, 0.001, "Kick on each later drop"), dropPunchTime: num(0.05, 2, 0.01), hitPunch: num(0, 0.2, 0.001),
+    endShrink: num(0, 0.5, 0.01), endBlur: num(0, 40, 0.5),
+  }),
+  recedeIntro: z.object({ shrink: num(0, 0.5, 0.01, "Behind intro cards and the title"), dim: num(0, 1, 0.01), blur: num(0, 30, 0.5) }),
+  recedeCards: z.object({ shrink: num(0, 0.5, 0.01, "Behind the feature statement cards"), dim: num(0, 1, 0.01), blur: num(0, 30, 0.5) }),
+  shake: z.object({ x: num(0, 60, 0.5, "Shake on the intro's hits (px)"), y: num(0, 60, 0.5), duration: num(0.05, 1, 0.01) }),
+  pushIns: obj(PUSH_KEYS, pushIn),
+  pushInEase: z.object({ in: num(0.05, 3, 0.05, "Seconds to push in"), out: num(0.05, 3, 0.05, "Seconds to pull back") }),
+  titles: z.object({
+    rise: num(0, 3, 0.01, "How far each letter rises in (em)"), tilt: num(0, 45, 0.5, "Degrees"), blur: num(0, 40, 0.5),
+    letterDelay: num(0, 0.2, 0.001, "Max delay between letters (s)"), duration: num(0.05, 3, 0.01, "Each letter's entrance (s)"),
+    exitLift: num(0, 3, 0.01, "How far letters lift away (em)"), pulse: num(0, 0.3, 0.001, "Pulse on music hits"),
+    topLineSlide: num(0, 200, 1, "Top lines slide down from this far (px)"),
+  }),
+  flights: z.object({ duration: num(0.1, 3, 0.01, "Map build: seconds in the air"), arcHeight: num(0, 600, 1), shrink: num(0, 1, 0.01, "How much the chip shrinks on the way") }),
+  mascotBob: num(0, 60, 0.5, "Mascot bob behind statement cards (px)"),
+});
+export const fxSchema = z.object({
+  flash: z.object({ strength: num(0, 1, 0.01, "White flash on drops"), duration: num(0.05, 3, 0.01) }),
+  background: z.object({ skyTop: zColor(), skyUpper: zColor(), skyLower: zColor(), skyBottom: zColor(), dots: z.boolean(), floor: z.boolean(),
+    floorCentre: zColor(), floorInner: zColor(), floorMid: zColor(), floorEdge: zColor() }),
+  windowRadius: num(0, 80, 1, "App window corner radius (px)"),
+});
+export type MotionCfg = z.infer<typeof motionSchema>;
+export type FxCfg = z.infer<typeof fxSchema>;
 export type TextCfg = z.infer<typeof textSchema>;
 export type StyleCfg = z.infer<typeof styleSchema>;
 export type ShowCfg = z.infer<typeof showSchema>;
-export type Cfg = { text: TextCfg; style: StyleCfg; show: ShowCfg };
+export type Cfg = { text: TextCfg; style: StyleCfg; show: ShowCfg; motion: MotionCfg; fx: FxCfg };
 
 const cardOf = (c: { kicker: string; html: string }) => ({ kicker: c.kicker, text: toMarkup(c.html) });
 export const DEFAULT_CFG: Cfg = {
@@ -93,6 +127,23 @@ export const DEFAULT_CFG: Cfg = {
     ink: "#0B1B3A", accent: "#155EEF", gradientStart: "#155EEF", gradientMid: "#2E90FA", gradientEnd: "#22CCEE", pill: "#4A90F7", badge: "#7F56D9",
     headingFont: "Poppins", bodyFont: "Inter",
     sizes: { introCard: 92, introCardRaised: 64, titleDrop: 168, featureCard: 84, topLine: 42, panelCaption: 56, titleCard: 120, lockup: 132 },
+  },
+  motion: {
+    window: { riseDistance: 160, riseStartScale: 0.94, introPush: 0.025, firstDropPunch: 0.03, dropPunch: 0.04, dropPunchTime: 0.45, hitPunch: 0.02, endShrink: 0.15, endBlur: 10 },
+    recedeIntro: { shrink: 0.12, dim: 0.45, blur: 7 },
+    recedeCards: { shrink: 0.1, dim: 0.5, blur: 7 },
+    shake: { x: 9, y: 5, duration: 0.22 },
+    pushIns: Object.fromEntries(PUSH_KEYS.map((k, i) => [k, { on: true, scale: ZOOMS[i][2], focusX: ZOOMS[i][3], focusY: ZOOMS[i][4] }])) as MotionCfg["pushIns"],
+    pushInEase: { in: 0.6, out: 0.5 },
+    titles: { rise: 0.85, tilt: 7, blur: 8, letterDelay: 0.032, duration: 0.45, exitLift: 0.45, pulse: 0.045, topLineSlide: 24 },
+    flights: { duration: 0.55, arcHeight: 70, shrink: 0.45 },
+    mascotBob: 8,
+  },
+  fx: {
+    flash: { strength: 0.75, duration: 0.45 },
+    background: { skyTop: "#F8FBFF", skyUpper: "#EEF4FF", skyLower: "#DDEBFF", skyBottom: "#C9DFFF", dots: true, floor: true,
+      floorCentre: "#FFFFFF", floorInner: "#E3EFFF", floorMid: "#B9D5FF", floorEdge: "#9CC3FF" },
+    windowRadius: 18,
   },
   show: {
     opening: true, introCards: true, titleDrop: true, featureCards: true, topLines: true, panelCaptions: true, titleCards: true, breaksHeadline: true,

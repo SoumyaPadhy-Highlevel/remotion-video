@@ -12,10 +12,12 @@ const hidden = (o: number): React.CSSProperties => ({ opacity: o, visibility: o 
 const html = (h: string) => ({ __html: h });
 
 // ── Background: pale sky with a glowing planet rim along the bottom ──────────
-export const Background: React.FC = () => (
+export const Background: React.FC = () => {
+  const B = useCfg().fx.background;
+  return (
   <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, #F8FBFF 0%, #EEF4FF 40%, #DDEBFF 72%, #C9DFFF 100%)" }} />
-    <div style={{
+    <div style={{ position: "absolute", inset: 0, background: `linear-gradient(180deg, ${B.skyTop} 0%, ${B.skyUpper} 40%, ${B.skyLower} 72%, ${B.skyBottom} 100%)` }} />
+    {B.dots ? <div style={{
       position: "absolute", inset: 0, backgroundImage: [
         "radial-gradient(2px 2px at 12% 18%, rgba(21,94,239,.18) 50%, transparent 51%)",
         "radial-gradient(2px 2px at 82% 12%, rgba(21,94,239,.16) 50%, transparent 51%)",
@@ -24,18 +26,19 @@ export const Background: React.FC = () => (
         "radial-gradient(2px 2px at 92% 48%, rgba(21,94,239,.14) 50%, transparent 51%)",
         "radial-gradient(1.5px 1.5px at 6% 60%, rgba(21,94,239,.14) 50%, transparent 51%)",
       ].join(","),
-    }} />
-    <div style={{
+    }} /> : null}
+    {B.floor ? <><div style={{
       position: "absolute", left: "50%", top: 930, width: 3400, height: 1400, marginLeft: -1700, borderRadius: "50%",
-      background: "radial-gradient(ellipse 50% 40% at 50% 0%, #FFFFFF 0%, #E3EFFF 35%, #B9D5FF 70%, #9CC3FF 100%)",
+      background: `radial-gradient(ellipse 50% 40% at 50% 0%, ${B.floorCentre} 0%, ${B.floorInner} 35%, ${B.floorMid} 70%, ${B.floorEdge} 100%)`,
       boxShadow: "0 -18px 60px rgba(66,140,255,.45), 0 -4px 14px rgba(255,255,255,.95)",
     }} />
     <div style={{
       position: "absolute", left: "50%", top: 926, width: 3400, height: 1400, marginLeft: -1700, borderRadius: "50%",
       borderTop: "3px solid rgba(255,255,255,.95)", filter: "blur(1px)",
-    }} />
+    }} /></> : null}
   </div>
-);
+  );
+};
 
 // ── Browser tabs piling up above the window ──────────────────────────────────
 const WorkflowIcon: React.FC<{ size: number; color: string }> = ({ size, color }) => (
@@ -200,6 +203,7 @@ export const Message: React.FC<{ t: number }> = ({ t }) => {
 
 // ── White flash on drops and hits ────────────────────────────────────────────
 export const Flash: React.FC<{ t: number }> = ({ t }) => {
-  const o = Math.max(0, ...FLASHES.map((d) => (t >= d && t < d + 0.45 ? 0.75 * (1 - (t - d) / 0.45) : 0)));
+  const F = useCfg().fx.flash;
+  const o = Math.max(0, ...FLASHES.map((d) => (t >= d && t < d + F.duration ? F.strength * (1 - (t - d) / F.duration) : 0)));
   return o > 0 ? <div style={{ position: "absolute", inset: 0, background: "#fff", opacity: o }} /> : null;
 };

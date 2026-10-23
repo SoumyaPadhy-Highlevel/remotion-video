@@ -1,18 +1,13 @@
 // The music settings as composition props, so Remotion Studio shows them as editable fields (right-hand Props panel):
-// change a value, hear it, and "Save" writes it back to the defaultProps in src/Composition.tsx. Times are seconds of the
-// finished video.
+// change a value, hear it, and "Save" writes it back to the defaultProps in src/Composition.tsx. The track itself is
+// MUSIC in script.ts.
 import { z } from "zod";
-import { MUSIC } from "./script";
-import { showSchema, styleSchema, textSchema } from "./config";
+import { fxSchema, motionSchema, showSchema, styleSchema, textSchema } from "./config";
 
 export const musicSchema = z.object({
-  percussionVolume: z.number().min(0).max(2).step(0.05).describe("Percussion level (1 = as recorded)"),
-  percussionFadeOutStart: z.number().min(0).max(60).step(0.1).describe("Percussion starts fading out (s)"),
-  percussionFadeOutEnd: z.number().min(0).max(60).step(0.1).describe("Percussion silent from (s)"),
-  originalStart: z.number().min(0).max(60).step(0.01).describe("Original track starts (s); 32.94 puts its drop on the video's drop"),
-  originalVolume: z.number().min(0).max(2).step(0.05).describe("Original track level (1 = as recorded)"),
-  originalFadeInStart: z.number().min(0).max(60).step(0.1).describe("Original starts fading in (s)"),
-  originalFadeInEnd: z.number().min(0).max(60).step(0.1).describe("Original at full level from (s)"),
+  volume: z.number().min(0).max(2).step(0.05).describe("Music level (1 = as mixed)"),
+  offset: z.number().min(-5).max(5).step(0.01).describe("Nudge the music later (+) or earlier (−) against the picture (s); 0 = drop on the drop"),
+  loopToDrop: z.boolean().describe("Where the video outruns the track, jump back to the drop on a bar line"),
   endFade: z.number().min(0).max(10).step(0.1).describe("Fade-out at the very end (s)"),
 });
 export type MusicSettings = z.infer<typeof musicSchema>;
@@ -23,13 +18,11 @@ export const workflowMapsSchema = z.object({
   text: textSchema,
   style: styleSchema,
   show: showSchema,
+  motion: motionSchema,
+  fx: fxSchema,
   layer: z.enum(LAYERS).optional().describe("Editor export only: render one layer (leave empty for the video)"),
   item: z.number().optional().describe("Editor export only: which flying item"),
 });
 
-/** The settings the video was cut with (MUSIC in script.ts). */
-export const DEFAULT_MUSIC: MusicSettings = {
-  percussionVolume: 1, percussionFadeOutStart: MUSIC.xfade[0], percussionFadeOutEnd: MUSIC.xfade[1],
-  originalStart: +MUSIC.mainAt.toFixed(2), originalVolume: 1, originalFadeInStart: MUSIC.xfade[0], originalFadeInEnd: MUSIC.xfade[1],
-  endFade: 1.6,
-};
+/** The settings the video is synced with. */
+export const DEFAULT_MUSIC: MusicSettings = { volume: 1, offset: 0, loopToDrop: true, endFade: 1.6 };

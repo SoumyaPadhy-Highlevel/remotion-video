@@ -20,21 +20,22 @@ const parts = (html: string) => {
 /** Kinetic type: letters rise in one after another (expo ease, a little blur and tilt), the accent word sweeps in
  *  as one piece, the kicker's tracking closes up; on `out` the letters lift away in the same order. */
 export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker: string; html: string; size: number; pulse?: number[]; offsetY?: number }> = ({ t, at, out, kicker, html, size, pulse = [], offsetY = 0 }) => {
+  const T = useCfg().motion.titles;
   if (t < at - 0.05 || t > out + 0.6) return null;
   const ex = (x: number) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp(x)));
   const total = parts(html).reduce((n, p) => n + p.text.length, 0);
-  const st = Math.min(0.032, 0.55 / Math.max(1, total)), so = Math.min(0.016, 0.3 / Math.max(1, total));
+  const st = Math.min(T.letterDelay, 0.55 / Math.max(1, total)), so = Math.min(0.016, 0.3 / Math.max(1, total));
   let i = 0;
   const glyph = (ch: string, key: string, accent = false) => {
     const k = i++;
-    const p = ex((t - at - 0.08 - k * st) / 0.45);
+    const p = ex((t - at - 0.08 - k * st) / T.duration);
     const q = clamp((t - out - k * so) / 0.3);
-    const y = (1 - p) * 0.85 - q * 0.45, o = p * (1 - q);
+    const y = (1 - p) * T.rise - q * T.exitLift, o = p * (1 - q);
     return (
-      <span key={key} className={accent ? "grad-text" : undefined} style={{ display: "inline-block", whiteSpace: "pre", transform: `translateY(${y.toFixed(3)}em) rotate(${((1 - p) * 7).toFixed(2)}deg)`, opacity: o, filter: (1 - p) * 8 + q * 6 > 0.3 ? `blur(${((1 - p) * 8 + q * 6).toFixed(1)}px)` : undefined }}>{ch}</span>
+      <span key={key} className={accent ? "grad-text" : undefined} style={{ display: "inline-block", whiteSpace: "pre", transform: `translateY(${y.toFixed(3)}em) rotate(${((1 - p) * T.tilt).toFixed(2)}deg)`, opacity: o, filter: (1 - p) * T.blur + q * 6 > 0.3 ? `blur(${((1 - p) * T.blur + q * 6).toFixed(1)}px)` : undefined }}>{ch}</span>
     );
   };
-  const pul = pulse.reduce((s, w) => s + (t >= w && t < w + 0.35 ? 0.045 * Math.pow(1 - (t - w) / 0.35, 2) : 0), 0);
+  const pul = pulse.reduce((s, w) => s + (t >= w && t < w + 0.35 ? T.pulse * Math.pow(1 - (t - w) / 0.35, 2) : 0), 0);
   const kp = ex((t - at) / 0.5), kq = clamp((t - out) / 0.25);
   return (
     <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", transform: `translateY(${offsetY}px) scale(${(1 + pul).toFixed(4)})` }}>
@@ -66,11 +67,11 @@ export const Impact: React.FC<{ t: number }> = ({ t }) => {
 export const ImpactBack: React.FC<{ t: number }> = () => null;
 
 /** Window shake on the intro's scramble hits and the first drop. */
-export const shakeAt = (t: number, hits: number[]) => {
+export const shakeAt = (t: number, hits: number[], sh = { x: 9, y: 5, duration: 0.22 }) => {
   let x = 0, y = 0;
-  for (const h of hits) if (t >= h && t < h + 0.22) {
-    const k = 1 - (t - h) / 0.22;
-    x += Math.sin((t - h) * 90) * 9 * k; y += Math.cos((t - h) * 70) * 5 * k;
+  for (const h of hits) if (t >= h && t < h + sh.duration) {
+    const k = 1 - (t - h) / sh.duration;
+    x += Math.sin((t - h) * 90) * sh.x * k; y += Math.cos((t - h) * 70) * sh.y * k;
   }
   return [x, y];
 };

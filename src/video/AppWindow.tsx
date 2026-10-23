@@ -3,16 +3,18 @@
 import React from "react";
 import { OffthreadVideo, Sequence, staticFile } from "remotion";
 import { windowAt } from "./choreography";
+import { useCfg } from "./config";
 import { BEATS, FPS } from "./script";
 
 export const WINDOW = { left: 150, top: 118, width: 1620, height: 880 };
 
 export const AppWindow: React.FC<{ t: number; plate?: boolean }> = ({ t, plate }) => {
-  const w = windowAt(t, plate);
+  const cfg = useCfg();
+  const w = windowAt(t, plate, cfg.motion);
   return (
     <div style={{
       position: "absolute", left: WINDOW.left, top: WINDOW.top, width: WINDOW.width, height: WINDOW.height,
-      borderRadius: 18, background: "#fff", overflow: "hidden",
+      borderRadius: cfg.fx.windowRadius, background: "#fff", overflow: "hidden",
       boxShadow: "0 30px 80px rgba(16,44,102,.18), 0 6px 18px rgba(16,44,102,.10), 0 0 0 1px rgba(16,44,102,.06)",
       transformOrigin: `${w.zoomOrigin[0]}px ${w.zoomOrigin[1]}px`,
       transform: `translate(${w.translateX}px, ${w.translateY}px) scale(${w.scale * w.zoom})`,

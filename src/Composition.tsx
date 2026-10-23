@@ -16,13 +16,9 @@ export const MyComposition = () => {
       schema={workflowMapsSchema}
       defaultProps={{
         music: {
-          percussionVolume: 1,
-          percussionFadeOutStart: 40.6,
-          percussionFadeOutEnd: 44.6,
-          originalStart: 32.94,
-          originalVolume: 1,
-          originalFadeInStart: 40.6,
-          originalFadeInEnd: 44.6,
+          volume: 1,
+          offset: 0,
+          loopToDrop: true,
           endFade: 1.6,
         },
         text: {
@@ -210,6 +206,123 @@ export const MyComposition = () => {
           lockup: true,
           mascot: true,
           mascotSize: 1,
+        },
+        motion: {
+          window: {
+            riseDistance: 160,
+            riseStartScale: 0.94,
+            introPush: 0.025,
+            firstDropPunch: 0.03,
+            dropPunch: 0.04,
+            dropPunchTime: 0.45,
+            hitPunch: 0.02,
+            endShrink: 0.15,
+            endBlur: 10,
+          },
+          recedeIntro: {
+            shrink: 0.12,
+            dim: 0.45,
+            blur: 7,
+          },
+          recedeCards: {
+            shrink: 0.1,
+            dim: 0.5,
+            blur: 7,
+          },
+          shake: {
+            x: 9,
+            y: 5,
+            duration: 0.22,
+          },
+          pushIns: {
+            drawers: {
+              on: true,
+              scale: 1.2,
+              focusX: 1620,
+              focusY: 0,
+            },
+            search: {
+              on: true,
+              scale: 1.2,
+              focusX: 0,
+              focusY: 0,
+            },
+            cleanup: {
+              on: true,
+              scale: 1.15,
+              focusX: 0,
+              focusY: 0,
+            },
+            contactDrawer: {
+              on: true,
+              scale: 1.15,
+              focusX: 1620,
+              focusY: 0,
+            },
+            runDetails: {
+              on: true,
+              scale: 1.12,
+              focusX: 1620,
+              focusY: 220,
+            },
+            needsAttention: {
+              on: true,
+              scale: 1.15,
+              focusX: 0,
+              focusY: 0,
+            },
+            errorExecutions: {
+              on: true,
+              scale: 1.2,
+              focusX: 1620,
+              focusY: 0,
+            },
+            assistant: {
+              on: true,
+              scale: 1.12,
+              focusX: 0,
+              focusY: 300,
+            },
+          },
+          pushInEase: {
+            in: 0.6,
+            out: 0.5,
+          },
+          titles: {
+            rise: 0.85,
+            tilt: 7,
+            blur: 8,
+            letterDelay: 0.032,
+            duration: 0.45,
+            exitLift: 0.45,
+            pulse: 0.045,
+            topLineSlide: 24,
+          },
+          flights: {
+            duration: 0.55,
+            arcHeight: 70,
+            shrink: 0.45,
+          },
+          mascotBob: 8,
+        },
+        fx: {
+          flash: {
+            strength: 0.75,
+            duration: 0.45,
+          },
+          background: {
+            skyTop: "#F8FBFF",
+            skyUpper: "#EEF4FF",
+            skyLower: "#DDEBFF",
+            skyBottom: "#C9DFFF",
+            dots: true,
+            floor: true,
+            floorCentre: "#FFFFFF",
+            floorInner: "#E3EFFF",
+            floorMid: "#B9D5FF",
+            floorEdge: "#9CC3FF",
+          },
+          windowRadius: 18,
         },
       }}
       fps={FPS}
