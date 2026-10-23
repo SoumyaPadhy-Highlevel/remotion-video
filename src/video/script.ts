@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v18.mp4";
+export const APP_FILE = "app-motion-v22.mp4";
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -224,7 +224,12 @@ export const STRUCTURE_OPENING = {
 /** `end`: play only to this timeline time, then cut to the next card. `panels`: instead of a card, a multi-panel shot
  * (PANELS). `clip`: instead of a card, a stretch of film shown in the window ([from, to] film seconds; film = timeline − 3.9).
  * `atOut`: this shot starts at that output (music) time; the play before it is stretched or squeezed to land there. */
-export type FeatureCard = { at: number; kicker: string; html: string; speed?: number; top?: boolean; build?: boolean; end?: number; panels?: keyof typeof PANELS; clip?: [number, number]; atOut?: number };
+export type FeatureCard = { at: number; kicker: string; html: string; hold?: number; speed?: number;
+  /** hold over the previous film clip's last frame (receded, with its callout) instead of the app window */
+  over?: boolean; top?: boolean; build?: boolean; end?: number; panels?: keyof typeof PANELS; clip?: [number, number]; atOut?: number;
+  /** clip cards: `callout` shows the text in the footage at that window point (by the cursor), line by line, instead of as a
+   * top line; `pop` makes it a title that pops in at that clip second instead */
+  callout?: [number, number]; pop?: number };
 const g = (s: string) => `<span class="grad-text">${s}</span>`;
 /** "How the map works" (timeline 58.15–67.65): the window shrinks to the right on a zoomed map while the left panel walks
  * the steps, and each list item flies across and lands where its node appears in the film. Times are seconds from `at` and
@@ -261,10 +266,17 @@ export const FEATURE_CARDS: FeatureCard[] = [
   // how the map works: the list is built into the map beside a shrunk window (BUILD; film scene "map"), no card
   { at: BUILD.at, kicker: "HOW THE MAP WORKS", html: "", build: true, speed: BUILD.speed, end: BUILD.end + 0.25 },
   { at: 67.9, kicker: "PLAN IT", html: `Select a workflow. See what’s inside, ${g("down to the exact trigger.")}` },
-  { at: 72.3, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, end: 76.3 },
-  { at: 83.9, kicker: "PLAN IT", html: `See how workflows ${g("hand off to each other.")}`, end: 89.7 },
-  // on the second drop: zoomed out, every hand-off draws in (film scene "links"; its drop is 1.6 s in)
-  { at: 89.7, kicker: "PLAN IT", html: `All your interconnected workflows, ${g("visualized.")}`, top: true, clip: [180.36, 185.86], atOut: LINKS_DROP - 1.6, end: 89.7 },
+  { at: 72.3, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, end: 73.93, speed: 1.25 },
+  // linked workflows, told as a story (film scene "lm"): on the music's stop (output 1:18) a card, then the builder with an Add to
+  // Workflow action, a small push-in and a callout by the cursor (clip A), the "What if" card, then clip B, landed on the soundtrack: the Linked
+  // badges pop on the first build-up hit (clip 0.65 s), the hand-off lines draw from the second (4.03 s) and connect on drop 2
+  // (8.39 s), where the title pops
+  { at: 73.93, kicker: "PLAN IT", html: `Remember having to jump across workflows ${g("to view connections?")}`, hold: 2.32, end: 73.93 },   // hold fixed: the film's clip A is cut to it
+  { at: 73.93, kicker: "PLAN IT", html: `This is an ${g("Add to Workflow")} action.<br/>What happens to the contact ${g("next?")}`, top: true, clip: [185.86, 189.14],
+    end: 73.93, callout: [214, 720] },
+  { at: 73.93, kicker: "PLAN IT", html: `What if you could see ${g("all of it in one interface?")}`, over: true, end: 73.93 },
+  { at: 73.93, kicker: "PLAN IT", html: `All your linked workflows. ${g("One canvas.")}`, top: true, clip: [189.14, 201.55],
+    atOut: LINKS_DROP - 1.6 + 5.5 - 12.41, end: 73.93, pop: 8.51 },
   // search and filter, side by side; then the ORGANISE IT title (timeline 100.6–102.1)
   { at: 100.6, kicker: "PLAN IT", html: `Find anything, ${g("fast.")}`, panels: "duo", end: 102.1 },
   // Organise, shortened: one main move (drag workflows, then drop a folder into a folder), then the three-panel shot
@@ -304,8 +316,8 @@ export const PANELS: Record<"trio" | "duo", PanelShot> = {
     ],
   },
 };
-/** How long a card holds: enough to read it (≈ 30 ms a character), 1.6–2.6 s. */
-const cardDur = (c: FeatureCard) => (c.build ? 0 : c.panels ? PANELS[c.panels].dur : c.clip ? c.clip[1] - c.clip[0] : c.top ? 0.8 : Math.min(2.6, Math.max(1.6, 1.0 + c.html.replace(/<[^>]+>/g, "").length * 0.03)));
+/** How long a card holds: enough to read it (≈ 30 ms a character), 1.6–2.6 s, or its `hold`. */
+const cardDur = (c: FeatureCard) => (c.hold ?? (c.build ? 0 : c.panels ? PANELS[c.panels].dur : c.clip ? c.clip[1] - c.clip[0] : c.top ? 0.8 : Math.min(2.6, Math.max(1.6, 1.0 + c.html.replace(/<[^>]+>/g, "").length * 0.03))));
 type Seg = { n0: number; n1: number; hold: boolean; src: number; speed: number; card?: FeatureCard; until?: number; panels?: keyof typeof PANELS; clip?: [number, number] };
 /** The edit, in output time: a hold (card, panel shot or film clip) per entry, then the visual at its speed. */
 export const EDIT = (() => {

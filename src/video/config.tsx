@@ -19,7 +19,7 @@ export const md = (s: string) => s.replace(/\*([^*]+)\*/g, '<span class="grad-te
 
 // ── names for the cards (order as in script.ts) ──
 const INTRO_KEYS = ["startedSimple", "callingEachOther", "oneFormManyWorkflows", "openEveryWorkflow", "whatIf", "reimagine"] as const;
-const FEATURE_KEYS = ["selectWorkflow", "clickAsset", "handOff", "interconnected", "findAnything", "moveWorkflows", "keepTidy", "pickContact",
+const FEATURE_KEYS = ["selectWorkflow", "clickAsset", "rememberHandOff", "linkedQuestion", "whatIfOneView", "linkedCanvas", "findAnything", "moveWorkflows", "keepTidy", "pickContact",
   "everyRun", "openRun", "stepRunToRun", "needsAttention", "failedStep", "deletedAssets", "askYourMap", "answersOnMap"] as const;
 const TITLE_CARD_KEYS = ["makeItYours", "traceContact", "fixErrors", "justAsk"] as const;
 const FEATURES = FEATURE_CARDS.filter((c) => !c.build);

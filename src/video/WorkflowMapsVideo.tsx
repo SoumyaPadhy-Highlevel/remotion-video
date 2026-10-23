@@ -36,13 +36,17 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
   const frame = useCurrentFrame();
   const tn = uncut(frame / FPS);   // music time: the intro cut is skipped
   const { t, seg } = editTime(tn);
-  // panel shots and film clips replace the window for their length (cross-fading in and out)
-  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, seg.n0, seg.n1, 0.2, 0.25) : 0;
+  // panel shots and film clips replace the window for their length (cross-fading in and out); a card held `over` a clip keeps
+  // that clip's last frame behind it (receded) instead of the window, so the clip doesn't fade out into it
+  const si = seg ? EDIT.indexOf(seg) : -1;
+  const overSeg = seg?.hold && seg.card?.over ? seg : undefined, overClip = overSeg ? EDIT[si - 2] : undefined;
+  const intoOver = !!seg?.clip && !!EDIT[si + 2]?.card?.over;
+  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, seg.n0, seg.n1, 0.2, intoOver ? 0.001 : 0.25) : overSeg ? 1 : 0;
   const k = seg?.hold && !seg.card?.top && !seg.panels && !seg.clip ? win(tn, seg.n0, seg.n1, 0.3, 0.35) : 0;
   const cards = EDIT.filter((s) => s.hold && !s.card?.top && !s.card?.build && !s.panels && !s.clip && tn >= s.n0 - 0.05 && tn < s.n1 + 0.4);
   const top = EDIT.find((s) => s.hold && s.card?.top && !s.clip && tn >= s.n0 && tn < (s.until ?? s.n1));
   // the mascot keeps to the corner while a panel shot or film clip replaces the window
-  const st0 = mascotAt(t), st1 = seg?.panels || seg?.clip ? { ...st0, x: 1830, y: 960, s: 0.38, r: -10, o: (st0.o ?? 1) * (1 - 0.15 * trio) } : st0;
+  const st0 = mascotAt(t), st1 = seg?.panels || seg?.clip || overSeg ? { ...st0, x: 1830, y: 960, s: 0.38, r: -10, o: (st0.o ?? 1) * (1 - 0.15 * trio) } : st0;
   // while the map is built beside the shrunk window, the mascot waits small under the window's bottom-right corner
   const sp = splitAt(t);
   const st = sp > 0 ? { ...st1, x: st1.x + (1790 - st1.x) * sp, y: st1.y + (968 - st1.y) * sp, s: st1.s + (0.32 - st1.s) * sp } : st1;
@@ -90,7 +94,14 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
       {/* the statement before each feature (say), on output time */}
       <div className="poppins" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         {seg?.panels && (L("base") || layer === "panels") ? <Panels cfg={PANELS[seg.panels]} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={trio} /> : null}
-        {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.clip[0] + (tn - seg.n0)} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={trio} /> : null}
+        {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.clip[0] + (tn - seg.n0)} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0}
+          callout={seg.card!.callout} pop={seg.card!.pop} /> : null}
+        {overClip?.clip && (L("base") || layer === "panels") ? (() => {
+          const kk = clamp((tn - overSeg!.n0) / 0.35), r = motion.recedeCards, out = 1 - clamp((tn - (overSeg!.n1 - 0.3)) / 0.3);
+          return <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: `scale(${(1 - r.shrink * kk).toFixed(4)})`, opacity: (1 - r.dim * kk) * out, filter: kk > 0.02 ? `blur(${(r.blur * kk).toFixed(2)}px)` : undefined }}>
+            <ClipWindow film={overClip.clip[1] - 1 / FPS} lt={overClip.n1 - overClip.n0} {...cardText(cfg, overClip.card!)} fade={1} dur={overClip.n1 - overClip.n0} callout={overClip.card!.callout} pop={overClip.card!.pop} />
+          </div>;
+        })() : null}
         {L("titles") && show.featureCards && cards.map((s) => <KineticTitle key={s.n0} t={tn} at={s.n0} out={s.n1 - 0.3} {...cardText(cfg, s.card!)} size={style.sizes.featureCard} />)}
         {/* or, where the visual is light, the line sits above the window and the animation plays under it */}
         {top && L("titles") && show.topLines ? (() => {

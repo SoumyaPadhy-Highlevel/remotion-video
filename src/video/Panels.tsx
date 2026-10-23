@@ -100,8 +100,12 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
 };
 
 /** A stretch of film in the app window (same frame as AppWindow), with an optional line above it. */
-export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number }> = ({ film, lt, kicker, html, fade }) => {
+/** A film clip in place of the window, with its card as the top line, as a callout in the footage (`callout`, window px) or as
+ * a title that pops in (`pop`, clip seconds). */
+export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number; dur: number; callout?: [number, number]; pop?: number }> = ({ film, lt, kicker, html, fade, dur, callout, pop }) => {
   const { show, style } = useCfg();
+  const capOut = callout || pop != null ? 0 : 1;
+  const lines = html.split(/<br\s*\/?>/), co = prog(lt, 1.05, 1.4, easeOut);
   return <>
     <div style={{
       position: "absolute", left: WINDOW.left, top: WINDOW.top, width: WINDOW.width, height: WINDOW.height, borderRadius: 18, background: "#fff", overflow: "hidden", opacity: fade,
@@ -111,9 +115,21 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
         <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted style={{ width: WINDOW.width, height: WINDOW.height }} />
       </Freeze>
     </div>
-    <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * prog(lt, 0.1, 0.5, easeOut), transform: `translateY(${((1 - prog(lt, 0.1, 0.5, easeOut)) * 20).toFixed(1)}px)` }}>
+    <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * prog(lt, 0.1, 0.5, easeOut), transform: `translateY(${((1 - prog(lt, 0.1, 0.5, easeOut)) * 20).toFixed(1)}px)` }}>
       <div style={{ fontSize: 17, fontWeight: 600, color: BLUE, letterSpacing: "0.12em", marginBottom: 2 }}>{kicker}</div>
       <div style={{ fontSize: style.sizes.topLine, fontWeight: 700, letterSpacing: "-0.01em", color: INK }} dangerouslySetInnerHTML={{ __html: html }} />
     </div>
+    {callout && show.panelCaptions ? <div className="poppins" style={{
+      position: "absolute", left: WINDOW.left + callout[0], top: WINDOW.top + callout[1], padding: "16px 24px 18px", borderRadius: 16, background: "#fff",
+      boxShadow: "0 18px 40px rgba(16,44,102,.22), 0 0 0 1px rgba(16,44,102,.08)", opacity: fade * co, transform: `translateY(${((1 - co) * 14).toFixed(1)}px) scale(${(0.94 + 0.06 * co).toFixed(3)})`, transformOrigin: "60px 0",
+    }}>
+      <div style={{ position: "absolute", left: 104, top: -9, width: 18, height: 18, background: "#fff", transform: "rotate(45deg)", boxShadow: "-1px -1px 0 rgba(16,44,102,.08)" }} />
+      {lines.map((l, i) => { const k = i === 0 ? 1 : prog(lt, 1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1), easeOut); return (
+        <div key={i} style={{ position: "relative", fontSize: i === 0 ? style.sizes.topLine * 0.6 : style.sizes.topLine * 0.82, fontWeight: i === 0 ? 600 : 800, letterSpacing: "-0.01em", color: INK, whiteSpace: "nowrap",
+          lineHeight: 1.25, marginTop: i ? 4 : 0, opacity: k, transform: `translateY(${((1 - k) * 10).toFixed(1)}px)` }} dangerouslySetInnerHTML={{ __html: l }} />); })}
+    </div> : null}
+    {pop != null && show.panelCaptions ? <div className="poppins" style={{ position: "absolute", inset: 0, opacity: fade }}>
+      <KineticTitle t={lt} at={pop} out={dur + 1} kicker="" html={html} size={style.sizes.panelCaption + 6} pulse={[pop + 0.45]} offsetY={-478} />
+    </div> : null}
   </>;
 };

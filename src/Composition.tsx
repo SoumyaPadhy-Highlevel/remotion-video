@@ -47,13 +47,21 @@ export const MyComposition = () => {
               kicker: "PLAN IT",
               text: "Click any asset. See *everywhere it’s used.*",
             },
-            handOff: {
+            rememberHandOff: {
               kicker: "PLAN IT",
-              text: "See how workflows *hand off to each other.*",
+              text: "Remember having to jump across workflows *to view connections?*",
             },
-            interconnected: {
+            linkedQuestion: {
               kicker: "PLAN IT",
-              text: "All your interconnected workflows, *visualized.*",
+              text: "This is an *Add to Workflow* action.\nWhat happens to the contact *next?*",
+            },
+            whatIfOneView: {
+              kicker: "PLAN IT",
+              text: "What if you could see *all of it in one interface?*",
+            },
+            linkedCanvas: {
+              kicker: "PLAN IT",
+              text: "All your linked workflows. *One canvas.*",
             },
             findAnything: {
               kicker: "PLAN IT",
