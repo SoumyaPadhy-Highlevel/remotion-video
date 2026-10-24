@@ -134,6 +134,14 @@ export const MyComposition = () => {
               kicker: "ASSISTANT",
               text: "It answers on the map, *down to what to fix first.*",
             },
+            doesTheWork: {
+              kicker: "ASSISTANT",
+              text: "And it doesn’t just answer. *It does the work.*",
+            },
+            actsOnMap: {
+              kicker: "ASSISTANT",
+              text: "Ask it to find, create and move, *right on the map.*",
+            },
           },
           panelShots: {
             searchLabel: "Search anything, fly straight to it",

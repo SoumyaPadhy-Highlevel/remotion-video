@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v25.mp4";   // v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
+export const APP_FILE = "app-motion-v27.mp4";   // v27: v26 without the offer lines while highlighting; v26: v25 + scene "act" (the Assistant acting on the map, from frame 7084); v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -279,6 +279,8 @@ export const BUILD = {
 };
 /** Where the film's "orgdoc" scene starts (film seconds; frame 6245, right after "lm"). */
 const ORGDOC = 6245 / 30;
+/** The Assistant acting on the map (film scene "act", appended after "orgdoc"): its start and length in the film. */
+const ACT = 7084 / 30, ACT_LEN = 22.66;
 /** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
 export const LINKS_DROP = 100.86;
 export const FEATURE_CARDS: FeatureCard[] = [
@@ -319,7 +321,11 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: 155.15, kicker: "WHEN IT BREAKS", html: `Jump straight to the ${g("failed step.")}` },
   { at: 158.05, kicker: "WHEN IT BREAKS", html: `Catch deleted assets ${g("still in use.")}` },
   { at: 163.15, kicker: "ASSISTANT", html: `Ask your map ${g("anything.")}` },
-  { at: 166.25, kicker: "ASSISTANT", html: `It answers on the map, ${g("down to what to fix first.")}`, speed: 1 },
+  { at: 166.25, kicker: "ASSISTANT", html: `It answers on the map, ${g("down to what to fix first.")}`, speed: 1, end: 173.0 },
+  // then it acts (film scene "act"): a card, and three asks applied to the map (find, create a folder, move into it). The clip
+  // is cut so the lockup (LOGO, 0.05 s after it) lands on the soundtrack's re-entry after its break (output 4:09.5)
+  { at: 173.0, kicker: "ASSISTANT", html: `And it doesn’t just answer. ${g("It does the work.")}`, hold: 2.5, end: 173.0 },
+  { at: 174.0, kicker: "ASSISTANT", html: `Ask it to find, create and move, ${g("right on the map.")}`, top: true, clip: [ACT, ACT + ACT_LEN], speed: 1 },
 ];
 const PLAY_SPEED = 0.85;
 /** Multi-panel shots: each panel is a crop of the app footage (`src` in film seconds); labels and animations go one after
