@@ -9,7 +9,8 @@ import { BROWSER, DeviceBezel, deviceOn, TabStrip } from "./Browser";
 import { Callout } from "./Callout";
 import { windowAt } from "./choreography";
 import { introCalloutHtml, useCfg } from "./config";
-import { APP_FILE, BEATS, CUT_LEN, EDITED_FILE, editedFootageTime, FPS, INTRO_BROWSE, INTRO_CALLOUTS, INTRO_CUT, introCalloutAt } from "./script";
+import { APP_FILE, BEATS, CUT_LEN, EDITED_FILE, editedFootageTime, FPS, INTRO_BROWSE, INTRO_CALLOUTS, INTRO_CUT, introCalloutAt, PLAN_SHOT, planTime } from "./script";
+import { PlanAssets } from "./builder/PlanAssets";
 import { BuilderScenes } from "./builder/scenes";
 
 export const WINDOW = { left: 150, top: 118, width: 1620, height: 880 };
@@ -21,6 +22,7 @@ const calloutLines = stagger(0.5, { startDelay: 0.45 });
 export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean; chromeOnly?: boolean }> = ({ t, tn, plate, chromeOnly }) => {
   const cfg = useCfg();
   const device = deviceOn(t, cfg.show.browserTabs), r = BROWSER.screenRadius;
+  const plan = tn != null ? planTime(tn) : null;
   const w = windowAt(t, plate, cfg.motion);
   const co = tn != null && cfg.show.introCallouts ? introCalloutAt(tn) : undefined, P = cfg.motion.introCallouts;
   if (co && !plate && !co.c.noPush) {
@@ -64,7 +66,12 @@ export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean; chro
         </Freeze>
       ) : null}
       {/* the builder, redrawn over the film's builder shots (film time = t − 3.9) */}
-      {t >= 3.9 ? <BuilderScenes ft={t >= INTRO_BROWSE.a && t < INTRO_BROWSE.b ? INTRO_BROWSE.film + t - INTRO_BROWSE.a : t - 3.9} /> : null}
+      {t >= 3.9 && plan == null ? <BuilderScenes ft={t >= INTRO_BROWSE.a && t < INTRO_BROWSE.b ? INTRO_BROWSE.film + t - INTRO_BROWSE.a : t - 3.9} /> : null}
+      {/* Plan it: the product's panels drawn over the film's map page (builder/PlanAssets.tsx) */}
+      {plan != null ? <>
+        <Freeze frame={0}><OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted trimBefore={Math.round(PLAN_SHOT.film * FPS)} style={{ position: "absolute", left: 0, top: 0, width: WINDOW.width, height: WINDOW.height, background: "#fff" }} /></Freeze>
+        <PlanAssets t={plan} />
+      </> : null}
       {co && !plate ? (() => {
         const lt = tn! - co.o0;
         return <Callout compact x={co.c.x} y={co.c.y} side={co.c.side} ax={co.c.ax} html={introCalloutHtml(cfg, INTRO_CALLOUTS.indexOf(co.c))}

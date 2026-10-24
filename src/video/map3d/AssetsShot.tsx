@@ -2,7 +2,7 @@
 // a plan gives its cameras (in the film's camera terms, so they read like the film's scenes), which node is selected when and
 // what that lights, and where the drawer and the preview cover it. The film's filter pills and toolbars stay visible.
 import React from "react";
-import { EdgeLook, MapPlane, MapView, NodeLook } from "./MapScene";
+import { EdgeLook, MapArc, MapPlane, MapScene, MapView, NodeLook } from "./MapScene";
 import { FILM_WORLDS } from "./filmMap";
 
 /** The film's map canvas in the 1620×880 window (WM.CANVAS) and the right drawer's left edge (app.css .wd). */
@@ -73,7 +73,7 @@ export { cursorPos };
 
 export const AssetsMap: React.FC<{ t: number; plan: AssetsPlan }> = ({ t, plan }) => {
   const cam = toCam(camPath(plan.cams, t));
-  const world = FILM_WORLDS.main;
+  const world = plan.world ?? FILM_WORLDS.main;
   const sel = plan.select.map(([a, b]) => eo(seg(t, a, a + 0.3)) * (b == null ? 1 : 1 - eo(seg(t, b, b + 0.3))));
   const looks: Record<string, NodeLook> = {}, edgeLooks: Record<string, EdgeLook> = {}, planeLooks: Record<string, Partial<MapPlane>> = {};
   const anySel = Math.max(0, ...sel.map((k, i) => (plan.groups[i].dims ? k : 0)));
@@ -92,7 +92,7 @@ export const AssetsMap: React.FC<{ t: number; plan: AssetsPlan }> = ({ t, plan }
   return (
     <div style={{ position: "absolute", left: CANVAS.left, top: CANVAS.top, width: CANVAS.width, height: CANVAS.height, overflow: "hidden", borderRadius: CANVAS.radius,
       maskImage: holesMask(ui, CANVAS.width, CANVAS.height), WebkitMaskImage: holesMask(ui, CANVAS.width, CANVAS.height), maskSize: "100% 100%" }}>
-      <MapView scene={world} width={CANVAS.width} height={CANVAS.height} camera={cam} t={t} looks={looks} edgeLooks={edgeLooks} planeLooks={planeLooks} />
+      <MapView scene={world} width={CANVAS.width} height={CANVAS.height} camera={cam} t={t} looks={looks} edgeLooks={edgeLooks} planeLooks={planeLooks} arcs={plan.arcs?.(t)} />
     </div>
   );
 };
@@ -104,5 +104,9 @@ export type AssetsPlan = {
   select: [number, number | null][];
   groups: { selected: string; lit: string[]; dims: boolean }[];
   drawer: (t: number) => number;
+  /** the world to draw (default: the film's main map) — keep it one object, the renderer rebuilds when it changes */
+  world?: MapScene;
+  /** cross-folder usage arcs ("Show usage on map") */
+  arcs?: (t: number) => MapArc[];
 };
 export type { FilmCam };

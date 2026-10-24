@@ -169,7 +169,10 @@ function buildScene(desc: MapScene, icons: Map<string, THREE.Texture>) {
     scene.add(mesh, pulse);
     edges.set(`${e.from}>${e.to}`, { mesh, mat, pulse, pulseMat });
   }
-  return { scene, planes, nodes, edges };
+  // cross-folder usage arcs (MapArc), rebuilt per frame into this group
+  const arcs = new THREE.Group();
+  scene.add(arcs);
+  return { scene, planes, nodes, edges, arcs };
 }
 
 /** Ribbon geometry for an edge: line quad, source dot and target arrowhead, flat at y (EdgeRenderer.ts). */
@@ -225,10 +228,20 @@ const Pill: React.FC<{ x: number; y: number; text: string; scale: number; opacit
 /** The map at `width × height` canvas px. `looks` / `edgeLooks` / `planeLooks` give this frame's states; `t` drives pulses.
  * `zoomH` is the product's canvas height in px that `camera.s` is measured against (zoom = s / (zoomH / 10)), for label
  * scale and the zoom-gated label visibility. */
+/** An asset's cross-folder usage arc ("Show usage on map": ShallowEdgeRenderer.ts): a tube from one copy of the asset to
+ *  another, rising in a parabola 1.5 × distance / 4 high, both ends 0.2 inside their nodes, in the asset's 500 shade. */
+export type MapArc = { from: string; to: string; color: string };
+const ARC = { y: 0.15, inset: 0.2, radius: 0.022, radial: 6, segments: 32, heightBase: 1.5, refDistance: 4 };
+class ArcCurve extends THREE.Curve<THREE.Vector3> {
+  constructor(private a: THREE.Vector3, private b: THREE.Vector3, private h: number) { super(); }
+  getPoint(t: number, out = new THREE.Vector3()) { out.lerpVectors(this.a, this.b, t); out.y += 4 * this.h * t * (1 - t); return out; }
+}
+
 export const MapView: React.FC<{
   scene: MapScene; width: number; height: number; camera: MapCamera; t?: number; zoomH?: number;
   looks?: Record<string, NodeLook>; edgeLooks?: Record<string, EdgeLook>; planeLooks?: Record<string, Partial<MapPlane>>; labels?: boolean; pixelRatio?: number;
-}> = ({ scene: desc, width, height, camera: cam, t = 0, zoomH = 792, looks = {}, edgeLooks = {}, planeLooks = {}, labels = true, pixelRatio = 2 }) => {
+  arcs?: MapArc[];
+}> = ({ scene: desc, width, height, camera: cam, t = 0, zoomH = 792, looks = {}, edgeLooks = {}, planeLooks = {}, labels = true, pixelRatio = 2, arcs = [] }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState<{ icons: Map<string, THREE.Texture>; hdr: THREE.DataTexture } | null>(null);
   const [handle] = useState(() => delayRender("Loading the map's environment and icons"));
@@ -358,6 +371,15 @@ export const MapView: React.FC<{
       }
     }
 
+    for (const m of [...built.arcs.children] as THREE.Mesh[]) { built.arcs.remove(m); m.geometry.dispose(); (m.material as THREE.Material).dispose(); }
+    for (const a of arcs) {
+      const A = nodePos.get(a.from), B = nodePos.get(a.to);
+      if (!A || !B) continue;
+      const dx = B.x - A.x, dz = B.z - A.z, dist = Math.hypot(dx, dz) || 1, ux = dx / dist, uz = dz / dist;
+      const src = new THREE.Vector3(A.x + ux * ARC.inset, ARC.y, A.z + uz * ARC.inset), dst = new THREE.Vector3(B.x - ux * ARC.inset, ARC.y, B.z - uz * ARC.inset);
+      const curve = new ArcCurve(src, dst, ARC.heightBase * (src.distanceTo(dst) / ARC.refDistance));
+      built.arcs.add(new THREE.Mesh(new THREE.TubeGeometry(curve, ARC.segments, ARC.radius, ARC.radial, false), new THREE.MeshBasicMaterial({ color: a.color })));
+    }
     r.render(built.scene, camera);
     const ctx = canvasRef.current?.getContext("2d");
     if (ctx) {

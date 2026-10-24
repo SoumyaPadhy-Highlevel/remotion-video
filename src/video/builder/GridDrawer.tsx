@@ -234,8 +234,8 @@ export type UsingWorkflow = { name: string; folder: string; draft?: boolean; ste
 /** AssetDetailPanel: the asset's header with "Show usage on map" (when it is in more than one folder) and its helper, the
  *  three summary cards (Workflows selected), "Workflows using this asset (N)", search, the Published / Draft tabs (HLTabs line
  *  md: 32 px tabs, 6px 8px, 14/20 500 gray-600; active 600 #004eeb with a 1 px underline; gray-200 nav border) and the rows. */
-export const AssetDrawer: React.FC<{ type: GridType; name: string; workflows: UsingWorkflow[]; triggers: number; actions: number; usage?: boolean;
-  tab: "published" | "draft"; open?: string; openK?: number; rowHover?: string; tabHover?: string; stepHover?: number }> = ({ type, name, workflows, triggers, actions, usage, tab, open, openK = 0, rowHover, tabHover, stepHover = 0 }) => {
+export const AssetDrawer: React.FC<{ type: GridType; name: string; workflows: UsingWorkflow[]; triggers: number; actions: number; usage?: boolean; usageOn?: boolean; usageHover?: boolean;
+  tab: "published" | "draft"; open?: string; openK?: number; rowHover?: string; tabHover?: string; stepHover?: number }> = ({ type, name, workflows, triggers, actions, usage, usageOn, usageHover, tab, open, openK = 0, rowHover, tabHover, stepHover = 0 }) => {
   const pub = workflows.filter((w) => !w.draft), dr = workflows.filter((w) => w.draft), list = tab === "draft" ? dr : pub;
   const usageCount = (w: UsingWorkflow) => {
     const tr = w.steps.filter((s) => s.kind === "trigger").length, ac = w.steps.length - tr;
@@ -250,8 +250,10 @@ export const AssetDrawer: React.FC<{ type: GridType; name: string; workflows: Us
   return (
     <>
       <DrawerHeader type={type} typeRow={type === "forms" ? "Forms" : "Tags"} name={name} below={usage ? <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ height: 40, boxSizing: "border-box", borderRadius: 8, background: HR.primary[600], border: `1px solid ${HR.primary[600]}`, boxShadow: SHADOW_XS, color: "#fff",
-          fontSize: 14, lineHeight: "20px", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center" }}>Show usage on map</div>
+        {/* HLButton blue md: primary "Show usage on map" (hover #0040c1), secondary "Hide usage on map" once it is on */}
+        <div style={{ height: 40, boxSizing: "border-box", borderRadius: 8, boxShadow: SHADOW_XS, fontSize: 14, lineHeight: "20px", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center",
+          ...(usageOn ? { background: "#fff", border: "1px solid #84adff", color: HR.primary[700] }
+            : { background: usageHover ? "#0040c1" : HR.primary[600], border: `1px solid ${usageHover ? "#0040c1" : HR.primary[600]}`, color: "#fff" }) }}>{usageOn ? "Hide usage on map" : "Show usage on map"}</div>
         <div style={{ fontSize: 12, lineHeight: "20px", color: HR.gray[500] }}>Highlight the connections between folders that share this asset.</div>
       </div> : undefined} />
       <div style={{ padding: 16, borderBottom: `1px solid ${HR.gray[100]}`, display: "flex", gap: 8 }}>

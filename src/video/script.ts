@@ -210,7 +210,18 @@ export const TABS = {
 /** The workflows the film's builder shots show, redrawn with the product's own canvas (src/video/builder, scenes.tsx).
  * Trigger `title` is the trigger type, `name` the name the user gave it; filters read as the builder writes them. */
 const tagTrigger = { id: "contact-tag", title: "Contact Tag", name: "Tag added: follow-up", icon: "heroicons-outline:tag", tone: "primary", filters: [`Tag Added is "follow-up"`] } as const;
-export const BUILDER_WORKFLOWS: Record<"continueJourney" | "tagWorkflow" | "formToTag" | "consultationGoal" | "opportunityRouting" | "programApplication" | "priorityAssignment" | "runApplication" | "runTagEnquiries" | "runPayment", WorkflowSpec> = {
+export const BUILDER_WORKFLOWS: Record<"tagNewEnquiries" | "continueJourney" | "tagWorkflow" | "formToTag" | "consultationGoal" | "opportunityRouting" | "programApplication" | "priorityAssignment" | "runApplication" | "runTagEnquiries" | "runPayment", WorkflowSpec> = {
+  // Tag New Enquiries in Plan it (its preview): the Coaching Enquiry form, the tags, then the follow-up (utils/workflows.ts:
+  // wait purple, email and internal notification green)
+  tagNewEnquiries: {
+    triggers: [{ id: "form-submitted", title: "Form Submitted", name: "Form Submitted", icon: "heroicons-outline:clipboard-list", tone: "green", filters: [`Form is "Coaching Enquiry"`] }],
+    steps: [
+      { kind: "action", id: "add-contact-tag", label: "Add Contact Tag", icon: "heroicons-solid:tag", tone: "primary" },
+      { kind: "action", id: "wait", label: "Wait 10 minutes", icon: "ant-design:clock-circle-filled", tone: "purple" },
+      { kind: "action", id: "send-email", label: "Thanks for your enquiry", icon: "heroicons-solid:mail-open", tone: "green" },
+      { kind: "action", id: "notify", label: "Notify the sales team", icon: "ic:baseline-notifications-active", tone: "green" },
+    ],
+  },
   continueJourney: {
     triggers: [{ ...tagTrigger, filters: [...tagTrigger.filters] }], addTrigger: true,
     steps: [{ kind: "action", id: "add-to-workflow", label: "Add to Workflow", icon: "entypo:add-to-list", tone: "purple" }],
@@ -370,7 +381,7 @@ export type FeatureCard = { at: number; kicker: string; html: string; hold?: num
   callout?: [number, number]; pop?: number;
   /** clip cards: hold the clip's first frame instead of playing it (for `hold` s) */
   still?: boolean;
-  /** clip cards: draw "Plan it" (builder/PlanAssets.tsx) over the held film frame, from `plan[0]` to `plan[1]` s of that shot */
+  /** a hold that plays "Plan it" (builder/PlanAssets.tsx) in the app window, from `plan[0]` to `plan[1]` s of that shot */
   plan?: [number, number];
   /** clip cards: a callout whose pointer's tip touches (x, y) in window px, on that card edge (`ax`: tip from the card's left) */
   calloutTip?: { x: number; y: number; side: "top" | "bottom" | "left" | "right"; ax?: number } };
@@ -412,12 +423,12 @@ const ORGDOC = 6245 / 30;
 const HOLD_ORG = 3.727;
 /** The Assistant acting on the map (film scene "act", appended after "orgdoc"): its start and length in the film. */
 const ACT = 7084 / 30, ACT_LEN = 22.66;
-/** "Plan it" (FEATURE_CARDS) is this much longer than the film play it replaced (4 bars): everything after it moves on by
+/** "Plan it" (FEATURE_CARDS) is this much longer than the film play it replaced (6 bars): everything after it moves on by
  * this much, the shots landed on the music included. The soundtrack isn't moved yet (it is to be edited separately). */
-export const PLAN_INSERT = 4 * 1.9375;
+export const PLAN_INSERT = 6 * 1.9375;
 /** The Plan it shot: its length (the replaced play, (72.3 − 67.9) / 0.85 + 0.8 + (73.93 − 72.3) / 1.25, plus PLAN_INSERT), where
  * the asset part starts, and the film frame of the map page it is drawn over. */
-export const PLAN_SHOT = { len: (72.3 - 67.9) / 0.85 + 0.8 + (73.93 - 72.3) / 1.25 + PLAN_INSERT, split: 8.1, film: 64.24 };
+export const PLAN_SHOT = { len: (72.3 - 67.9) / 0.85 + 0.8 + (73.93 - 72.3) / 1.25 + PLAN_INSERT, split: 9.5, film: 64.24 };
 /** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
 export const LINKS_DROP = 100.86 + PLAN_INSERT;
 /** How fast the visual plays after a card; the errors visual plays calmer (it took over the time of a card). */
@@ -434,11 +445,11 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: BUILD.at, kicker: "HOW THE MAP WORKS", html: "", build: true, speed: BUILD.speed, end: BUILD.end + 0.25 },
   // Plan it (user, 2026-10-25): the card, then the product's own panels drawn over the map page (builder/PlanAssets.tsx): a
   // workflow's assets searched to a tag, View step into the preview; then a form's workflows, published and draft. It is
-  // PLAN_INSERT longer than the film play it replaced; the music is to be edited to match (4 bars inserted before 1:18)
+  // PLAN_INSERT longer than the film play it replaced; the music is to be edited to match (6 bars inserted before 1:18).
+  // The app window itself shows the shot (AppWindow.tsx), so it comes forward out of the card like any other visual.
   { at: 67.9, kicker: "PLAN IT", html: `Select a workflow. See what’s inside, ${g("down to the exact trigger.")}`, end: 67.9 },
-  { at: 67.9, kicker: "", html: "", clip: [PLAN_SHOT.film, PLAN_SHOT.film], still: true, plan: [0, PLAN_SHOT.split], hold: PLAN_SHOT.split, end: 67.9 },
-  { at: 73.93, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, clip: [PLAN_SHOT.film, PLAN_SHOT.film], still: true,
-    plan: [PLAN_SHOT.split, PLAN_SHOT.len], hold: PLAN_SHOT.len - PLAN_SHOT.split, end: 73.93 },
+  { at: 67.9, kicker: "", html: "", plan: [0, PLAN_SHOT.split], hold: PLAN_SHOT.split, end: 67.9 },
+  { at: 73.93, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, plan: [PLAN_SHOT.split, PLAN_SHOT.len], hold: PLAN_SHOT.len - PLAN_SHOT.split, end: 73.93 },
   // linked workflows, told as a story (film scene "lm"): on the music's stop (output 1:18) a card, then the builder with an Add to
   // Workflow action, a small push-in and a callout by the cursor (clip A), the "What if" card, then clip B, landed on the soundtrack: the Linked
   // badges pop on the first build-up hit (clip 0.65 s), the hand-off lines draw from the second (4.03 s) and connect on drop 2
@@ -546,6 +557,11 @@ export const EDIT_END = EDIT[EDIT.length - 1].n1;
  * drop; after the errors visual everything is LOOP_CUT_LEN earlier than when it was built, so it is read that much later.
  * Uncut output time in, uncut output time out. A rebuilt EDITED_FILE makes this the identity. */
 const ERRORS_OUT = EDIT.find((s) => s.hold && s.card?.at === M.D3)!.n0, AFTER_ERRORS_OUT = EDIT.find((s) => s.hold && s.src === 163.15)!.n0;
+/** Plan it's moment at output time `tn`, or null: its first frame under the card before it, its last under the card after it
+ *  (so the window recedes and comes forward on the shot itself), the shot's own time in between. */
+const PLAN_P1 = EDIT.find((s) => s.hold && s.card?.plan?.[0] === 0)!, PLAN_CARD_OUT = EDIT[EDIT.indexOf(PLAN_P1) + 4]!;
+const PLAN_FROM = EDIT[EDIT.indexOf(PLAN_P1) - 2]!.n0, PLAN_TO = EDIT[EDIT.indexOf(PLAN_CARD_OUT)].n1;
+export const planTime = (tn: number) => (tn < PLAN_FROM || tn >= PLAN_TO ? null : Math.min(PLAN_SHOT.len, Math.max(0, tn - PLAN_P1.n0)));
 /** …and after Plan it, everything is PLAN_INSERT later than when the footage was built, so it is read that much earlier. */
 const PLAN_END_OUT = EDIT.find((s) => s.hold && s.card?.plan?.[1] === PLAN_SHOT.len)!.n1;
 const builtTime = (tn: number) => (tn < PLAN_END_OUT ? tn : tn - PLAN_INSERT);

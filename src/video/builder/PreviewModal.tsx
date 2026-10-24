@@ -19,16 +19,19 @@ const SEC: React.CSSProperties = { height: 32, boxSizing: "border-box", padding:
 const LABEL: React.CSSProperties = { display: "block", textTransform: "uppercase", letterSpacing: "0.3px", color: HR.gray[700], fontSize: 12, lineHeight: "16px", fontWeight: 700, marginBottom: 8 };
 
 /** A tag chip in a ghl-ui multiple select (naive Tag medium, closable): 28 px, 0 7px, 2 px radius, #eee, #e0e0e6, 14 px #344054. */
-const Chip: React.FC<{ text: string }> = ({ text }) => (
+const Chip: React.FC<{ text: string; glow?: number }> = ({ text, glow = 0 }) => (
   <span style={{ height: 28, boxSizing: "border-box", padding: "0 7px", borderRadius: 2, background: "#eeeeee", border: "1px solid #e0e0e6", color: HR.gray[700], fontSize: 14, lineHeight: 1,
-    display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>{text}<span style={{ width: 18, textAlign: "center", color: "#666", fontSize: 14 }}>×</span></span>
+    display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap",
+    // the video's highlight (not the product's): a primary ring that swells and fades, to show where the tag is
+    boxShadow: glow > 0.01 ? `0 0 0 ${(2 * glow).toFixed(2)}px ${HR.primary[500]}, 0 0 0 ${(2 + 5 * glow).toFixed(2)}px rgba(41,112,255,${(0.25 * glow).toFixed(3)})` : undefined }}>
+    {text}<span style={{ width: 18, textAlign: "center", color: "#666", fontSize: 14 }}>×</span></span>
 );
 
 export type PaneStep = { kind: "trigger" | "action"; title: string; icon: string; tone: "green" | "primary"; fields: ({ label: string; input: string } | { label: string; chips: string[] })[] };
 
 /** AsideSectionLite: header (46 px tile, 12 px radius, {c}-50 / 24 px {c}-700 glyph; title 14/20 600; subtitle 12/16 gray-500;
  *  28 px close), the orange "View-only mode" alert, then the fields (labels 12/16 700 uppercase gray-700). */
-const DetailPane: React.FC<{ step: PaneStep }> = ({ step }) => {
+const DetailPane: React.FC<{ step: PaneStep; glowChip?: string; glow?: number }> = ({ step, glowChip, glow = 0 }) => {
   const c = step.tone === "green" ? { box: HR.green[50], glyph: HR.green[700] } : { box: HR.primary[50], glyph: HR.primary[700] };
   return (
     <div style={{ width: MODAL.pane, height: MODAL.bodyH, boxSizing: "border-box", border: `1px solid ${HR.gray[200]}`, borderRadius: 8, background: "#fff", overflow: "hidden" }}>
@@ -57,7 +60,7 @@ const DetailPane: React.FC<{ step: PaneStep }> = ({ step }) => {
               ? <div style={{ height: 38, boxSizing: "border-box", borderRadius: 4, border: `1px solid ${HR.gray[300]}`, padding: "8px 12px", fontSize: 14, lineHeight: "20px", color: HR.gray[900], boxShadow: "0 1px 2px 0 rgba(0,0,0,.05)" }}>{f.input}</div>
               : <div style={{ display: "flex", marginTop: 8 }}>
                 <div style={{ flex: 1, height: 40, boxSizing: "border-box", borderRadius: "8px 0 0 8px", border: `1px solid ${HR.gray[300]}`, boxShadow: "0 1px 2px #1018280D", display: "flex", alignItems: "center", gap: 6, padding: "0 8px" }}>
-                  {f.chips.map((c2) => <Chip key={c2} text={c2} />)}
+                  {f.chips.map((c2) => <Chip key={c2} text={c2} glow={c2 === glowChip ? glow : 0} />)}
                 </div>
                 <div style={{ width: 40, height: 40, boxSizing: "border-box", borderRadius: "0 8px 8px 0", border: `1px solid ${HR.gray[300]}`, borderLeft: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <BIcon name="ghl:DotsVertical" size={16} color={HR.gray[700]} />
@@ -71,9 +74,8 @@ const DetailPane: React.FC<{ step: PaneStep }> = ({ step }) => {
 };
 
 /** The preview at `k` (0–1, the modal's fade/scale), its canvas at `view` with `states`, and the detail pane sliding in with `pane`. */
-export const PreviewModal: React.FC<{ k: number; name: string; wf: WorkflowSpec; view: CanvasView; states: Record<string, RunNodeState>; pane: number; step: PaneStep; t: number }> = ({
-  k, name, wf, view, states, pane, step, t,
-}) => {
+export const PreviewModal: React.FC<{ k: number; name: string; wf: WorkflowSpec; view: CanvasView; states: Record<string, RunNodeState>; pane: number; step: PaneStep; t: number;
+  glowChip?: string; glow?: number }> = ({ k, name, wf, view, states, pane, step, t, glowChip, glow }) => {
   if (k <= 0.001) return null;
   const cw = MODAL_CANVAS.width + (MODAL.gap + MODAL.pane) * (1 - Math.min(1, pane * 4));   // the pane takes its room as it opens
   return (
@@ -95,7 +97,7 @@ export const PreviewModal: React.FC<{ k: number; name: string; wf: WorkflowSpec;
         </div>
         <div style={{ display: "flex", gap: MODAL.gap }}>
           <MapsCanvas wf={wf} width={cw} height={MODAL.bodyH} view={view} states={states} t={t} />
-          <div style={{ opacity: pane, transform: `translateX(${(100 * (1 - pane)).toFixed(1)}%)` }}><DetailPane step={step} /></div>
+          <div style={{ opacity: pane, transform: `translateX(${(100 * (1 - pane)).toFixed(1)}%)` }}><DetailPane step={step} glowChip={glowChip} glow={glow} /></div>
         </div>
       </div>
     </div>
