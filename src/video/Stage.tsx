@@ -41,14 +41,14 @@ export const Background: React.FC = () => {
   );
 };
 
-/** `{2,500}` in a headline: counts up over `count` (timeline s), digits in a fixed-width box so the line doesn't reflow, then
- * drops into place at the end of the count (a slam from 1.4× that bounces as it settles). */
+/** `{2,500}` in a headline: counts up over `count` (timeline s) in tabular digits, then drops into place at the end of the count
+ * (from 0.3 em above at 1.22×, a spring that bounces as it settles). The line grows with the digits, so no gap opens early on. */
 const counter = (h: string, count: [number, number] | undefined, t: number) => h.replace(/\{([\d,]+)\}/, (_, v: string) => {
   const to = Number(v.replace(/,/g, "")), [c0, c1] = count ?? [0, 0];
   const n = Math.round(to * transform(t, [c0, c1], [0, 1], { ease: easeOut }));
-  const k = t >= c1 ? 1 + 0.4 * (1 - springAt(t, c1, 0.5, 0.45)) : 1;
-  return `<span class="grad-text" style="display:inline-block;min-width:${(v.length * 0.56).toFixed(2)}em;text-align:right;font-variant-numeric:tabular-nums;`
-    + `transform:scale(${k.toFixed(4)});transform-origin:50% 85%">${n.toLocaleString("en-US")}</span>`;
+  const d = t >= c1 ? 1 - springAt(t, c1, 0.5, 0.45) : 0;
+  return `<span class="grad-text" style="display:inline-block;font-variant-numeric:tabular-nums;transform-origin:50% 100%;`
+    + `transform:translateY(${(-0.3 * d).toFixed(4)}em) scale(${(1 + 0.22 * d).toFixed(4)})">${n.toLocaleString("en-US")}</span>`;
 });
 
 // ── Titles ───────────────────────────────────────────────────────────────────
