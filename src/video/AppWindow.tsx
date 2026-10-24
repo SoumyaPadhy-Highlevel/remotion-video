@@ -1,12 +1,12 @@
 // The app window. Its content is one footage clip per beat (public/footage/<beat id>.mp4,
 // 1620×880). The window's own motion (rise, push-ins, receding behind titles) lives here.
 import React from "react";
-import { OffthreadVideo, Sequence, staticFile } from "remotion";
+import { Freeze, OffthreadVideo, Sequence, staticFile } from "remotion";
 import { easeInOut, easeOut, prog } from "./anim";
 import { Callout } from "./Callout";
 import { windowAt } from "./choreography";
 import { introCalloutHtml, useCfg } from "./config";
-import { BEATS, FPS, INTRO_CALLOUTS, introCalloutAt } from "./script";
+import { APP_FILE, BEATS, FPS, INTRO_BROWSE, INTRO_CALLOUTS, introCalloutAt } from "./script";
 
 export const WINDOW = { left: 150, top: 118, width: 1620, height: 880 };
 
@@ -42,6 +42,11 @@ export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean }> = 
           </Sequence>
         );
       })}
+      {t >= INTRO_BROWSE.a && t < INTRO_BROWSE.b ? (
+        <Freeze frame={0}>
+          <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted trimBefore={Math.round((INTRO_BROWSE.film + t - INTRO_BROWSE.a) * FPS)} style={{ position: "absolute", left: 0, top: 0, width: WINDOW.width, height: WINDOW.height, background: "#fff" }} />
+        </Freeze>
+      ) : null}
       {co && !plate ? (() => {
         const lt = tn! - co.o0;
         return <Callout x={co.c.x} y={co.c.y} side={co.c.side} ax={co.c.ax} html={introCalloutHtml(cfg, INTRO_CALLOUTS.indexOf(co.c))}

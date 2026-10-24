@@ -12,6 +12,7 @@ import { ClipWindow, Panels } from "./Panels";
 import { DEFAULT_MUSIC, MusicSettings } from "./musicProps";
 import { Cfg, CfgProvider, cardText, DEFAULT_CFG, FxCfg, MotionCfg, ShowCfg, StyleCfg, styleVars, TextCfg } from "./config";
 import { BuildOverlay, splitAt, splitStyle } from "./Build";
+import { withSteadyMotion } from "./steadyMotion";
 
 loadFonts();
 
@@ -26,10 +27,11 @@ export type Layer = "all" | "base" | "titles" | "panel" | "flash" | "mascot" | "
   // single pieces for the full breakdown (scripts/resolve-dissect.ts): titles without the wash, the panel shots only,
   // the map-build panel only, one flying item (`item`), the client message only
   | "titles-clean" | "panels" | "buildpanel" | "flight" | "message" | "tabs";
-export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?: MusicSettings; text?: TextCfg; style?: StyleCfg; show?: ShowCfg; motion?: MotionCfg; fx?: FxCfg }> = ({
+export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?: MusicSettings; text?: TextCfg; style?: StyleCfg; show?: ShowCfg; motion?: MotionCfg; fx?: FxCfg; steadyMotion?: boolean }> = ({
   layer = "all", item = 0, music = DEFAULT_MUSIC, text = DEFAULT_CFG.text, style = DEFAULT_CFG.style, show = DEFAULT_CFG.show,
-  motion = DEFAULT_CFG.motion, fx = DEFAULT_CFG.fx,
+  motion: authoredMotion = DEFAULT_CFG.motion, fx = DEFAULT_CFG.fx, steadyMotion = false,
 }) => {
+  const motion = steadyMotion ? withSteadyMotion(authoredMotion) : authoredMotion;
   const cfg: Cfg = { text, style, show, motion, fx };
   const L = (k: Layer) => layer === "all" || layer === k || (k === "titles" && layer === "titles-clean");
   const plate = layer === "base";

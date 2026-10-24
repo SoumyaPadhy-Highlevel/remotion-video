@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v30.mp4";   // v30: the run cuts back on its close click; v29: Trace any contact re-cut (enrollment → run → timeline); v28: v27 with Trace any contact rebuilt from staging (taylor reynolds, wait for condition user); v27: v26 without the offer lines while highlighting; v26: v25 + scene "act" (the Assistant acting on the map, from frame 7084); v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
+export const APP_FILE = "app-motion-v36.mp4";   // v36: the Workflow Maps pop and click after the reimagine line; v35: browse from 0:36 with a slow Workflow Maps click; v34: the Workflow Maps button pops up before the click; v33: shorter Organise notes (orgdoc, from the Organise session) + scene "browse" (the intro's list browsing, from frame 7764); v30: the run cuts back on its close click; v29: Trace any contact re-cut (enrollment → run → timeline); v28: v27 with Trace any contact rebuilt from staging (taylor reynolds, wait for condition user); v27: v26 without the offer lines while highlighting; v26: v25 + scene "act" (the Assistant acting on the map, from frame 7084); v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -141,6 +141,10 @@ export const BURSTS = [
 ];
 /** The problem, "say, then show": a short statement over the receded window, then the visual on its own (its explanation is in
  * callouts inside the app footage). One card per idea; each sits on a bar line of the placeholder track. */
+/** From 0:36 (right after "Open every workflow") to the drop the window plays the list-browsing shot (film scene "browse", from
+ * frame 7764) instead of the tabs and the map forming: folder after folder, faster and faster, then slowly "Workflow Maps" pops
+ * up, a deliberate click, a slow zoom; the drop's flash cuts to the map. Timeline seconds (= output + CUT_LEN here). */
+export const INTRO_BROWSE = { a: 42.55, b: 54.27, film: 7764 / 30 };
 export const INTRO_CARDS: { a: number; b: number; html: string; depth?: number; y?: number }[] = [
   { a: 3.9, b: 5.75, html: `It started <span class="grad-text">simple.</span>` },
   { a: 11.62, b: 13.35, html: `Then workflows started <span class="grad-text">calling each other.</span>` },
@@ -148,7 +152,8 @@ export const INTRO_CARDS: { a: number; b: number; html: string; depth?: number; 
   { a: 40.69, b: 42.55, html: `The only way to know? <span class="grad-text">Open every workflow.</span>` },
   // the suspense before the reveal: over the chaos, then high above the map slowly forming in the window (light recede)
   { a: 46.55, b: 48.8, html: `What if we could change <span class="grad-text">all of this…</span>` },
-  { a: 49.1, b: 52.65, html: `…and reimagine how you <span class="grad-text">see your workflows?</span>`, depth: 0.3, y: -330 },
+  // ends before "Workflow Maps" pops up beside the list's title, which it would cover (INTRO_BROWSE)
+  { a: 49.1, b: 51.2, html: `…and reimagine how you <span class="grad-text">see your workflows?</span>`, depth: 0.3, y: -330 },
 ];
 /** The problem's explanations: white callouts in the app window, next to what they explain (window px). `x, y` is where the
  * pointer's tip touches and `side` the card edge it sits on (`ax`: tip's distance from the card's left, for top/bottom);
@@ -181,7 +186,7 @@ export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "
 export const TABS = {
   // one tab per workflow opened: the hand-off pair, then "open every workflow" on the hits; gone at the implosion
   times: [13.5, 18.7, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
-  b: 48.85,
+  b: 42.55,   // gone when the list page takes over (INTRO_BROWSE)
   /** the hand-off: flipping back and forth between the two open workflows ([time, tab index]) */
   flips: [[22.0, 0], [22.75, 1], [23.5, 0], [24.25, 1]] as [number, number][],
   names: ["Continue Client Journey", "Tag workflow", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],

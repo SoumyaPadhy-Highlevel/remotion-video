@@ -113,8 +113,10 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
       position: "absolute", left: WINDOW.left, top: WINDOW.top, width: WINDOW.width, height: WINDOW.height, borderRadius: 18, background: "#fff", overflow: "hidden", opacity: fade,
       boxShadow: "0 30px 80px rgba(16,44,102,.18), 0 6px 18px rgba(16,44,102,.10), 0 0 0 1px rgba(16,44,102,.06)",
     }}>
-      <Freeze frame={Math.round(film * FPS)}>
-        <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted style={{ width: WINDOW.width, height: WINDOW.height }} />
+      {/* the film frame comes from trimBefore, not the frozen frame: a frozen frame past the composition's own length is clamped
+          to it (the film runs longer than the video) */}
+      <Freeze frame={0}>
+        <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted trimBefore={Math.round(film * FPS)} style={{ width: WINDOW.width, height: WINDOW.height }} />
       </Freeze>
     </div>
     <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * prog(lt, 0.1, 0.5, easeOut) * (1 - prog(lt, dur - 0.35, dur - 0.05)), transform: `translateY(${((1 - prog(lt, 0.1, 0.5, easeOut)) * 20).toFixed(1)}px)` }}>

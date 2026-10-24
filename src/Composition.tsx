@@ -15,6 +15,7 @@ export const MyComposition = () => {
       durationInFrames={Math.round(VIDEO_END * FPS)}
       schema={workflowMapsSchema}
       defaultProps={{
+        steadyMotion: true,
         music: {
           volume: 1,
           offset: 0,

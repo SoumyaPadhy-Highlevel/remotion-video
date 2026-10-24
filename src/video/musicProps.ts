@@ -14,6 +14,7 @@ export type MusicSettings = z.infer<typeof musicSchema>;
 
 export const LAYERS = ["all", "base", "titles", "panel", "flash", "mascot", "audio", "titles-clean", "panels", "buildpanel", "flight", "message", "tabs"] as const;
 export const workflowMapsSchema = z.object({
+  steadyMotion: z.boolean().optional().describe("Keep the app frame steady between text cards; use gentle title fades"),
   music: musicSchema,
   text: textSchema,
   style: styleSchema,

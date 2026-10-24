@@ -86,6 +86,7 @@ export const motionSchema = z.object({
   pushInEase: z.object({ in: num(0.05, 3, 0.05, "Seconds to push in"), out: num(0.05, 3, 0.05, "Seconds to pull back") }),
   introCallouts: z.object({ push: num(1, 1.4, 0.01, "Push-in while an intro callout is up (1.08 = 8% closer)"), in: num(0.05, 3, 0.05, "Seconds to push in"), out: num(0.05, 3, 0.05, "Seconds to pull back") }),
   titles: z.object({
+    mode: z.enum(["kinetic", "calm"]).optional().describe("Calm: the full line fades and rises together, without a size pulse"),
     rise: num(0, 3, 0.01, "How far each letter rises in (em)"), tilt: num(0, 45, 0.5, "Degrees"), blur: num(0, 40, 0.5),
     letterDelay: num(0, 0.2, 0.001, "Max delay between letters (s)"), duration: num(0.05, 3, 0.01, "Each letter's entrance (s)"),
     exitLift: num(0, 3, 0.01, "How far letters lift away (em)"), pulse: num(0, 0.3, 0.001, "Pulse on music hits"),
