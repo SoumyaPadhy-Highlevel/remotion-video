@@ -2,7 +2,7 @@
 // exact glyphs the builder draws. Iconify names (`prefix:name`) come from @iconify/json; `ghl:Name` from
 // @gohighlevel/ghl-icons/24/outline (the builder's Untitled-UI set). To add an icon, add its name to NAMES and re-run:
 //   node scripts/builder-icons.mjs ../automation-workflows-frontend
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const NAMES = [
@@ -35,6 +35,10 @@ const NAMES = [
   // the deleted asset's panel (AssetDetailPanel): search prefix; the summary's trigger / action glyphs are mingcute:lightning-fill
   // and mingcute:play-fill in the product, which @iconify/json 1.x lacks, so mdi's filled bolt and play stand in
   "ghl:SearchMd", "mdi:lightning-bolt", "mdi:play",
+  // Workflow Maps' right drawer and preview modal (grid-right-sidebar, GridAssetGlyph, AsideSectionLite)
+  "ghl:Stars02", "ghl:XClose", "ghl:X", "ghl:SearchMd", "ghl:Folder", "ghl:ChevronRight", "ghl:LinkExternal01", "ghl:DotsVertical",
+  "akar-icons:arrow-up-right", "lucide:chevron-down", "heroicons-solid:user", "heroicons-solid:chevron-down", "fa-solid:trash",
+  "mingcute:lightning-fill", "mingcute:play-fill",
 ];
 
 const repo = process.argv[2];
@@ -44,7 +48,10 @@ const sets = new Map();
 
 /** Iconify icon → { body, size } (body is the SVG's inner markup in its own viewBox). */
 const iconify = (prefix, name) => {
-  if (!sets.has(prefix)) sets.set(prefix, JSON.parse(readFileSync(join(nm, "@iconify/json/json", `${prefix}.json`), "utf8")));
+  // the product fetches a few sets from the Iconify API at runtime (not in its @iconify/json): their icons are kept in
+  // scripts/icon-sets/<prefix>.json, as the API serves them (https://api.iconify.design/<prefix>.json?icons=...)
+  const local = new URL(`./icon-sets/${prefix}.json`, import.meta.url);
+  if (!sets.has(prefix)) sets.set(prefix, JSON.parse(readFileSync(existsSync(local) ? local : join(nm, "@iconify/json/json", `${prefix}.json`), "utf8")));
   const set = sets.get(prefix);
   const alias = set.aliases?.[name];
   const icon = set.icons[alias ? alias.parent : name];

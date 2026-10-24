@@ -16,6 +16,8 @@ const MS = {
   grid: "#f7f7f7", edge: "#b1b1b7", arrow: "#6b7280", handle: "#6b7280",
   ran: { border: HR.green[500], ring: "#dcfce7" }, failed: { border: "#EF4444", ring: "#FEE2E2" },
   selected: { primary: HR.primary[700], green: HR.green[700], purple: HR.purple[700] } as Record<string, string>,
+  // the selection ring (NodeLayout.vue: box-shadow 0 0 0 8px var(--ring-color), colorMap's oklch -100 shades, 0.3 s ease-out)
+  selectedRing: { primary: "#dbeafe", green: "#dcfce7", purple: "#f3e8ff" } as Record<string, string>,
 };
 type ChipKind = "entered" | "exited" | "error" | "skipped" | "current";
 const CHIPS: Record<ChipKind, { label: string; icon: string; bg: string; border: string; glyph: string; text: string }> = {
@@ -28,7 +30,9 @@ const CHIPS: Record<ChipKind, { label: string; icon: string; bg: string; border:
 
 /** A node's state: in a run, `ran` (0–1, the path ring growing in over 0.3 s), `failed`, `skipped`, `selected` and its chips;
  * on an Add to Workflow step, `linked` (0–1 as it pops in) shows the "Linked" badge with its count. */
-export type RunNodeState = { ran?: number; failed?: boolean; skipped?: boolean; selected?: boolean; chips?: ChipKind[]; chipsIn?: number; linked?: number; linkedCount?: number };
+export type RunNodeState = { ran?: number; failed?: boolean; skipped?: boolean; selected?: boolean; chips?: ChipKind[]; chipsIn?: number; linked?: number; linkedCount?: number;
+  /** a selected node's 8 px ring as it grows in (0–1); the run views select without it */
+  ring?: number };
 
 /** "Linked" (workflow-canvas-pane/LinkedAssetFloater.vue): a 2xs primary HLButton 8 px above the card's top-left, with the
  * count in a FilterCount pill and a chevron. */
@@ -54,7 +58,8 @@ const Chip: React.FC<{ kind: ChipKind }> = ({ kind }) => {
 
 const Card: React.FC<{ n: MapsNode; s: RunNodeState }> = ({ n, s }) => {
   const c = toneColors(n.tone);
-  const ran = s.ran ?? 0, ring = s.failed ? `0 0 0 8px ${MS.failed.ring}` : ran > 0 ? `0 0 0 ${(8 * Math.min(1, ran)).toFixed(1)}px ${MS.ran.ring}` : MS.shadow;
+  const ran = s.ran ?? 0, ring = s.failed ? `0 0 0 8px ${MS.failed.ring}` : ran > 0 ? `0 0 0 ${(8 * Math.min(1, ran)).toFixed(1)}px ${MS.ran.ring}`
+    : s.selected && s.ring ? `0 0 0 ${(8 * Math.min(1, s.ring)).toFixed(1)}px ${MS.selectedRing[n.tone] ?? MS.selectedRing.primary}` : MS.shadow;
   const border = s.selected ? MS.selected[n.tone] ?? HR.primary[700] : s.failed ? MS.failed.border : ran > 0 ? MS.ran.border : MS.border;
   const branch = n.kind === "branch";
   return (

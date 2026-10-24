@@ -5,7 +5,7 @@ import { workflowMapsSchema } from "./video/musicProps";
 import { StructureOpeningPreview } from "./video/StructureOpening";
 import { MapBuildMock } from "./video/MapBuildMock";
 import { EditorPieces, FootageAsEdited } from "./video/EditorPieces";
-import { BuilderShots } from "./video/builder/BuilderShots";
+import { BuilderShots, PlanAssetsShot, PLAN_LEN } from "./video/builder/BuilderShots";
 import { AssistantStills } from "./video/assistant/AssistantStills";
 import { AssistantSection, SECTION_LEN } from "./video/assistant/AssistantSection";
 
@@ -367,6 +367,7 @@ export const MyComposition = () => {
     <Composition id="AssistantSection" component={AssistantSection} durationInFrames={Math.round(SECTION_LEN * FPS)} fps={FPS} width={1620} height={880} />
     <Composition id="AssistantStills" component={AssistantStills} durationInFrames={1} fps={FPS} width={1620} height={880} defaultProps={{ still: "A1" }} />
     <Composition id="BuilderShots" component={BuilderShots} durationInFrames={Math.round(236 * FPS)} fps={FPS} width={1620} height={880} defaultProps={{ overlay: true }} />
+    <Composition id="PlanAssets" component={PlanAssetsShot} durationInFrames={Math.round(PLAN_LEN * FPS)} fps={FPS} width={1620} height={880} defaultProps={{ film: 64.24 }} />
     <Composition id="MapBuild-Mock" component={MapBuildMock} durationInFrames={1} fps={30} width={1920} height={1080} />
     </>
   );
