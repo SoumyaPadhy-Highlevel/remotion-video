@@ -12,8 +12,8 @@ export const RECEDES: [number, number, number][] = [
   ...INTRO_CARDS.map((c): [number, number, number] => [c.a - 0.05, c.b, c.depth ?? 0.9]), // the intro's statement cards
   [54.25, 58.1, 0.45], // behind the exploding title (held until the map build); the map still shows through
   [M.B2, M.D2 + 0.1, 1], // build to drop 2
-  ...[122.04, M.D3].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
-  [M.GAP, M.D3 + 0.1, 0.8], // "and when something breaks?"
+  ...[122.04].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
+  [M.GAP, 148.6, 0.8], // "what if something breaks across your 2,500 workflows?" (holds past the drop)
   [M.FIN - 0.05, 163.1, 0.9], // "One more thing: just ask your map"
 ];
 
@@ -92,6 +92,9 @@ export interface MascotState {
 }
 
 /** Where the mascot is and how it reacts, beat by beat. */
+/** Where the mascot stands for "And when something breaks?" (GAP – D3). */
+const GAP_POSE = { x: 1690, y: 690, s: 0.6 };
+
 export function mascotAt(t: number): MascotState {
   const m: MascotState = { x: 2400, y: 600, s: 0.5, o: 1, eyes: "normal", look: [0, 0] };
   const corner = () => {
@@ -225,10 +228,11 @@ export function mascotAt(t: number): MascotState {
   }
   // GAP – D3: steps forward for "one more thing".
   else if (t < M.D3) {
+    // right of the "And when something breaks?" headline, not over it
     const k = springAt(t, M.GAP, 0.7, 0.25);
-    m.x = mix(1830, 1180, k);
-    m.y = mix(960, 600, k);
-    m.s = mix(0.38, 0.9, k);
+    m.x = mix(1830, GAP_POSE.x, k);
+    m.y = mix(960, GAP_POSE.y, k);
+    m.s = mix(0.38, GAP_POSE.s, k);
     m.r = mix(-10, 6, k);
     m.look = [0, -6];
     m.eyes = t > 145.76 ? "worried" : "normal";
@@ -236,9 +240,9 @@ export function mascotAt(t: number): MascotState {
   // D3 – FIN: troubleshoot, find what's broken.
   else if (t < M.FIN) {
     const k = springAt(t, M.D3, 0.8, 0.2);
-    m.x = mix(1180, 1830, k);
-    m.y = mix(600, 960, k);
-    m.s = mix(0.9, 0.38, k);
+    m.x = mix(GAP_POSE.x, 1830, k);
+    m.y = mix(GAP_POSE.y, 960, k);
+    m.s = mix(GAP_POSE.s, 0.38, k);
     m.r = -10;
     m.look = [-16, -8];
     m.streak = transform(t, [M.D3, M.D3 + 0.1, M.D3 + 0.5, M.D3 + 0.9], [0, 1, 1, 0]);

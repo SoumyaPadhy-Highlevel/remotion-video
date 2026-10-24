@@ -21,7 +21,7 @@ export const md = (s: string) => s.replace(/\*([^*]+)\*/g, '<span class="grad-te
 const INTRO_KEYS = ["startedSimple", "callingEachOther", "oneFormManyWorkflows", "openEveryWorkflow", "whatIf", "reimagine"] as const;
 const FEATURE_KEYS = ["selectWorkflow", "clickAsset", "rememberHandOff", "linkedQuestion", "whatIfOneView", "linkedCanvas", "traceJourney", "organiseAndDocument", "makeItYourOwn", "writeItOnce", "customerJourney", "pickContact",
   "activeAndFinished", "onTheTimeline", "needsAttention", "failedStep", "deletedAssets", "askYourMap", "answersOnMap", "doesTheWork", "actsOnMap"] as const;
-const TITLE_CARD_KEYS = ["traceContact", "fixErrors", "justAsk"] as const;
+const TITLE_CARD_KEYS = ["traceContact", "justAsk"] as const;
 export const CALLOUT_KEYS = ["buriedInFolders", "handsOffContact", "everyHandOffTab", "whichTab", "oneFormFourWorkflows", "fourWorkflowsBreak"] as const;
 const FEATURES = FEATURE_CARDS.filter((c) => !c.build && !c.cut);
 if (FEATURES.length !== FEATURE_KEYS.length || INTRO_CARDS.length !== INTRO_KEYS.length || TITLE_CARDS.length !== TITLE_CARD_KEYS.length || INTRO_CALLOUTS.length !== CALLOUT_KEYS.length) {

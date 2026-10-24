@@ -28,6 +28,10 @@ const NAMES = [
   "ghl:MessageChatSquare", "ghl:XClose", "ghl:ArrowUp", "ghl:Microphone01", "ghl:Lightbulb02", "ghl:Map01", "ghl:AlertCircle",
   "ghl:Dataflow01", "ghl:Lightning01", "ghl:FolderPlus", "ghl:Eraser", "ghl:Save01", "ghl:ThumbsUp", "ghl:ThumbsDown",
   "ghl:ClockRewind", "ghl:ReverseLeft", "ghl:CheckCircle", "ghl:Clock", "ghl:Loading01", "ghl:Folder",
+  // Workflow Maps' error flow (GridErrorSummary, WorkflowDetailPanel, WorkflowFailedExecutionList, WorkflowCanvasModal,
+  // ExecutionLogPanel, ExecutionLogDetailPanel)
+  "lucide:chevron-down", "lucide:chevron-right", "lucide:x", "heroicons-solid:user", "akar-icons:arrow-up-right",
+  "ghl:Folder", "ghl:XClose", "ghl:Stars02", "ghl:ChevronRight", "ghl:LinkExternal01", "ghl:X", "ghl:Share03",
 ];
 
 const repo = process.argv[2];

@@ -109,7 +109,7 @@ export const MyComposition = () => {
             },
             needsAttention: {
               kicker: "WHEN IT BREAKS",
-              text: "Spot what needs attention. *See exactly which runs failed.*",
+              text: "Catch errors *quickly.*",
             },
             failedStep: {
               kicker: "WHEN IT BREAKS",
@@ -149,16 +149,12 @@ export const MyComposition = () => {
               kicker: "TROUBLESHOOT IT",
               text: "Trace any *contact*",
             },
-            fixErrors: {
-              kicker: "TROUBLESHOOT IT",
-              text: "Fix *errors* fast",
-            },
             justAsk: {
               kicker: "ONE MORE THING",
               text: "Just *ask* your map",
             },
           },
-          breaksHeadline: "And when something *breaks?*",
+          breaksHeadline: "What if something *breaks*\nacross your {2,500} workflows?",
           mapBuild: {
             kicker: "HOW THE MAP WORKS",
             headline: "Your same workflows,\n*now drawn as a map.*",
