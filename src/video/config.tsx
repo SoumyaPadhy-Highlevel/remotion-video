@@ -20,10 +20,10 @@ export const md = (s: string) => s.replace(/\*([^*]+)\*/g, '<span class="grad-te
 // ── names for the cards (order as in script.ts) ──
 const INTRO_KEYS = ["startedSimple", "callingEachOther", "oneFormManyWorkflows", "openEveryWorkflow", "whatIf", "reimagine"] as const;
 const FEATURE_KEYS = ["selectWorkflow", "clickAsset", "rememberHandOff", "linkedQuestion", "whatIfOneView", "linkedCanvas", "traceJourney", "findAnything", "organiseAndDocument", "makeItYourOwn", "documentIt", "writeItOnce", "customerJourney", "pickContact",
-  "everyRun", "openRun", "stepRunToRun", "needsAttention", "failedStep", "deletedAssets", "askYourMap", "answersOnMap", "doesTheWork", "actsOnMap"] as const;
+  "activeAndFinished", "onTheTimeline", "needsAttention", "failedStep", "deletedAssets", "askYourMap", "answersOnMap", "doesTheWork", "actsOnMap"] as const;
 const TITLE_CARD_KEYS = ["makeItYours", "traceContact", "fixErrors", "justAsk"] as const;
 export const CALLOUT_KEYS = ["buriedInFolders", "handsOffContact", "flipBackAndForth", "oneFormFourWorkflows", "fourWorkflowsBreak"] as const;
-const FEATURES = FEATURE_CARDS.filter((c) => !c.build);
+const FEATURES = FEATURE_CARDS.filter((c) => !c.build && !c.cut);
 if (FEATURES.length !== FEATURE_KEYS.length || INTRO_CARDS.length !== INTRO_KEYS.length || TITLE_CARDS.length !== TITLE_CARD_KEYS.length || INTRO_CALLOUTS.length !== CALLOUT_KEYS.length) {
   throw new Error("config.tsx: the card names no longer match script.ts (cards were added or removed)");
 }

@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v27.mp4";   // v27: v26 without the offer lines while highlighting; v26: v25 + scene "act" (the Assistant acting on the map, from frame 7084); v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
+export const APP_FILE = "app-motion-v30.mp4";   // v30: the run cuts back on its close click; v29: Trace any contact re-cut (enrollment → run → timeline); v28: v27 with Trace any contact rebuilt from staging (taylor reynolds, wait for condition user); v27: v26 without the offer lines while highlighting; v26: v25 + scene "act" (the Assistant acting on the map, from frame 7084); v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -94,9 +94,8 @@ export const CAPTIONS: { a: number; b: number; html: string }[] = [
   { a: 124.16, b: 125.76, html: `Pick any <span class="grad-text">contact.</span>` },
   { a: 125.96, b: 129.06, html: `See every workflow <span class="grad-text">they’ve been in.</span>` },
   { a: 129.26, b: 132.36, html: `Every run, <span class="grad-text">newest first.</span>` },
-  { a: 132.86, b: 135.66, html: `Open any run. See the <span class="grad-text">exact path.</span>` },
-  { a: 135.96, b: 139.06, html: `There’s the email <span class="grad-text">Jordan got.</span>` },
-  { a: 140.16, b: 144.46, html: `Step from <span class="grad-text">run to run.</span>` },
+  { a: 132.86, b: 139.06, html: `Open any run. See exactly <span class="grad-text">where they are.</span>` },
+  { a: 140.16, b: 144.46, html: `Click any step. See <span class="grad-text">why it’s waiting.</span>` },
   { a: 148.76, b: 150.86, html: `Spot what needs <span class="grad-text">attention.</span>` },
   { a: 152.06, b: 154.86, html: `See exactly which <span class="grad-text">runs failed.</span>` },
   { a: 155.26, b: 157.86, html: `Jump straight to the <span class="grad-text">failed step.</span>` },
@@ -176,7 +175,7 @@ export const BUILD_LINES = ["Plan it.", "Organise it.", "Troubleshoot it."];
 export const BUILD_LINES_START = 94.91;
 
 /** Client message bubble: shown in the build, then again top-right during the journey. */
-export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "Why did Jordan get this email?", answeredAt: 139.06, from: 123.36, to: 144.76 };
+export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "Why hasn’t Taylor moved on yet?", answeredAt: 142.65, from: 123.36, to: 123.36 };   // off (user, 24 Oct: only the features)
 
 /** Browser tabs that pile up above the window ("tab hell"). */
 export const TABS = {
@@ -242,11 +241,21 @@ export const STRUCTURE_OPENING = {
  * (PANELS). `clip`: instead of a card, a stretch of film shown in the window ([from, to] film seconds; film = timeline − 3.9).
  * `atOut`: this shot starts at that output (music) time; the play before it is stretched or squeezed to land there. */
 export type FeatureCard = { at: number; kicker: string; html: string; hold?: number; speed?: number;
+  /** a plain cut to `at` in the film: nothing shown, no hold */
+  cut?: boolean;
+  /** clip cards: play the clip at this rate (default 1) */
+  clipRate?: number;
+  /** top lines: leave after this many output seconds instead of at the next card */
+  lineFor?: number;
   /** hold over the previous film clip's last frame (receded, with its callout) instead of the app window */
   over?: boolean; top?: boolean; build?: boolean; end?: number; panels?: keyof typeof PANELS; clip?: [number, number]; atOut?: number;
   /** clip cards: `callout` shows the text in the footage at that window point (by the cursor), line by line, instead of as a
    * top line; `pop` makes it a title that pops in at that clip second instead */
-  callout?: [number, number]; pop?: number };
+  callout?: [number, number]; pop?: number;
+  /** clip cards: hold the clip's first frame instead of playing it (for `hold` s) */
+  still?: boolean;
+  /** clip cards: a callout whose pointer's tip touches (x, y) in window px, on that card edge (`ax`: tip from the card's left) */
+  calloutTip?: { x: number; y: number; side: "top" | "bottom" | "left" | "right"; ax?: number } };
 const g = (s: string) => `<span class="grad-text">${s}</span>`;
 /** "How the map works" (timeline 58.15–67.65): the window shrinks to the right on a zoomed map while the left panel walks
  * the steps, and each list item flies across and lands where its node appears in the film. Times are seconds from `at` and
@@ -277,6 +286,8 @@ export const BUILD = {
       .map(([n, k, c, l, x, z, w]) => ({ step: 2, name: n, land: l, x, y: 0.25, z, color: c, kind: k, group: w })),
   ],
 };
+/** The film's first frame of the Workflow canvas in scene "lm" (frame 5675; at 189.14 the decoder can still return the builder). */
+const LM_CANVAS = 5675 / 30;
 /** Where the film's "orgdoc" scene starts (film seconds; frame 6245, right after "lm"). */
 const ORGDOC = 6245 / 30;
 /** The Assistant acting on the map (film scene "act", appended after "orgdoc"): its start and length in the film. */
@@ -293,10 +304,12 @@ export const FEATURE_CARDS: FeatureCard[] = [
   // badges pop on the first build-up hit (clip 0.65 s), the hand-off lines draw from the second (4.03 s) and connect on drop 2
   // (8.39 s), where the title pops
   { at: 73.93, kicker: "PLAN IT", html: `Remember having to jump across workflows ${g("to view connections?")}`, hold: 2.32, end: 73.93 },   // hold fixed: the film's clip A is cut to it
-  { at: 73.93, kicker: "PLAN IT", html: `This is an ${g("Add to Workflow")} action.<br/>What happens to the contact ${g("next?")}`, top: true, clip: [185.86, 189.14],
-    end: 73.93, callout: [214, 720] },
-  { at: 73.93, kicker: "PLAN IT", html: `What if you could see ${g("all of it in one interface?")}`, over: true, end: 73.93 },
-  { at: 73.93, kicker: "PLAN IT", html: `All your linked workflows. ${g("One canvas.")}`, top: true, clip: [189.14, 199.74],
+  // one frame throughout (user, 2026-10-24): clip B's first frame (the Workflow canvas) held with the callout above Start
+  // high-priority nurturing, then held with "What if…" as the top line, then clip B plays on from that same frame
+  { at: 73.93, kicker: "PLAN IT", html: `This is an ${g("Add to Workflow")} action.<br/>What happens to the contact ${g("next?")}`, top: true, clip: [LM_CANVAS, LM_CANVAS],
+    still: true, hold: 3.28, end: 73.93, calloutTip: { x: 380, y: 701, side: "bottom", ax: 200 } },
+  { at: 73.93, kicker: "PLAN IT", html: `What if you could see ${g("all of it in one interface?")}`, top: true, clip: [LM_CANVAS, LM_CANVAS], still: true, hold: 2.47, end: 73.93 },
+  { at: 73.93, kicker: "PLAN IT", html: `All your linked workflows. ${g("One canvas.")}`, top: true, clip: [LM_CANVAS, 199.74],
     atOut: LINKS_DROP - 1.6 + 5.5 - 12.41, end: 73.93, pop: 8.51 },
   // straight on (same film, no fade): one contact's journey across the linked workflows. It adds 6.57 s to the video, which
   // puts the "Fix errors fast" title on the soundtrack's loop back to its main drop (output 2:51.99)
@@ -314,18 +327,25 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: 105.65, kicker: "ORGANISE IT", html: `Write it once. ${g("Your whole team reads it.")}`, top: true, clip: [ORGDOC + 11.0, ORGDOC + 21.0], end: 105.65 },
   { at: 122.05, kicker: "ORGANISE IT", html: `Notes that tell ${g("the customer journey.")}`, top: true, clip: [ORGDOC + 21.0, ORGDOC + 27.8] },
   { at: 124.05, kicker: "TROUBLESHOOT IT", html: `Pick any contact. See every workflow ${g("they’ve been in.")}` },
-  { at: 129.15, kicker: "TROUBLESHOOT IT", html: `Every run, ${g("newest first.")}` },
-  { at: 132.75, kicker: "TROUBLESHOOT IT", html: `Open any run. See the exact path, ${g("and the email Jordan got.")}` },
-  { at: 140.05, kicker: "TROUBLESHOOT IT", html: `Step from ${g("run to run.")}` },
+  // then it plays (user, 24 Oct: no full-screen cards here, faster): a line over her drawer; clicking her active enrollment cuts
+  // to the run (film scene "run", played at full speed, no text); back in the drawer, the Timeline; then a cut to the cleared
+  // map for "And when something breaks?". The last cut's `at` puts the drop (M.D3) on the soundtrack's loop back to its main
+  // drop (output 2:51.99)
+  { at: 126.0, kicker: "TROUBLESHOOT IT", html: `See all their ${g("active and finished workflows.")}`, top: true, hold: 0, end: 128.64 },
+  { at: 132.54, kicker: "", html: "", cut: true, end: 140.49, speed: 1 },
+  { at: 128.64, kicker: "TROUBLESHOOT IT", html: `Or follow every run ${g("on the timeline.")}`, top: true, hold: 0, end: 132.54, lineFor: 3.1 },
+  { at: 144.749, kicker: "", html: "", cut: true },
   { at: 148.65, kicker: "WHEN IT BREAKS", html: `Spot what needs attention. ${g("See exactly which runs failed.")}` },
   { at: 155.15, kicker: "WHEN IT BREAKS", html: `Jump straight to the ${g("failed step.")}` },
   { at: 158.05, kicker: "WHEN IT BREAKS", html: `Catch deleted assets ${g("still in use.")}` },
   { at: 163.15, kicker: "ASSISTANT", html: `Ask your map ${g("anything.")}` },
   { at: 166.25, kicker: "ASSISTANT", html: `It answers on the map, ${g("down to what to fix first.")}`, speed: 1, end: 173.0 },
   // then it acts (film scene "act"): a card, and three asks applied to the map (find, create a folder, move into it). The clip
-  // is cut so the lockup (LOGO, 0.05 s after it) lands on the soundtrack's re-entry after its break (output 4:09.5)
+  // ends 0.05 s before the lockup (LOGO)
   { at: 173.0, kicker: "ASSISTANT", html: `And it doesn’t just answer. ${g("It does the work.")}`, hold: 2.5, end: 173.0 },
-  { at: 174.0, kicker: "ASSISTANT", html: `Ask it to find, create and move, ${g("right on the map.")}`, top: true, clip: [ACT, ACT + ACT_LEN], speed: 1 },
+  // played at 0.83 so the lockup (LOGO) lands on the soundtrack's re-entry 36 bars after its drop (file 117.75 s), now that
+  // Troubleshoot is shorter (output 4:01.75)
+  { at: 174.0, kicker: "ASSISTANT", html: `Ask it to find, create and move, ${g("right on the map.")}`, top: true, clip: [ACT, ACT + ACT_LEN], clipRate: 0.83013, speed: 1 },
 ];
 const PLAY_SPEED = 0.85;
 /** Multi-panel shots: each panel is a crop of the app footage (`src` in film seconds); labels and animations go one after
@@ -352,7 +372,7 @@ export const PANELS: Record<"trio" | "duo", PanelShot> = {
   },
 };
 /** How long a card holds: enough to read it (≈ 30 ms a character), 1.6–2.6 s, or its `hold`. */
-const cardDur = (c: FeatureCard) => (c.hold ?? (c.build ? 0 : c.panels ? PANELS[c.panels].dur : c.clip ? c.clip[1] - c.clip[0] : c.top ? 0.8 : Math.min(2.6, Math.max(1.6, 1.0 + c.html.replace(/<[^>]+>/g, "").length * 0.03))));
+const cardDur = (c: FeatureCard) => (c.hold ?? (c.build || c.cut ? 0 : c.panels ? PANELS[c.panels].dur : c.clip ? (c.clip[1] - c.clip[0]) / (c.clipRate ?? 1) : c.top ? 0.8 : Math.min(2.6, Math.max(1.6, 1.0 + c.html.replace(/<[^>]+>/g, "").length * 0.03))));
 type Seg = { n0: number; n1: number; hold: boolean; src: number; speed: number; card?: FeatureCard; until?: number; panels?: keyof typeof PANELS; clip?: [number, number] };
 /** The edit, in output time: a hold (card, panel shot or film clip) per entry, then the visual at its speed. */
 export const EDIT = (() => {
@@ -372,7 +392,7 @@ export const EDIT = (() => {
     const next = c.end ?? (i + 1 < FEATURE_CARDS.length ? FEATURE_CARDS[i + 1].at : M.END);
     const sp = c.speed ?? PLAY_SPEED;
     out.push({ n0: n, n1: n + (next - c.at) / sp, hold: false, src: c.at, speed: sp });
-    out[out.length - 2].until = c.clip ? n : n + (next - c.at) / sp;   // a top line stays until the next card
+    out[out.length - 2].until = c.clip ? n : n + Math.min((next - c.at) / sp, c.lineFor ?? Infinity);   // a top line stays until the next card
     n += (next - c.at) / sp;
   });
   return out;

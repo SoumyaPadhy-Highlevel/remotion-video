@@ -48,9 +48,10 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
   const fromClip = seg?.panels && prevS?.clip && tn < seg.n0 + 0.4 ? prevS : undefined;
   // a clip straight after a statement card cuts in (the card has finished leaving by then)
   const afterCard = !!seg?.clip && !!prevS?.hold && !prevS.clip && !prevS.panels && !prevS.card?.top;
-  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, seg.n0, seg.n1, contIn || afterCard ? 0.001 : 0.2, intoOver || contOut || intoPanels ? 0.001 : 0.25) : overSeg ? 1 : 0;
+  // a clip that cuts in is fully there on its first frame (a start exactly on a frame would otherwise give 0 there and flash the window)
+  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, contIn || afterCard ? seg.n0 - 1 / FPS : seg.n0, seg.n1, contIn || afterCard ? 0.001 : 0.2, intoOver || contOut || intoPanels ? 0.001 : 0.25) : overSeg ? 1 : 0;
   const k = seg?.hold && !seg.card?.top && !seg.panels && !seg.clip ? win(tn, seg.n0, seg.n1, 0.3, EDIT[EDIT.indexOf(seg) + 2]?.clip ? 0.001 : 0.35) : 0;   // stays receded into a cut to a clip
-  const cards = EDIT.filter((s) => s.hold && !s.card?.top && !s.card?.build && !s.panels && !s.clip && tn >= s.n0 - 0.05 && tn < s.n1 + 0.4);
+  const cards = EDIT.filter((s) => s.hold && !s.card?.top && !s.card?.build && !s.card?.cut && !s.panels && !s.clip && tn >= s.n0 - 0.05 && tn < s.n1 + 0.4);
   const top = EDIT.find((s) => s.hold && s.card?.top && !s.clip && tn >= s.n0 && tn < (s.until ?? s.n1));
   // the mascot keeps to the corner while a panel shot or film clip replaces the window
   const st0 = mascotAt(t), st1 = seg?.panels || seg?.clip || overSeg ? { ...st0, x: 1830, y: 960, s: 0.38, r: -10, o: (st0.o ?? 1) * (1 - 0.15 * trio) } : st0;
@@ -106,7 +107,7 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
           <ClipWindow film={fromClip.clip[1] - 1 / FPS} lt={fromClip.n1 - fromClip.n0} {...cardText(cfg, fromClip.card!)} fade={1} dur={fromClip.n1 - fromClip.n0} callout={fromClip.card!.callout} pop={fromClip.card!.pop} />
         </div> : null}
         {seg?.panels && (L("base") || layer === "panels") ? <Panels cfg={PANELS[seg.panels]} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={prevS?.clip ? Math.min(trio, clamp((tn - seg.n0 - 0.12) / 0.33)) : trio} /> : null}
-        {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.clip[0] + (tn - seg.n0)} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0}
+        {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.card!.still ? seg.clip[0] : seg.clip[0] + (tn - seg.n0) * (seg.card!.clipRate ?? 1)} lt={tn - seg.n0} calloutTip={seg.card!.calloutTip} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0}
           callout={seg.card!.callout} pop={seg.card!.pop} /> : null}
         {overClip?.clip && (L("base") || layer === "panels") ? (() => {
           const kk = clamp((tn - overSeg!.n0) / 0.35), r = motion.recedeCards, out = nextS?.clip ? 1 : 1 - clamp((tn - (overSeg!.n1 - 0.3)) / 0.3);

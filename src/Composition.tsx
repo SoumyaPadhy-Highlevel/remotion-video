@@ -102,17 +102,13 @@ export const MyComposition = () => {
               kicker: "TROUBLESHOOT IT",
               text: "Pick any contact. See every workflow *they’ve been in.*",
             },
-            everyRun: {
+            activeAndFinished: {
               kicker: "TROUBLESHOOT IT",
-              text: "Every run, *newest first.*",
+              text: "See all their *active and finished workflows.*",
             },
-            openRun: {
+            onTheTimeline: {
               kicker: "TROUBLESHOOT IT",
-              text: "Open any run. See the exact path, *and the email Jordan got.*",
-            },
-            stepRunToRun: {
-              kicker: "TROUBLESHOOT IT",
-              text: "Step from *run to run.*",
+              text: "Or follow every run *on the timeline.*",
             },
             needsAttention: {
               kicker: "WHEN IT BREAKS",
@@ -186,7 +182,7 @@ export const MyComposition = () => {
           clientMessage: {
             from: "Client · Summit Shield",
             initials: "SS",
-            text: "Why did Jordan get this email?",
+            text: "Why hasn’t Taylor moved on yet?",
           },
           lockup: {
             name: "Workflow",

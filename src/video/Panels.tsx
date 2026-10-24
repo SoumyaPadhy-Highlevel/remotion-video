@@ -9,7 +9,7 @@ import { APP_FILE, FPS, PanelShot } from "./script";
 import { WINDOW } from "./AppWindow";
 import { KineticTitle } from "./Impact";
 import { md, useCfg } from "./config";
-import { Callout } from "./Callout";
+import { Callout, CalloutSide } from "./Callout";
 
 const GAP = 30, TOP = 300;
 const BLUE = "var(--accent, #155EEF)", INK = "var(--ink, #0B1B3A)";
@@ -103,9 +103,10 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
 /** A stretch of film in the app window (same frame as AppWindow), with an optional line above it. */
 /** A film clip in place of the window, with its card as the top line, as a callout in the footage (`callout`, window px) or as
  * a title that pops in (`pop`, clip seconds). */
-export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number; dur: number; callout?: [number, number]; pop?: number }> = ({ film, lt, kicker, html, fade, dur, callout, pop }) => {
+export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number; dur: number; callout?: [number, number]; pop?: number;
+  calloutTip?: { x: number; y: number; side: CalloutSide; ax?: number } }> = ({ film, lt, kicker, html, fade, dur, callout, pop, calloutTip }) => {
   const { show, style } = useCfg();
-  const capOut = callout || pop != null ? 0 : 1;
+  const capOut = callout || calloutTip || pop != null ? 0 : 1;
   const co = prog(lt, 1.05, 1.4, easeOut);
   return <>
     <div style={{
@@ -122,6 +123,8 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
     </div>
     {callout && show.panelCaptions ? <Callout x={WINDOW.left + callout[0] + 113} y={WINDOW.top + callout[1] - 9} html={html} k={co} opacity={fade * (1 - prog(lt, dur - 0.4, dur - 0.1))}
       lineK={(i) => prog(lt, 1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1), easeOut)} /> : null}
+    {calloutTip && show.panelCaptions ? <Callout x={WINDOW.left + calloutTip.x} y={WINDOW.top + calloutTip.y} side={calloutTip.side} ax={calloutTip.ax} html={html} k={co}
+      opacity={fade * (1 - prog(lt, dur - 0.4, dur - 0.1))} lineK={(i) => prog(lt, 1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1), easeOut)} /> : null}
     {pop != null && show.panelCaptions ? <div className="poppins" style={{ position: "absolute", inset: 0, opacity: fade }}>
       <KineticTitle t={lt} at={pop} out={dur - 0.75} kicker="" html={html} size={style.sizes.panelCaption + 6} pulse={[pop + 0.45]} offsetY={-478} />
     </div> : null}
