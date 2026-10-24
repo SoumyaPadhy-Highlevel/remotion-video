@@ -413,7 +413,13 @@ const ACT = 7084 / 30, ACT_LEN = 22.66;
 /** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
 export const LINKS_DROP = 100.86;
 /** How fast the visual plays after a card; the errors visual plays calmer (it took over the time of a card). */
+/** LOOP_CUT's length (4 bars): declared here because the errors cards above the window use it. */
+const LOOP_CUT_LEN = 4 * 1.9375;
 const PLAY_SPEED = 0.85, ERRORS_HOLD = 0.5;
+/** When the run opens in the errors visual (timeline s), and where the visual ends: the old stretch from the drop to the
+ * deleted-assets card (the visual at 0.85 with a 2.6 s and a 1.99 s card) minus LOOP_CUT's 4 bars and the opening hold. */
+const ERRORS_JUMP = 150.6;
+const ERRORS_END = M.D3 + ((158.05 - M.D3) / PLAY_SPEED + 2.6 + 1.99 - LOOP_CUT_LEN - ERRORS_HOLD) * PLAY_SPEED;
 export const FEATURE_CARDS: FeatureCard[] = [
   // how the map works: the list is built into the map beside a shrunk window (BUILD; film scene "map"), no card
   { at: BUILD.at, kicker: "HOW THE MAP WORKS", html: "", build: true, speed: BUILD.speed, end: BUILD.end + 0.25 },
@@ -455,12 +461,11 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: 132.54, kicker: "", html: "", cut: true, end: 140.49, speed: 1 },
   { at: 128.64, kicker: "TROUBLESHOOT IT", html: `Or follow every run ${g("on the timeline.")}`, top: true, hold: 0, end: 132.54, lineFor: 3.1 },
   { at: 144.749, kicker: "", html: "", cut: true },
-  // on the drop: a line above the window (no full-screen card), held 0.5 s, then the errors visual plays a little calmer so
-  // the stretch to the next card keeps its old length (D3 → 148.65 at 0.85, the 2.6 s card, 148.65 → 155.15 at 0.85) and
-  // every later music hit stays where it was
-  { at: M.D3, kicker: "WHEN IT BREAKS", html: `Catch it quickly, ${g("right on the map.")}`, top: true, hold: ERRORS_HOLD,
-    speed: (155.15 - M.D3) / ((148.65 - M.D3) / PLAY_SPEED + 2.6 + (155.15 - 148.65) / PLAY_SPEED - ERRORS_HOLD), lineFor: 3.2 },
-  { at: 155.15, kicker: "WHEN IT BREAKS", html: `Jump straight to the ${g("failed step.")}` },
+  // the errors visual (errors/ErrorShots.tsx) with its text as lines above the window: on the drop, held 0.5 s, then playing
+  // straight through; the second line comes in as the run opens and the cursor clicks the failed step. It ends at ERRORS_END,
+  // 4 bars sooner than the old cut (see LOOP_CUT), and the next card shows the deleted-assets map
+  { at: M.D3, kicker: "WHEN IT BREAKS", html: `Catch it quickly, ${g("right on the map.")}`, top: true, hold: ERRORS_HOLD, speed: PLAY_SPEED, lineFor: 3.0 },
+  { at: ERRORS_JUMP, kicker: "WHEN IT BREAKS", html: `Jump straight to the ${g("failed step.")}`, top: true, hold: 0, speed: PLAY_SPEED, end: ERRORS_END },
   { at: 158.05, kicker: "WHEN IT BREAKS", html: `Catch deleted assets ${g("still in use.")}` },
   { at: 163.15, kicker: "ASSISTANT", html: `Ask your map ${g("anything.")}` },
   { at: 166.25, kicker: "ASSISTANT", html: `It answers on the map, ${g("down to what to fix first.")}`, speed: 1, end: 173.0 },
@@ -521,6 +526,12 @@ export const EDIT = (() => {
   return out;
 })();
 export const EDIT_END = EDIT[EDIT.length - 1].n1;
+/** EDITED_FILE (app-edited-v2) was built before LOOP_CUT. Up to the drop it lines up with the video; through the errors visual
+ * (redrawn whole by errors/ErrorShots.tsx, so only the footage's header and left rail show) it holds the frame just after the
+ * drop; after the errors visual everything is LOOP_CUT_LEN earlier than when it was built, so it is read that much later.
+ * Uncut output time in, uncut output time out. A rebuilt EDITED_FILE makes this the identity. */
+const ERRORS_OUT = EDIT.find((s) => s.hold && s.card?.at === M.D3)!.n0, AFTER_ERRORS_OUT = EDIT.find((s) => s.hold && s.src === 158.05)!.n0;
+export const editedFootageTime = (tn: number) => (tn < ERRORS_OUT ? tn : tn < AFTER_ERRORS_OUT ? ERRORS_OUT + 0.1 : tn + LOOP_CUT_LEN);
 /** The soundtrack is one file: public/music-workflow-maps.mp3 ("Workflow Maps Audio", 174.4 s): "Percussion Drums" (Infraction,
  * no-copyright) under the intro, then the original track from 32.469 s on, unedited, so its first drop is at 47.989 s.
  * The video is synced to it: the intro cut below ends where the timeline's drop (M.D1) lands exactly on that drop, and
@@ -540,6 +551,9 @@ export const MUSIC = {
  * gone; the Organise title's hold makes up the rest), so everything after, the loop back to the drop and the lockup on the
  * track's re-entry included, stays on the music. */
 export const MUSIC_CUT: [number, number] = [MUSIC.drop + 29 * 1.9375, MUSIC.drop + 34 * 1.9375];
+/** A second cut, after the loop back to the drop (bars counted from the drop, music-file s): bars 4–8 of the errors section are
+ * skipped, and the errors visual is 4 bars shorter to match (ERRORS_END), so everything after stays on the music. */
+export const LOOP_CUT: [number, number] = [MUSIC.drop + 4 * 1.9375, MUSIC.drop + 8 * 1.9375];
 export const INTRO_CUT: [number, number] = [40.69 - (38.75 - MUSIC.originalAt), 40.69];
 export const CUT_LEN = INTRO_CUT[1] - INTRO_CUT[0];
 export const uncut = (out: number) => (out < INTRO_CUT[0] ? out : out + CUT_LEN);

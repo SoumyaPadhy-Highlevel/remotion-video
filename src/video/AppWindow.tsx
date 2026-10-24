@@ -9,7 +9,7 @@ import { BROWSER, DeviceBezel, deviceOn, TabStrip } from "./Browser";
 import { Callout } from "./Callout";
 import { windowAt } from "./choreography";
 import { introCalloutHtml, useCfg } from "./config";
-import { APP_FILE, BEATS, CUT_LEN, EDITED_FILE, FPS, INTRO_BROWSE, INTRO_CALLOUTS, INTRO_CUT, introCalloutAt } from "./script";
+import { APP_FILE, BEATS, CUT_LEN, EDITED_FILE, editedFootageTime, FPS, INTRO_BROWSE, INTRO_CALLOUTS, INTRO_CUT, introCalloutAt } from "./script";
 import { BuilderScenes } from "./builder/scenes";
 
 export const WINDOW = { left: 150, top: 118, width: 1620, height: 880 };
@@ -44,7 +44,7 @@ export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean; chro
       }}>
         {typeof getInputProps().filmStill === "string" ? <Img src={staticFile(getInputProps().filmStill as string)} style={{ position: "absolute", left: 0, top: 0, width: WINDOW.width, height: WINDOW.height }} />
         // the edited footage has one frame per video frame: show the one for this frame (inside the timeline's Freeze, so freeze again)
-        : EDITED_FILE && tn != null && t >= 3.9 ? <Freeze frame={Math.round((tn < INTRO_CUT[0] ? tn : tn - CUT_LEN) * FPS)}>
+        : EDITED_FILE && tn != null && t >= 3.9 ? <Freeze frame={(() => { const e = editedFootageTime(tn); return Math.round((e < INTRO_CUT[0] ? e : e - CUT_LEN) * FPS); })()}>
           <OffthreadVideo src={staticFile(`footage/${EDITED_FILE}`)} muted style={{ position: "absolute", left: 0, top: 0, width: WINDOW.width, height: WINDOW.height, objectFit: "contain", background: "#fff" }} />
         </Freeze> : BEATS.map((b) => {
         const from = Math.round(b.start * FPS);

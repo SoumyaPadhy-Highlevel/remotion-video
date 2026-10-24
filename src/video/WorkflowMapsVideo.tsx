@@ -5,7 +5,7 @@ import { AppWindow } from "./AppWindow";
 import { mascotAt, RECEDES, recedeAt } from "./choreography";
 import { GLOBAL_CSS, loadFonts } from "./fonts";
 import { Mascot } from "./Mascot";
-import { EDIT, editTime, FPS, introCalloutAt, M, MUSIC, MUSIC_CUT, PANELS, uncut, VIDEO_END } from "./script";
+import { EDIT, editTime, FPS, introCalloutAt, LOOP_CUT, M, MUSIC, MUSIC_CUT, PANELS, uncut, VIDEO_END } from "./script";
 import { Background, Flash, Message, Titles } from "./Stage";
 import { Impact, ImpactBack, KineticTitle } from "./Impact";
 import { ClipWindow, Panels } from "./Panels";
@@ -92,9 +92,19 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
             <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(c1 * FPS)}
               volume={(f) => m.volume * endVol(f / FPS + c0 + at) * transform(f / FPS, [0, xf], [0, 1]) * (loop ? transform(f / FPS, [loopOut - c0, loopOut - c0 + 0.13], [1, 0]) : 1)} />
           </Sequence>
-          {loop ? <Sequence from={Math.round((loopOut + at) * FPS)} layout="none">
-            <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(MUSIC.drop * FPS)} volume={(f) => m.volume * endVol(f / FPS + loopOut + at)} />
-          </Sequence> : null}
+          {/* after the loop: from the drop to LOOP_CUT, a skip (bar line to bar line, the same few ms of fade), then on */}
+          {loop ? (() => {
+            const [l0, l1] = LOOP_CUT, head = l0 - MUSIC.drop, out1 = loopOut + head;
+            return <>
+              <Sequence from={Math.round((loopOut + at) * FPS)} durationInFrames={Math.round(head * FPS)} layout="none">
+                <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(MUSIC.drop * FPS)}
+                  volume={(f) => m.volume * endVol(f / FPS + loopOut + at) * transform(f / FPS, [head - xf, head], [1, 0])} />
+              </Sequence>
+              <Sequence from={Math.round((out1 + at) * FPS)} layout="none">
+                <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(l1 * FPS)} volume={(f) => m.volume * endVol(f / FPS + out1 + at) * transform(f / FPS, [0, xf], [0, 1])} />
+              </Sequence>
+            </>;
+          })() : null}
         </>;
       })() : null}
       {L("base") ? <Background /> : null}
