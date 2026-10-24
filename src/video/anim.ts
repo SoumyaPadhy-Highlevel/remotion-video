@@ -15,16 +15,26 @@ export const linear = (k: number) => k;
 const springs = new Map<string, ReturnType<typeof spring>>();
 /** 0 → 1 of a Motion spring released at `at` (seconds): it arrives in about `visualDuration` s, overshoots by `bounce`
  *  (0 = none, 0.3 = lively) and settles. Use it as the `k` of a `mix`; it can go past 1 while it settles. */
-export const springAt = (t: number, at: number, visualDuration = 0.5, bounce = 0.25) => {
+export const springAt = (
+  t: number,
+  at: number,
+  visualDuration = 0.5,
+  bounce = 0.25,
+) => {
   if (t < at) return 0;
   const key = `${visualDuration}|${bounce}`;
   let g = springs.get(key);
-  if (!g) springs.set(key, (g = spring({ keyframes: [0, 1], visualDuration, bounce })));
+  if (!g)
+    springs.set(
+      key,
+      (g = spring({ keyframes: [0, 1], visualDuration, bounce })),
+    );
   return g.next((t - at) * 1000).value;
 };
 
 /** Motion's mixColor from `from` to `to` at `p` (0–1) as a CSS colour. Colours must be hex or rgb(), not CSS variables. */
-export const blend = (from: string, to: string, p: number) => String(mixColor(from, to)(clamp(0, 1, p)));
+export const blend = (from: string, to: string, p: number) =>
+  String(mixColor(from, to)(clamp(0, 1, p)));
 
 /** Deterministic pseudo-random number in [0, 1). */
 export const rand = (i: number) => {

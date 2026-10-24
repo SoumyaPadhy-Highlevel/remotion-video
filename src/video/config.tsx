@@ -65,7 +65,7 @@ export const showSchema = z.object({
   opening: z.boolean(), introCards: z.boolean(), introCallouts: z.boolean().describe("White callouts in the intro's visuals"), titleDrop: z.boolean(), featureCards: z.boolean().describe("Full-screen statement cards"),
   topLines: z.boolean().describe("Lines above the window"), panelCaptions: z.boolean(), titleCards: z.boolean(), breaksHeadline: z.boolean(),
   mapBuildPanel: z.boolean(), flights: z.boolean().describe("Map build: items flying into the map"), clientMessage: z.boolean(),
-  browserTabs: z.boolean(), flashes: z.boolean(), lockup: z.boolean(), mascot: z.boolean(),
+  browserTabs: z.boolean().describe("The intro's device frame and browser tabs"), flashes: z.boolean(), lockup: z.boolean(), mascot: z.boolean(),
   mascotSize: z.number().min(0.2).max(3).step(0.05).describe("1 = as designed"),
 });
 // ── phase 2: how things move and look (when they happen stays in script.ts until phase 3) ──

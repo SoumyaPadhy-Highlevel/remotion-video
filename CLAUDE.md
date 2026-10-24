@@ -15,7 +15,8 @@ Give each re-render a new file name (browsers cache half-written files).
 | `src/video/script.ts` | **Start here.** Music markers, the 19 beats, and every piece of on-screen text with its timing (headlines, captions, chapter pills, title cards, build lines, client message, browser tabs, lockup, flashes). |
 | `src/video/choreography.ts` | App-window motion (rise, push-ins `ZOOMS`, receding behind titles `RECEDES`) and the mascot's position and reaction per beat (`mascotAt`). |
 | `src/video/AppWindow.tsx` | The 1620×880 app window at (150, 118). Plays one footage clip per beat. |
-| `src/video/Stage.tsx` | Background, browser tabs, titles, client message bubble, white flash. |
+| `src/video/Browser.tsx` | The intro's device: tablet-style bezel and a desktop browser tab strip around the app window (tabs from `TABS`), gone from the first drop. |
+| `src/video/Stage.tsx` | Background, titles, client message bubble, white flash. |
 | `src/video/Impact.tsx` | Kinetic type: the "Workflow Maps" title on the drop, title cards, the three intro questions. |
 | `src/video/Mascot.tsx` | Mascot artwork with animated SVG eyes (normal, happy, wow, worried, star, squint), sparkles, speed streak, question mark. |
 | `src/video/WorkflowMapsVideo.tsx` | Layer order and the music. |

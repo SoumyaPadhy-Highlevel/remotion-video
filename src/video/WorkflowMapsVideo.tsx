@@ -6,7 +6,7 @@ import { mascotAt, recedeAt } from "./choreography";
 import { GLOBAL_CSS, loadFonts } from "./fonts";
 import { Mascot } from "./Mascot";
 import { EDIT, editTime, FPS, introCalloutAt, M, MUSIC, PANELS, uncut, VIDEO_END } from "./script";
-import { Background, BrowserTabs, Flash, Message, Titles } from "./Stage";
+import { Background, Flash, Message, Titles } from "./Stage";
 import { Impact, ImpactBack, KineticTitle } from "./Impact";
 import { ClipWindow, Panels } from "./Panels";
 import { DEFAULT_MUSIC, MusicSettings } from "./musicProps";
@@ -15,7 +15,7 @@ import { BuildOverlay, splitAt, splitStyle } from "./Build";
 
 loadFonts();
 
-/** Layers back to front: background, tabs, app window, titles, message, mascot, flash.
+/** Layers back to front: background, app window (in its device, with the tabs, through the intro), titles, message, mascot, flash.
  * After the intro the output is an edit of the timeline (script.ts EDIT): before each feature the scene freezes and
  * recedes behind a statement card, then the visual plays on its own. `tn` is output time, `t` the timeline time. */
 /** `layer` renders one pass for an editor (DaVinci export, scripts/resolve-export.ts). Default "all" = the video.
@@ -86,9 +86,8 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
         {layer === "titles" ? <div style={{ position: "absolute", inset: 0, background: "#EEF4FF", opacity: 0.6 * Math.max(k, t >= M.B2 && t < M.D2 + 0.1 ? 0 : recedeAt(t)) * (1 - trio) }} /> : null}
         <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: plate ? undefined : `scale(${(1 - motion.recedeCards.shrink * k).toFixed(4)})`, opacity: (plate ? 1 : 1 - motion.recedeCards.dim * k) * (1 - trio) * (fromClip ? 0 : 1), filter: k > 0.02 && !plate ? `blur(${(motion.recedeCards.blur * k).toFixed(2)}px)` : undefined }}>
           {L("base") ? <div style={{ position: "absolute", inset: 0, ...splitStyle(t) }}>
-            <BrowserTabs t={t} />
             <AppWindow t={t} tn={tn} plate={plate} />
-          </div> : layer === "tabs" ? <div style={{ position: "absolute", inset: 0, ...splitStyle(t) }}><BrowserTabs t={t} /></div> : null}
+          </div> : layer === "tabs" ? <div style={{ position: "absolute", inset: 0, ...splitStyle(t) }}><AppWindow t={t} tn={tn} plate chromeOnly /></div> : null}
           {L("panel") ? <BuildOverlay t={t} /> : layer === "buildpanel" ? <BuildOverlay t={t} part="panel" /> : layer === "flight" ? <BuildOverlay t={t} part={item} /> : null}
           {L("titles") ? <>
             <ImpactBack t={t} />

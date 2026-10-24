@@ -1,11 +1,11 @@
-// Everything outside the app window: background, browser tabs, titles, client message, flash.
+// Everything outside the app window: background, titles, client message, flash. (The browser tabs are in Browser.tsx.)
 import React from "react";
 import { Img, staticFile } from "remotion";
 import { mix, transform } from "motion";
-import { blend, easeIn, easeInOut, easeOut, linear, springAt } from "./anim";
+import { easeIn, easeInOut, easeOut, linear, springAt } from "./anim";
 import { KineticTitle } from "./Impact";
 import { cardText, md, useCfg } from "./config";
-import { BUILD_LINES, BUILD_LINES_START, CAPTIONS, CHAPTERS, FLASHES, HEADLINES, M, MESSAGE, TABS, TITLE_CARDS, WALLS } from "./script";
+import { BUILD_LINES, BUILD_LINES_START, CAPTIONS, CHAPTERS, FLASHES, HEADLINES, M, MESSAGE, TITLE_CARDS, WALLS } from "./script";
 
 const INK = "var(--ink, #0B1B3A)";
 const BLUE = "var(--accent, #155EEF)";
@@ -38,48 +38,6 @@ export const Background: React.FC = () => {
       borderTop: "3px solid rgba(255,255,255,.95)", filter: "blur(1px)",
     }} /></> : null}
   </div>
-  );
-};
-
-// ── Browser tabs piling up above the window ──────────────────────────────────
-const TAB_BG = "#E4ECF7";
-const WorkflowIcon: React.FC<{ size: number; color: string }> = ({ size, color }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" style={{ color, flexShrink: 0, display: "block" }}>
-    <path fill="currentColor" d="M9 2v6h2v3H5c-1.11 0-2 .89-2 2v3H1v6h6v-6H5v-3h6v3H9v6h6v-6h-2v-3h6v3h-2v6h6v-6h-2v-3c0-1.11-.89-2-2-2h-6V8h2V2z" />
-  </svg>
-);
-
-export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
-  const { text, show } = useCfg();
-  const n = show.browserTabs && t < TABS.b ? TABS.times.filter((x) => t >= x).length : 0;
-  if (!n) return null;
-  const opened = TABS.times[n - 1], pop = springAt(t, opened, 0.25, 0.35);
-  // the active tab: the last one opened, unless a later flip switched back to an earlier one
-  const activeAt = (x: number) => {
-    const m = TABS.times.filter((y) => x >= y).length;
-    let a = m - 1;
-    TABS.flips.forEach(([at, i]) => { if (x >= at && at >= TABS.times[m - 1] && i < m) a = i; });
-    return a;
-  };
-  const active = activeAt(t);
-  // on each switch the old tab's white fades into the new one over 0.15 s
-  const switched = Math.max(opened, ...TABS.flips.map(([at]) => at).filter((at) => at <= t && at >= opened));
-  const was = activeAt(switched - 0.001), sw = transform(t, [switched, switched + 0.15], [0, 1]);
-  const tabBg = (i: number) => (i === active ? (i === was ? "#fff" : blend(TAB_BG, "#fff", sw)) : i === was ? blend("#fff", TAB_BG, sw) : TAB_BG);
-  return (
-    <div style={{ position: "absolute", left: 150, top: 70, width: 1620, height: 48, display: "flex", alignItems: "flex-end", gap: 2, paddingLeft: 10, boxSizing: "border-box" }}>
-      {TABS.names.slice(0, n).map((_, i) => text.browserTabs[i] ?? TABS.names[i]).map((name, i) => (
-        <div key={i} style={{
-          display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontSize: 12, fontWeight: 500, color: "#344054",
-          overflow: "hidden", whiteSpace: "nowrap", height: 38, borderRadius: "10px 10px 0 0",
-          background: tabBg(i), boxShadow: "0 -1px 0 rgba(16,24,40,.06)", flex: "1 1 0", minWidth: 0, maxWidth: 220,
-          transform: i === n - 1 ? `translateY(${(1 - pop) * 14}px)` : undefined, opacity: i === n - 1 ? pop : 1,
-        }}>
-          <WorkflowIcon size={14} color={BLUE} />
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
-        </div>
-      ))}
-    </div>
   );
 };
 

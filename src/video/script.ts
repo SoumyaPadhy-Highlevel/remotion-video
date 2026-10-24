@@ -163,7 +163,7 @@ export const INTRO_CALLOUTS: IntroCallout[] = [
   // Continue Client Journey: under its Add to Workflow step (the panel on the right shows Tag workflow)
   { a: 14.85, hold: 15.6, dur: 1.3, b: 16.95, html: `This step hands the contact to another workflow.<br/>What happens next lives <span class="grad-text">in another tab.</span>`, x: 840, y: 432, side: "top", ax: 560, focus: [840, 0] },
   // the two tabs flipping: points up at the tab strip
-  { a: 22.15, hold: 24.45, dur: 1.1, b: 25.05, html: `Nothing connects the two.<br/>So you <span class="grad-text">flip back and forth.</span>`, x: 200, y: 6, side: "top", ax: 104, focus: [200, 0] },
+  { a: 22.15, hold: 24.45, dur: 1.1, b: 25.05, html: `Nothing connects the two.<br/>So you <span class="grad-text">flip back and forth.</span>`, x: 356, y: 6, side: "top", ax: 104, focus: [356, 0] },
   // one form, four workflows: under the Coaching Enquiry form
   { a: 28.6, hold: 29.5, dur: 0.9, b: 30.95, html: `The same form<br/>Starts <span class="grad-text">four workflows,</span> in four folders.`, x: 810, y: 490, side: "top", ax: 300, focus: [810, 0] },
   { a: 32.3, hold: 33.25, dur: 0.9, b: 34.3, html: `Delete the form, and nothing warns you.<br/><span class="grad-text">Four workflows break.</span>`, x: 810, y: 490, side: "top", ax: 300, focus: [810, 0] },
@@ -178,8 +178,10 @@ export const BUILD_LINES_START = 94.91;
 /** Client message bubble: shown in the build, then again top-right during the journey. */
 export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "Why did Jordan get this email?", answeredAt: 139.06, from: 123.36, to: 144.76 };
 
-/** Browser tabs that pile up above the window ("tab hell"). */
+/** Browser tabs that pile up in the device's tab strip ("tab hell", Browser.tsx). */
 export const TABS = {
+  /** the one tab before the first workflow opens (in it, so its title changes) and after the rest close at `b` */
+  home: "Workflows",
   // one tab per workflow opened: the hand-off pair, then "open every workflow" on the hits; gone at the implosion
   times: [13.5, 18.7, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
   b: 48.85,
