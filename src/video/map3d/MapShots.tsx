@@ -121,15 +121,17 @@ const planeLooksAt = (shot: FilmMapShot, i: number, state: Record<string, string
 };
 
 /** A mask with an even-odd hole for each rect (board px): masks read alpha, so holes hand those pixels to the film. */
-const holesMask = (rects: number[][]) => {
+const holesMask = (rects: number[][], board = CANVAS) => {
   if (!rects.length) return undefined;
   const holes = rects.map(([x, y, w, h]) => `M${x} ${y}h${w}v${h}h${-w}z`).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS.width}" height="${CANVAS.height}"><path fill-rule="evenodd" d="M0 0H${CANVAS.width}V${CANVAS.height}H0z${holes}"/></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${board.width}" height="${board.height}"><path fill-rule="evenodd" d="M0 0H${board.width}V${board.height}H0z${holes}"/></svg>`;
   return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 };
 
-/** The redrawn map at film time `ft`, in window px (inside the 1620×880 app window, over the film), or nothing. */
-export const MapShots: React.FC<{ ft: number; cursor?: boolean }> = ({ ft, cursor = true }) => {
+/** The redrawn map at film time `ft`, in window px (inside the 1620×880 app window, over the film), or nothing. `board` and
+ * `fixedUi` replace the canvas rect and the film UI left to show on it (window px), for a layout the film analysis does not
+ * know (the Assistant's, assistant/: the canvas beside the redrawn panel). */
+export const MapShots: React.FC<{ ft: number; cursor?: boolean; board?: typeof CANVAS; fixedUi?: number[][] }> = ({ ft, cursor = true, board = CANVAS, fixedUi = FIXED_UI }) => {
   const shot = shotAt(ft);
   if (!shot) return null;
   const i = Math.min(shot.frames - 1, Math.round((ft - shot.from) * 30));
@@ -158,19 +160,19 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean }> = ({ ft, curso
   const left = unrle(shot.left).charCodeAt(i) - 65, right = unrle(shot.right).charCodeAt(i) - 65;
   const doc = docNotes(shot, ft, { cx, cy, s }), docRects = doc.flatMap((d) => (d.rect ? [d.rect] : []));
   const ui = [
-    ...FIXED_UI,
+    ...fixedUi,
     ...(left > 0 ? [[0, 0, left * 10 + 2, 880]] : []),
     ...(right > 0 ? [[right * 25 - 4, 0, 1620, 880]] : []),
     // one hole per note: the holes mask is even-odd, so a detected rect overlapping a docNotes card would cancel its hole out
     ...shot.notes.filter((n) => n[0] === i).map((n) => n.slice(1)).filter(([x, y, w, h]) => !docRects.some(([X, Y, W, H]) => x < X + W && X < x + w && y < Y + H && Y < y + h)),
     ...docRects,
-  ].map(([x, y, w, h]) => [x - CANVAS.left, y - CANVAS.top, w, h]);
+  ].map(([x, y, w, h]) => [x - board.left, y - board.top, w, h]);
   const fade = Math.min(transform(ft, [shot.from, shot.from + 0.001], [0, 1]), 1);
   const [mx, my] = shot.cursor.slice(i * 2, i * 2 + 2);
   return (<>
-    <div style={{ position: "absolute", left: CANVAS.left, top: CANVAS.top, width: CANVAS.width, height: CANVAS.height, borderRadius: CANVAS.radius,
-      overflow: "hidden", opacity: fade, maskImage: holesMask(ui), maskSize: "100% 100%" }}>
-      <MapView scene={scene} width={CANVAS.width} height={CANVAS.height} camera={{ cx: cx - CANVAS.left, cy: cy - CANVAS.top, s }} t={ft}
+    <div style={{ position: "absolute", left: board.left, top: board.top, width: board.width, height: board.height, borderRadius: board.radius,
+      overflow: "hidden", opacity: fade, maskImage: holesMask(ui, board), maskSize: "100% 100%" }}>
+      <MapView scene={scene} width={board.width} height={board.height} camera={{ cx: cx - board.left, cy: cy - board.top, s }} t={ft}
         looks={looks} edgeLooks={edgeLooksAt(shot, state)} planeLooks={planeLooks} />
     </div>
     {/* Organise's leader lines (docNotes), over the redrawn map and clipped to its canvas */}

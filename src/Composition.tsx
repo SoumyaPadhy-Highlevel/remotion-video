@@ -6,6 +6,8 @@ import { StructureOpeningPreview } from "./video/StructureOpening";
 import { MapBuildMock } from "./video/MapBuildMock";
 import { EditorPieces, FootageAsEdited } from "./video/EditorPieces";
 import { BuilderShots } from "./video/builder/BuilderShots";
+import { AssistantStills } from "./video/assistant/AssistantStills";
+import { AssistantSection, SECTION_LEN } from "./video/assistant/AssistantSection";
 
 export const MyComposition = () => {
   return (
@@ -366,6 +368,8 @@ export const MyComposition = () => {
     />
     <Composition id="EditorPieces" component={EditorPieces} durationInFrames={1} fps={30} width={1920} height={1080} defaultProps={{ piece: "background" as const }} />
     <Composition id="FootageAsEdited" component={FootageAsEdited} durationInFrames={Math.round(VIDEO_END * FPS)} fps={FPS} width={1620} height={880} />
+    <Composition id="AssistantSection" component={AssistantSection} durationInFrames={Math.round(SECTION_LEN * FPS)} fps={FPS} width={1620} height={880} />
+    <Composition id="AssistantStills" component={AssistantStills} durationInFrames={1} fps={FPS} width={1620} height={880} defaultProps={{ still: "A1" }} />
     <Composition id="BuilderShots" component={BuilderShots} durationInFrames={Math.round(236 * FPS)} fps={FPS} width={1620} height={880} defaultProps={{ overlay: true }} />
     <Composition id="MapBuild-Mock" component={MapBuildMock} durationInFrames={1} fps={30} width={1920} height={1080} />
     </>

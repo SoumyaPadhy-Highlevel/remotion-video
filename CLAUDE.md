@@ -61,6 +61,13 @@ rebuild it: `node scripts/edited-footage.mjs <film folder> app-edited-vN.mp4` an
   The worlds (folder rects, node positions, links, names) are `scripts/map_film/world_*.json`; Organise's drags and recolours
   are `map3d/organise.ts` (mirrored in `organise.py`). A new film with map shots: see `scripts/map_film/README.md`.
   Not redrawn: the film's map-forming intro (film 45–49.3 s, dots morphing into the map).
+- The Assistant section (film 158.23–169.3 s and the act clip, film 236.13 s + 22.66 s at 0.83×) is redrawn whole by
+  `src/video/assistant/`: the chat panel as `GridMapsChatPanel` draws it (master since #4766; `tokens.ts` lists the Vue
+  sources and HighRise colours), the map with the product's renderer (`actWorld.ts`: the main map plus the Growth Foundations
+  workflows and folder), the map's toasts, the header's Save cluster and the cursor. `shots.tsx` is the choreography on the
+  film's clock (cursor stops are window px read off the panel); `BuilderScenes` uses it in place of `MapShots` there. Its
+  text is `ASSISTANT` in `script.ts`. Check it alone with the `AssistantSection` composition (paced as the edit plays it) or
+  `AssistantStills`.
 
 ## Common tasks
 

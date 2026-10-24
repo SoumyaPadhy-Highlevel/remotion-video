@@ -574,3 +574,82 @@ export const outTime = (t: number) => {
   for (const s of EDIT) if (!s.hold && t >= s.src && t <= s.src + (s.n1 - s.n0) * s.speed) return s.n0 + (t - s.src) / s.speed;
   return t < EDIT[0].n0 ? t : EDIT_END + (t - M.END);
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The Assistant (ASSISTANT cards above): what its panel says, in the product's own words where the product supplies them
+// (automation-workflows-frontend en.json `workflow.grid.assistant`, master). Replies are written for the film's map.
+// `**bold**` marks the reply's bold runs; a block that is an array is a bullet list.
+// ─────────────────────────────────────────────────────────────────────────────
+export type ChatBlock = string | string[];
+export type PlanStep = { label: string; reason?: string };
+export type ChatPlan = { steps: PlanStep[]; reasons: string[]; undoable?: boolean; offer?: boolean };
+export const ASSISTANT = {
+  title: "Chat",
+  placeholder: "Summarize, explain, or troubleshoot",
+  empty: {
+    title: "What should we work on?",
+    description: "Ask about your workflows, find issues, or make changes to your map.",
+    useCases: "Popular use cases",
+    hint: "Questions send right away. Requests to make changes open as an editable prompt first.",
+    // MAPS_EMPTY_TILES order (maps-empty-state.ts)
+    tiles: [
+      { id: "summarize", title: "Map overview", description: "See what's live and what needs attention" },
+      { id: "issues", title: "Find what's broken", description: "Find errors and decide what to fix first" },
+      { id: "organize", title: "Tidy into folders", description: "Group related workflows in a folder" },
+      { id: "cleanup", title: "Clear the clutter", description: "Find unused workflows and empty folders" },
+      { id: "views", title: "Save a view", description: "Keep a filtered view for later" },
+      { id: "chain", title: "Launch a webinar funnel", description: "Build registration and follow-up workflows" },
+      { id: "build", title: "Build a workflow", description: "Start with a welcome email and SMS" },
+    ],
+  },
+  reviewFirst: "Review first",
+  editHistory: "Edit History",
+  askingAbout: "Asking about",
+  clearChat: "Clear chat",
+  working: "Working",
+  progress: { title: "Processing", stage: "Researching", steps: [["COMPLETE", "Reading your account"], ["RESEARCHING", "Analysing results..."]] as [string, string][] },
+  plan: { review: "Review changes", done: "Changes made", hint: "Check the details below before continuing.", cancel: "Cancel", apply: "Apply",
+    notNow: "Not now", showOnMap: "Show on map", undo: "Undo", running: "Running" },
+  /** "Ask your map anything": the Map overview tile, then the answer and the fix it offers. */
+  ask: {
+    prompt: "Summarize my map: what's live, what's in draft, and what needs attention.",
+    thought: "Thought for 2.4s",
+    answer: [
+      "**Overview:**\nYou have 20 workflows: 16 published and 4 drafts, across 7 folders.",
+      "**Busiest workflows (last 30 days):**",
+      ["“Tag New Enquiries” in “01 · Lead Capture”", "“Program Application Submitted” in “01 · Lead Capture”"],
+      "**Needs attention:**",
+      ["1 workflow with errors: “Program Payment Received”",
+        "1 deleted user still used in “wait for tag”", "4 drafts, including “Course Access Removed”"],
+      "Fix “Program Payment Received” first: it’s live and its runs are failing.",
+    ] as ChatBlock[],
+    offer: { steps: [{ label: "Focus on 1 item", reason: "The workflow with errors: Program Payment Received." }],
+      reasons: ["Suggested next step"], offer: true, undoable: true } as ChatPlan,
+  },
+  /** "It does the work": three asks, each reviewed and applied. */
+  act: [
+    { prompt: "Find all workflows related to the growth foundations course", thought: "Thought for 3.9s",
+      reply: "Highlight 5 workflows on the map",
+      plan: { steps: [{ label: "Highlight 5 items on the map", reason: "Highlights workflows using the Growth Foundations Access membership offer." }],
+        reasons: ["Check the plan first"], undoable: true } as ChatPlan,
+      after: "Highlighted 5 workflows using the “Growth Foundations Access” membership offer, across 4 folders." },
+    { prompt: "Create a new folder called growth foundations", thought: "Thought for 2.8s",
+      reply: "Create folder “growth foundations”",
+      plan: { steps: [{ label: "Create folder “growth foundations”", reason: "You asked for a new folder called growth foundations." }],
+        reasons: ["Ask before acting is on", "Writes to the server", "Check the plan first", "Needs your review"] } as ChatPlan,
+      after: "Created the folder “growth foundations”." },
+    { prompt: "Move all these workflows into the folder", thought: "Thought for 4.2s",
+      reply: "Move 5 workflows into “growth foundations”",
+      plan: { steps: [{ label: "Move 5 workflows to “growth foundations”", reason: "Moves the 5 workflows using the Growth Foundations Access membership offer into growth foundations." }],
+        reasons: ["Ask before acting is on"], undoable: true } as ChatPlan,
+      after: "The 5 workflows are now in “growth foundations”." },
+  ],
+  /** the map's own notices (en.json workflow.grid.feedback / edit) */
+  toast: {
+    folderCreated: "Created a folder",
+    folderCreatedNext: "The folder was created and saved immediately. You can rename it or move workflows into it. Creating the folder can’t be undone.",
+    moved: "Moved 5 workflows into growth foundations", unsaved: "Your changes aren’t saved yet. Select Save to keep them.",
+    saved: "Map changes saved", savedNext: "Saved changes cannot be undone.",
+  },
+  saveChanges: "Save 1 change",
+};

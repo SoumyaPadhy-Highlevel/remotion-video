@@ -23,6 +23,11 @@ const NAMES = [
   "mdi:sitemap", "mdi:form-select", "heroicons-solid:calendar", "mdi:clipboard-list", "mdi:view-column", "mdi:filter",
   "mdi:file-document-multiple", "mdi:package-variant-closed", "mdi:package-variant", "heroicons-solid:users", "mdi:play-circle",
   "mdi:file-document-edit", "mdi:folder", "mdi:alert-circle", "mdi:link-variant", "heroicons-solid:document-text",
+  "mdi:ticket-percent",
+  // Workflow Maps' Assistant panel (workflow-ai/maps-assistant, workflow-ai/v3/components, workflow-ai/chat)
+  "ghl:MessageChatSquare", "ghl:XClose", "ghl:ArrowUp", "ghl:Microphone01", "ghl:Lightbulb02", "ghl:Map01", "ghl:AlertCircle",
+  "ghl:Dataflow01", "ghl:Lightning01", "ghl:FolderPlus", "ghl:Eraser", "ghl:Save01", "ghl:ThumbsUp", "ghl:ThumbsDown",
+  "ghl:ClockRewind", "ghl:ReverseLeft", "ghl:CheckCircle", "ghl:Clock", "ghl:Loading01", "ghl:Folder",
 ];
 
 const repo = process.argv[2];

@@ -6,9 +6,13 @@ import React from "react";
 import { PriorityAssignment, PriorityInMaps } from "./linkedShots";
 import { RunShots } from "./runShots";
 import { MapShots } from "../map3d/MapShots";
+import { AssistantShots } from "../assistant/shots";
+import { assistantShown } from "../assistant/timing";
 
-/** Every builder redraw at film time `ft`, in window px (place it inside the 1620×880 app window, over the film). */
-export const BuilderScenes: React.FC<{ ft: number }> = ({ ft }) => <><MapShots ft={ft} /><BuilderShotsAt ft={ft} /></>;
+/** Every builder redraw at film time `ft`, in window px (place it inside the 1620×880 app window, over the film). The
+ * Assistant section (assistant/shots.tsx) draws its own map, panel and cursor, in place of the film's map shot. */
+export const BuilderScenes: React.FC<{ ft: number }> = ({ ft }) => assistantShown(ft)
+  ? <AssistantShots ft={ft} /> : <><MapShots ft={ft} /><BuilderShotsAt ft={ft} /></>;
 
 const BuilderShotsAt: React.FC<{ ft: number }> = ({ ft }) => {
   if (ft >= 185.8 && ft <= 193.5) return <><PriorityAssignment ft={ft} /><PriorityInMaps ft={ft} /></>;
