@@ -15,8 +15,8 @@ const PLACE: Record<CalloutSide, (ax: number) => { dx: number; dy: number; tr: s
   none: () => ({ dx: 0, dy: 0, tr: "", origin: "0 0" }),
 };
 
-/** `html`: lines split by <br/>. `k`: the card's entrance (0–1), `lineK(i)`: each later line's. */
-export const Callout: React.FC<{ x: number; y: number; side?: CalloutSide; ax?: number; html: string; k: number; opacity?: number; lineK: (i: number) => number }> = ({
+/** `html`: lines split by <br/>. `k`: the card's entrance (0–1, may overshoot), `lineK(i, n)`: each later line's (line i of n). */
+export const Callout: React.FC<{ x: number; y: number; side?: CalloutSide; ax?: number; html: string; k: number; opacity?: number; lineK: (i: number, n: number) => number }> = ({
   x, y, side = "top", ax = 104, html, k, opacity = 1, lineK,
 }) => {
   const { style } = useCfg();
@@ -28,7 +28,7 @@ export const Callout: React.FC<{ x: number; y: number; side?: CalloutSide; ax?: 
       transform: `${p.tr}translateY(${((1 - k) * 14).toFixed(1)}px) scale(${(0.94 + 0.06 * k).toFixed(3)})`, transformOrigin: p.origin,
     }}>
       {p.arrow ? <div style={{ position: "absolute", width: 18, height: 18, background: "#fff", transform: "rotate(45deg)", ...p.arrow }} /> : null}
-      {lines.map((l, i) => { const lk = i === 0 ? 1 : lineK(i); return (
+      {lines.map((l, i) => { const lk = i === 0 ? 1 : lineK(i, lines.length); return (
         <div key={i} style={{ position: "relative", fontSize: i === 0 ? style.sizes.topLine * 0.6 : style.sizes.topLine * 0.82, fontWeight: i === 0 ? 600 : 800, letterSpacing: "-0.01em", color: INK, whiteSpace: "nowrap",
           lineHeight: 1.25, marginTop: i ? 4 : 0, opacity: lk, transform: `translateY(${((1 - lk) * 10).toFixed(1)}px)` }} dangerouslySetInnerHTML={{ __html: l }} />); })}
     </div>

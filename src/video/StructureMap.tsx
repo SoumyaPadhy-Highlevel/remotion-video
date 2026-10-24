@@ -1,6 +1,6 @@
 import React from "react";
-import { clamp, mix, spring, transform } from "motion";
-import { easeInOut } from "./anim";
+import { clamp, mix, spring, stagger, transform } from "motion";
+import { blend, easeInOut } from "./anim";
 import { STRUCTURE_OPENING as S } from "./script";
 import { STRUCTURE_ICONS } from "./StructureIcons";
 
@@ -42,17 +42,20 @@ export const structureProject = (t: number, x: number, z: number, height = 0): P
 const pts = (points: Point[]) => points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
 const shade = (hex: string, k: number) => `rgb(${[1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * k)).join(",")})`;
 const appearSpring = spring({ keyframes: [0, 1], damping: 18, stiffness: 155, mass: .85 });
+// cascades: islands settle 0.1 s apart, workflows pop 0.075 s apart, then assets and their links one after another
+const islandIn = stagger(.10, { startDelay: 2.8 }), nodeIn = stagger(.075, { startDelay: 5.0 }), assetIn = stagger(.13, { startDelay: 15.52 });
+const linkDraw = stagger(.13, { startDelay: 5.7 }), linkFocus = stagger(.15, { startDelay: 15.52 });
 const appear = (t: number, at: number) => t < at ? 0 : appearSpring.next((t - at) * 1000).value;
 export const ProductIcon: React.FC<{ name: string; x?: number; y?: number; size?: number; color?: string }> = ({ name, x = 0, y = 0, size = 24, color = "currentColor" }) => <svg x={x} y={y} width={size} height={size} viewBox="0 0 24 24" color={color}><g dangerouslySetInnerHTML={{ __html: STRUCTURE_ICONS[name] ?? STRUCTURE_ICONS.workflow }} /></svg>;
 
 /** Bevelled nonagon workflows and smaller hexagonal assets, matching the product's visual grammar. */
 const Node: React.FC<{ node: MapNode; t: number }> = ({ node: n, t }) => {
   const i = NODES.indexOf(n);
-  const arrival = appear(t, 5.0 + i * .075);
+  const arrival = appear(t, nodeIn(i, NODES.length));
   const emphasis = n.workflow ? transform(t, [11.2, 11.8, 15.7, 16.2], [0, 1, 1, 0]) : transform(t, [15.52, 16.12, 20.9, 21.4], [0, 1, 1, 0]);
   const selected = n.id === "application" ? transform(t, [21.6, 22.2], [0, 1], { ease: easeInOut }) : 0;
   const focusPage = n.id === "page" ? transform(t, [26.65, 27.5], [0, 1], { ease: easeInOut }) : 0;
-  const assetReveal = !n.workflow ? appear(t, 15.52 + (i - 5) * .13) : 1;
+  const assetReveal = !n.workflow ? appear(t, assetIn(i - 5, NODES.length - 5)) : 1;
   const baseSize = n.workflow ? .40 : .27;
   const r = baseSize * arrival * (1 + .12 * emphasis + .10 * selected) * (n.workflow ? 1 : .80 + .20 * assetReveal);
   const press = n.id === "application" ? transform(t, [21.48, 21.55, 21.6, 21.82], [0, 1, 1, 0]) : 0;
@@ -118,7 +121,7 @@ export const StructureMap: React.FC<{ t: number }> = ({ t }) => {
       </g>
       {[1, 2, 4, 3, 0].map((idx) => {
         const island = ISLANDS[idx];
-        const k = transform(t, [2.8 + idx * .10, 5.0 + idx * .10], [0, 1], { ease: easeInOut });
+        const s0 = islandIn(idx, ISLANDS.length), k = transform(t, [s0, s0 + 2.2], [0, 1], { ease: easeInOut });
         const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
         const target = corners.map(([a, b]) => structureProject(t, island.x + a * island.w / 2, island.z + b * island.h / 2));
         const start = [{ x: 35, y: 299 + idx * 78 }, { x: 1585, y: 299 + idx * 78 }, { x: 1585, y: 377 + idx * 78 }, { x: 35, y: 377 + idx * 78 }];
@@ -133,7 +136,7 @@ export const StructureMap: React.FC<{ t: number }> = ({ t }) => {
       })}
       <g opacity={transform(t, [5.3, 6.3], [0, 1], { ease: easeInOut })}>
         {NODES.filter((n) => !n.workflow).map((asset, i) => {
-          const draw = transform(t, [5.7 + i * .13, 6.8 + i * .13], [0, 1], { ease: easeInOut });
+          const d0 = linkDraw(i, 4), draw = transform(t, [d0, d0 + 1.1], [0, 1], { ease: easeInOut }), f0 = linkFocus(i, 4);
           const ax = asset.x - node0.x, az = asset.z - node0.z;
           const len = Math.hypot(ax, az);
           const a = structureProject(t, node0.x + ax / len * .48, node0.z + az / len * .48, .06);
@@ -143,7 +146,7 @@ export const StructureMap: React.FC<{ t: number }> = ({ t }) => {
           const dot = { x: mix(b.x, a.x, phase), y: mix(b.y, a.y, phase) };
           return <g key={asset.id}>
             <path d={`M${a.x} ${a.y}L${b.x} ${b.y}`} pathLength="1" strokeDasharray="1" strokeDashoffset={1 - draw} stroke="#CAD2DD" strokeWidth="2.3" fill="none" />
-            <path d={`M${a.x} ${a.y}L${b.x} ${b.y}`} pathLength="1" strokeDasharray="1" strokeDashoffset={transform(t, [15.52 + i * .15, 16.4 + i * .15], [1, 0], { ease: easeInOut })} stroke={pageFocus > .1 ? "#155EEF" : "#A9CBFF"} strokeWidth={3 + pageFocus * 1.5} fill="none" opacity={assetFocus} />
+            <path d={`M${a.x} ${a.y}L${b.x} ${b.y}`} pathLength="1" strokeDasharray="1" strokeDashoffset={transform(t, [f0, f0 + .88], [1, 0], { ease: easeInOut })} stroke={blend("#A9CBFF", "#155EEF", pageFocus)} strokeWidth={3 + pageFocus * 1.5} fill="none" opacity={assetFocus} />
             <circle cx={dot.x} cy={dot.y} r={4 + pageFocus * 1.5} fill="#2876F6" opacity={assetFocus * transform(phase, [0, .08, .87, 1], [0, 1, 1, 0])} />
             <circle cx={mix(b.x, a.x, clamp(0, 1, phase - .04))} cy={mix(b.y, a.y, clamp(0, 1, phase - .04))} r="3" fill="#75ABFF" opacity={assetFocus * .5 * transform(phase, [.04, .1, .87, 1], [0, 1, 1, 0])} />
           </g>;
@@ -151,7 +154,7 @@ export const StructureMap: React.FC<{ t: number }> = ({ t }) => {
       </g>
       {[...NODES].sort((a, b) => (a.x + a.z) - (b.x + b.z)).map((n) => <Node key={n.id} node={n} t={t} />)}
       {ISLANDS.map((island, idx) => {
-        const k = transform(t, [2.8 + idx * .10, 5 + idx * .10], [0, 1], { ease: easeInOut });
+        const s0 = islandIn(idx, ISLANDS.length), k = transform(t, [s0, s0 + 2.2], [0, 1], { ease: easeInOut });
         const p = structureProject(t, island.x, island.z + island.h / 2 + .32);
         const x = mix(172, p.x, k), y = mix(344 + idx * 78, p.y, k);
         const width = S.folders[idx].length * 8.3 + 48;

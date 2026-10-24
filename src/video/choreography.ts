@@ -3,7 +3,7 @@ import { M, DROPS, INTRO_CARDS, SHAKES, TITLE_DROP } from "./script";
 import { shakeAt } from "./Impact";
 import { DEFAULT_CFG, MotionCfg, PUSH_KEYS } from "./config";
 import { clamp, mix, transform } from "motion";
-import { easeIn, easeInOut, easeOut, easeOutBack } from "./anim";
+import { easeIn, easeInOut, easeOut, springAt } from "./anim";
 
 // ── App window ───────────────────────────────────────────────────────────────
 
@@ -34,8 +34,8 @@ export function windowAt(t: number, plate = false, m: MotionCfg = DEFAULT_CFG.mo
   if (t < 3.9) {
     o = 0;
     ty = 120;
-  } else if (t < 4.7) {
-    const k = transform(t, [3.9, 4.6], [0, 1], { ease: easeOut });
+  } else if (t < 5.4) {
+    const k = springAt(t, 3.9, 0.7, 0.2);
     o = k;
     ty = (1 - k) * W.riseDistance;
     s = mix(W.riseStartScale, 1, k);
@@ -104,7 +104,7 @@ export function mascotAt(t: number): MascotState {
 
   // 0 – 3.9: flies in next to the opening headline.
   if (t < 3.9) {
-    const k = transform(t, [0.6, 1.9], [0, 1], { ease: easeOut });
+    const k = springAt(t, 0.6, 1.0, 0.25);
     m.x = mix(2350, 1490, k);
     m.y = mix(420, 640, k);
     m.s = 0.78;
@@ -116,7 +116,7 @@ export function mascotAt(t: number): MascotState {
   // 3.9 – D1: watches the problem from the corner: wide-eyed as the list hits 100, puzzled when the hand-off link turns out
   // to be invisible, worried when one form change hits four workflows, dizzy in the tab scramble, worried through the questions.
   else if (t < M.D1) {
-    const k = transform(t, [3.9, 4.6], [0, 1], { ease: easeInOut });
+    const k = springAt(t, 3.9, 0.6, 0.15);
     m.x = mix(1490, 1780, k);
     m.y = mix(640, 930, k);
     m.s = mix(0.78, 0.42, k);
@@ -126,13 +126,13 @@ export function mascotAt(t: number): MascotState {
     if (t > 20.0 && t < 23.2) m.eyes = "happy";
     if (t >= 23.3 && t < 25.1) {
       m.eyes = "squint";
-      m.q = transform(t, [23.4, 23.8], [0, 1], { ease: easeOutBack }) * transform(t, [24.8, 25.1], [1, 0], { ease: easeInOut });
+      m.q = springAt(t, 23.4, 0.35, 0.5) * transform(t, [24.8, 25.1], [1, 0], { ease: easeInOut });
     }
     if (t > 31.79 && t < 34.8) m.eyes = "worried";
     if (t > 36.9 && t < 40.6) m.eyes = "wow";
     if (t > 42.7 && t < 46.4) {
       m.eyes = "squint";
-      m.q = transform(t, [43.05, 43.4], [0, 1], { ease: easeOutBack }) * transform(t, [46.0, 46.4], [1, 0], { ease: easeInOut });
+      m.q = springAt(t, 43.05, 0.35, 0.5) * transform(t, [46.0, 46.4], [1, 0], { ease: easeInOut });
       m.r = -8 + Math.sin(t * 26) * 5;
     }
     if (t >= 46.4 && t < 52.1) {
@@ -142,7 +142,7 @@ export function mascotAt(t: number): MascotState {
       m.sparkle = transform(t, [50.5, 51.1, 51.8, 52.1], [0, 1, 1, 0]) * 0.5;
     }
     if (t >= 52.1) {
-      const k3 = transform(t, [52.1, 52.85], [0, 1], { ease: easeOut });
+      const k3 = springAt(t, 52.1, 0.6, 0.3);
       m.x = mix(1780, 1700, k3);
       m.y = mix(930, 880, k3);
       m.s = mix(0.42, 0.5, k3);
@@ -153,7 +153,7 @@ export function mascotAt(t: number): MascotState {
   }
   // D1 – 46.52: star eyes as Workflow Maps explodes, then the map.
   else if (t < 62.02) {
-    const k = transform(t, [M.D1 + 0.1, M.D1 + 0.9], [0, 1], { ease: easeOutBack });
+    const k = springAt(t, M.D1 + 0.1, 0.6, 0.4);
     m.x = mix(1700, 1640, k);
     m.y = mix(880, 860, k);
     m.s = mix(0.5, 0.56, k);
@@ -164,7 +164,7 @@ export function mascotAt(t: number): MascotState {
   }
   // 23.27 – B2: Plan tours, peeking from the corner.
   else if (t < M.B2) {
-    const k = transform(t, [62.02, 62.75], [0, 1], { ease: easeInOut });
+    const k = springAt(t, 62.02, 0.6, 0.15);
     m.x = mix(1640, 1830, k);
     m.y = mix(860, 960, k);
     m.s = mix(0.56, 0.36, k);
@@ -182,10 +182,10 @@ export function mascotAt(t: number): MascotState {
   }
   // B2 – D2: big, centre stage for "Plan it. Organise it. Troubleshoot it."
   else if (t < M.D2) {
-    const k = transform(t, [M.B2, M.B2 + 1.0], [0, 1], { ease: easeInOut });
+    const k = springAt(t, M.B2 + 0.15, 0.9, 0.2);
     m.x = mix(1830, 1480, k);
     m.y = mix(960, 640, k);
-    m.s = mix(0.36, 0.86, k);
+    m.s = transform(t, [M.B2, M.B2 + 0.2, M.B2 + 0.8, M.B2 + 1.1], [0.36, 0.32, 0.9, 0.86], { ease: [easeOut, easeInOut, easeInOut] });
     m.r = mix(-10, -4, k);
     m.look = t < 94.86 ? [-8, -14] : [-22, 0];
     m.eyes = t > 99.76 ? "wow" : t > 96.86 ? "happy" : "normal";
@@ -197,7 +197,7 @@ export function mascotAt(t: number): MascotState {
   }
   // D2 – 74.18: organise.
   else if (t < 122.04) {
-    const k = transform(t, [M.D2, M.D2 + 1.1], [0, 1], { ease: easeOut });
+    const k = springAt(t, M.D2, 0.9, 0.2);
     m.x = mix(1480, 1830, k);
     m.y = mix(640, 960, k);
     m.s = mix(0.86, 0.38, k);
@@ -225,7 +225,7 @@ export function mascotAt(t: number): MascotState {
   }
   // GAP – D3: steps forward for "one more thing".
   else if (t < M.D3) {
-    const k = transform(t, [M.GAP, M.GAP + 0.7], [0, 1], { ease: easeInOut });
+    const k = springAt(t, M.GAP, 0.7, 0.25);
     m.x = mix(1830, 1180, k);
     m.y = mix(960, 600, k);
     m.s = mix(0.38, 0.9, k);
@@ -235,7 +235,7 @@ export function mascotAt(t: number): MascotState {
   }
   // D3 – FIN: troubleshoot, find what's broken.
   else if (t < M.FIN) {
-    const k = transform(t, [M.D3, M.D3 + 1.0], [0, 1], { ease: easeOut });
+    const k = springAt(t, M.D3, 0.8, 0.2);
     m.x = mix(1180, 1830, k);
     m.y = mix(600, 960, k);
     m.s = mix(0.9, 0.38, k);
@@ -258,15 +258,14 @@ export function mascotAt(t: number): MascotState {
       m.sparkle = transform(t, [166.3, 166.5, 168.26, 168.86], [0, 1, 1, 0]);
     }
     if (t > 168.01 && t < 170.43) {
-      const k = transform(t, [168.01, 170.26], [0, 1], { ease: easeInOut });
-      m.y = 960 - Math.abs(Math.sin(k * Math.PI * 2)) * 70;
+      m.y = transform(t, [168.01, 168.57, 169.14, 169.7, 170.26], [960, 890, 960, 890, 960], { ease: [easeOut, easeIn, easeOut, easeIn] });
       m.eyes = "happy";
       m.sparkle = 0.6;
     }
   }
   // LOGO – END: next to the lockup.
   else {
-    const k = transform(t, [M.LOGO, M.LOGO + 1.0], [0, 1], { ease: easeOut });
+    const k = springAt(t, M.LOGO, 0.9, 0.3);
     m.x = mix(1830, 1560, k);
     m.y = mix(960, 780, k);
     m.s = mix(0.38, 0.62, k);

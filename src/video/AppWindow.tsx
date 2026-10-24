@@ -2,14 +2,16 @@
 // 1620×880). The window's own motion (rise, push-ins, receding behind titles) lives here.
 import React from "react";
 import { OffthreadVideo, Sequence, staticFile } from "remotion";
-import { mix, transform } from "motion";
-import { easeInOut, easeOut } from "./anim";
+import { mix, stagger, transform } from "motion";
+import { easeInOut, springAt } from "./anim";
 import { Callout } from "./Callout";
 import { windowAt } from "./choreography";
 import { introCalloutHtml, useCfg } from "./config";
 import { BEATS, FPS, INTRO_CALLOUTS, introCalloutAt } from "./script";
 
 export const WINDOW = { left: 150, top: 118, width: 1620, height: 880 };
+/** The intro callouts' later lines follow the card 0.45 s in, 0.5 s apart. */
+const calloutLines = stagger(0.5, { startDelay: 0.45 });
 
 /** `tn`: output time, for the intro's callouts (they hold while the timeline `t` stands still) and their push-in. */
 export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean }> = ({ t, tn, plate }) => {
@@ -46,7 +48,7 @@ export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean }> = 
       {co && !plate ? (() => {
         const lt = tn! - co.o0;
         return <Callout x={co.c.x} y={co.c.y} side={co.c.side} ax={co.c.ax} html={introCalloutHtml(cfg, INTRO_CALLOUTS.indexOf(co.c))}
-          k={transform(lt, [0, 0.35], [0, 1], { ease: easeOut })} opacity={transform(tn!, [co.o1 - 0.3, co.o1], [1, 0], { ease: easeInOut })} lineK={(i) => transform(lt, [0.45 + 0.5 * (i - 1), 0.8 + 0.5 * (i - 1)], [0, 1], { ease: easeOut })} />;
+          k={springAt(lt, 0, 0.4, 0.3)} opacity={transform(tn!, [co.o1 - 0.3, co.o1], [1, 0], { ease: easeInOut })} lineK={(i, n) => springAt(lt, calloutLines(i - 1, n - 1), 0.35, 0.2)} />;
       })() : null}
     </div>
   );

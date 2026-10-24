@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { clamp, mix, spring, transform } from "motion";
-import { easeInOut } from "./anim";
+import { clamp, mix, spring, stagger, transform } from "motion";
+import { blend, easeInOut } from "./anim";
 import { GLOBAL_CSS, loadFonts } from "./fonts";
 import { Mascot } from "./Mascot";
 import { STRUCTURE_OPENING as S } from "./script";
@@ -10,6 +10,10 @@ import { StructureMap, structureProject } from "./StructureMap";
 
 loadFonts();
 const BLUE = "#155EEF";
+/** The caption's words start 0.025 s apart. */
+const wordIn = stagger(.025);
+/** When each progress step (Folders, Workflows, Assets, Exact step) becomes the current one. */
+const STEP_AT = [0, 11.2, 16.2, 26.5];
 const capture = (file: string) => staticFile(`captures/structure/${file}.jpg`);
 const settleSpring = spring({ keyframes: [0, 1], damping: 24, stiffness: 155, mass: .95 });
 const settle = (t: number, at: number) => t < at ? 0 : settleSpring.next((t - at) * 1000).value;
@@ -33,7 +37,8 @@ export const StructureOpening: React.FC = () => {
   const panelCursor = transform(t, [25.5, 26.55], [0, 1], { ease: easeInOut });
   const startScale = mix(.975, 1, settle(t, .1));
   const shadowWave = Math.sin(morph * Math.PI);
-  const activeIndex = t < 11.2 ? 0 : t < 16.2 ? 1 : t < 26.5 ? 2 : 3;
+  // each progress dot blends next → current → done over 0.3 s
+  const reached = (i: number) => i >= STEP_AT.length ? 0 : transform(t, [STEP_AT[i], STEP_AT[i] + .3], [0, 1]);
   return <AbsoluteFill
     style={{ fontFamily: "Inter, sans-serif", color: "#0B1B3A", WebkitFontSmoothing: "antialiased", overflow: "hidden" }}
   >
@@ -41,7 +46,7 @@ export const StructureOpening: React.FC = () => {
     <Background />
     <div className="poppins" style={{ position: "absolute", top: 24, width: 1920, textAlign: "center", opacity: titleOut }}>
       <div style={{ fontSize: 47, fontWeight: 750, letterSpacing: "-.028em", lineHeight: 1.2 }}>
-        {words.map((word, i) => <span key={`${caption.a}-${i}`} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "bottom", paddingBottom: 5, marginRight: 12 }}><span style={{ display: "inline-block", translate: `0 ${(1 - settle(t, caption.a + i * .025)) * 64}px`, rotate: `${transform(t, [caption.a + i * .025, caption.a + i * .025 + .5], [1, 0], { ease: easeInOut }) * 3}deg`, opacity: transform(t, [caption.a + i * .025, caption.a + i * .025 + .18], [0, 1], { ease: easeInOut }) }}>{word}</span></span>)}
+        {words.map((word, i) => { const w0 = caption.a + wordIn(i, words.length); return <span key={`${caption.a}-${i}`} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "bottom", paddingBottom: 5, marginRight: 12 }}><span style={{ display: "inline-block", translate: `0 ${(1 - settle(t, w0)) * 64}px`, rotate: `${transform(t, [w0, w0 + .5], [1, 0], { ease: easeInOut }) * 3}deg`, opacity: transform(t, [w0, w0 + .18], [0, 1], { ease: easeInOut }) }}>{word}</span></span>; })}
       </div>
       <div style={{ marginTop: 6, fontFamily: "Inter, sans-serif", fontSize: 22, color: "#475467", fontWeight: 500, opacity: transform(t, [caption.a + .14, caption.a + .5], [0, 1], { ease: easeInOut }), translate: `0 ${(1 - settle(t, caption.a + .14)) * 15}px` }}>{caption.detail}</div>
     </div>
@@ -71,7 +76,7 @@ export const StructureOpening: React.FC = () => {
     </div>
     <Mascot t={t} st={{ x: transform(t, [3.9, 5.8], [2080, 1810], { ease: easeInOut }), y: 938 - 30 * Math.sin(transform(t, [3.9, 5.8], [0, 1], { ease: easeInOut }) * Math.PI), s: .32, r: transform(t, [3.9, 5.8], [-14, -6], { ease: easeInOut }), o: transform(t, [3.9, 4.4, 10.7, 11.2], [0, 1, 1, 0]), eyes: t < 6 ? "wow" : "happy", look: [-15, -10], sparkle: transform(t, [5.2, 5.5, 6.8, 7.5], [0, 1, 1, 0]) * .7, streak: transform(t, [3.9, 4.05, 5.2, 5.7], [0, 1, 1, 0]) }} />
     <div style={{ position: "absolute", left: 0, right: 0, top: 1037, display: "flex", justifyContent: "center", gap: 34 }}>
-      {S.progress.map((label, i) => <div key={label} style={{ display: "flex", alignItems: "center", gap: 9, color: i === activeIndex ? BLUE : i < activeIndex ? "#475467" : "#98A2B3", fontSize: 17, fontWeight: 600 }}><span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: 999, fontSize: 12, background: i === activeIndex ? BLUE : i < activeIndex ? "#DCE8FF" : "#E8EEF7", color: i === activeIndex ? "white" : "#667085", scale: String(i === activeIndex ? 1 + .08 * Math.sin(t * 2) ** 2 : 1) }}>{i + 1}</span>{label}</div>)}
+      {S.progress.map((label, i) => { const on = reached(i), done = reached(i + 1); return <div key={label} style={{ display: "flex", alignItems: "center", gap: 9, color: blend(blend("#98A2B3", BLUE, on), "#475467", done), fontSize: 17, fontWeight: 600 }}><span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: 999, fontSize: 12, background: blend(blend("#E8EEF7", BLUE, on), "#DCE8FF", done), color: blend(blend("#667085", "#FFFFFF", on), "#667085", done), scale: String(1 + .08 * Math.sin(t * 2) ** 2 * (on - done)) }}>{i + 1}</span>{label}</div>; })}
     </div>
   </AbsoluteFill>;
 };

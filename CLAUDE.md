@@ -25,8 +25,13 @@ Give each re-render a new file name (browsers cache half-written files).
 
 - Everything is a pure function of time: `t = frame / 30`. Never use `Math.random()`, `Date`, timers or state; use `rand(i)` from `anim.ts` for variety.
 - Animate with Motion's pure helpers (`motion` package): `transform(t, [a, b], [from, to], { ease })` for a timed move or fade,
-  `transform(t, [a, a + fadeIn, b - fadeOut, b], [0, 1, 1, 0])` for a visibility window, `mix` to blend, `clamp`, and `spring({ keyframes: [0, 1], … }).next(ms).value`.
-  Easing curves (`easeOut`, `easeIn`, `easeInOut`, `easeOutBack`, `easeOutExpo`) are Motion `cubicBezier`s in `anim.ts`.
+  `transform(t, [a, a + fadeIn, b - fadeOut, b], [0, 1, 1, 0])` for a visibility window, `mix` to blend, `clamp`.
+  Multi-step moves are one keyframe list with an ease per segment: `transform(t, [a, b, c, d], [60, 0, 0, -40], { ease: [easeOut, linear, easeIn] })`
+  (inputs must ascend).
+  Entrances use springs: `springAt(t, start, visualDuration, bounce)` from `anim.ts` (a Motion `spring`) gives 0 → 1 with overshoot, for a `mix`.
+  Cascades use Motion's `stagger(gap, { startDelay })(i, count)` for the start time of item `i`.
+  Colour changes use `blend(from, to, p)` (Motion's `mixColor`); pass hex colours, e.g. `cfg.style.accent`, not CSS variables.
+  Easing curves (`easeOut`, `easeIn`, `easeInOut`, `easeOutBack`, `easeOutExpo`, `linear`) are in `anim.ts`.
   Don't use `<motion.div animate>`, `useAnimate` or motion values: they run on wall-clock time, and Remotion renders each frame separately.
 - Times are seconds on the edited music. Beats must stay contiguous and keep their start/end, or the music stops matching.
 - Keep text in `script.ts`. Components read from it.

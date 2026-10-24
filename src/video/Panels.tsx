@@ -3,8 +3,8 @@
 // Also the film clip window (a stretch of film shown in the app window, e.g. the hand-offs on the second drop).
 import React from "react";
 import { Freeze, OffthreadVideo, staticFile } from "remotion";
-import { clamp, mix, transform } from "motion";
-import { easeInOut, easeOut } from "./anim";
+import { clamp, mix, stagger, transform } from "motion";
+import { easeInOut, easeOut, linear, springAt } from "./anim";
 import { PANEL_CLIPS } from "./panelCursor";
 import { APP_FILE, FPS, PanelShot } from "./script";
 import { WINDOW } from "./AppWindow";
@@ -13,6 +13,8 @@ import { md, useCfg } from "./config";
 import { Callout } from "./Callout";
 
 const GAP = 30, TOP = 300;
+/** A clip callout's later lines follow the card 0.6 s apart. */
+const calloutLines = stagger(0.6, { startDelay: 1.65 });
 const BLUE = "var(--accent, #155EEF)", INK = "var(--ink, #0B1B3A)";
 
 export const Panels: React.FC<{ cfg: PanelShot; lt: number; kicker: string; html: string; fade: number }> = ({ cfg, lt, kicker, html, fade }) => {
@@ -25,7 +27,7 @@ export const Panels: React.FC<{ cfg: PanelShot; lt: number; kicker: string; html
   return (
     <div className="poppins" style={{ position: "absolute", inset: 0, opacity: fade }}>
       {/* the line on top */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: 70, textAlign: "center", opacity: cap * transform(lt, [0, 0.4], [0, 1], { ease: easeOut }) * transform(lt, [outAt - 0.3, outAt], [1, 0], { ease: easeInOut }), transform: `translateY(${transform(lt, [0, 0.4], [1, 0], { ease: easeOut }) * 20}px)` }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 70, textAlign: "center", opacity: cap * transform(lt, [0, 0.4, outAt - 0.3, outAt], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }), transform: `translateY(${(1 - springAt(lt, 0, 0.45, 0.2)) * 20}px)` }}>
         <div style={{ fontSize: 20, fontWeight: 600, color: BLUE, letterSpacing: "0.12em" }}>{kicker}</div>
         <div style={{ fontSize: style.sizes.panelCaption, fontWeight: 800, letterSpacing: "-0.02em", color: INK, marginTop: 4 }} dangerouslySetInnerHTML={{ __html: html }} />
       </div>
@@ -33,7 +35,7 @@ export const Panels: React.FC<{ cfg: PanelShot; lt: number; kicker: string; html
       {cfg.outro && cap ? <KineticTitle t={lt} at={cfg.outro.at} out={cfg.dur + 1} kicker="" html={md(P.tidyOutro)} size={style.sizes.panelCaption} offsetY={-372} /> : null}
       {cfg.panels.map((p, i) => {
         const [cx, cy, cw] = p.crop, sc = PW / cw;
-        const on = transform(lt, [p.at, p.at + 0.35], [0, 1], { ease: easeOut });
+        const on = springAt(lt, p.at, 0.4, 0.25);
         const pc = p.clip != null ? PANEL_CLIPS[p.clip] : null;
         const ft = pc ? pc.offset + clamp(0, (pc.frames.length - 1) / FPS, lt - p.at - 0.3) : p.src[0] + clamp(0, p.src[1] - p.src[0], lt - p.at - 0.3);
         return (
@@ -107,7 +109,7 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
 export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number; dur: number; callout?: [number, number]; pop?: number }> = ({ film, lt, kicker, html, fade, dur, callout, pop }) => {
   const { show, style } = useCfg();
   const capOut = callout || pop != null ? 0 : 1;
-  const co = transform(lt, [1.05, 1.4], [0, 1], { ease: easeOut });
+  const co = springAt(lt, 1.05, 0.4, 0.3);
   return <>
     <div style={{
       position: "absolute", left: WINDOW.left, top: WINDOW.top, width: WINDOW.width, height: WINDOW.height, borderRadius: 18, background: "#fff", overflow: "hidden", opacity: fade,
@@ -117,12 +119,12 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
         <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted style={{ width: WINDOW.width, height: WINDOW.height }} />
       </Freeze>
     </div>
-    <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * transform(lt, [0.1, 0.5], [0, 1], { ease: easeOut }) * transform(lt, [dur - 0.35, dur - 0.05], [1, 0], { ease: easeInOut }), transform: `translateY(${(transform(lt, [0.1, 0.5], [1, 0], { ease: easeOut }) * 20).toFixed(1)}px)` }}>
+    <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * transform(lt, [0.1, 0.5, dur - 0.35, dur - 0.05], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }), transform: `translateY(${((1 - springAt(lt, 0.1, 0.45, 0.2)) * 20).toFixed(1)}px)` }}>
       <div style={{ fontSize: 17, fontWeight: 600, color: BLUE, letterSpacing: "0.12em", marginBottom: 2 }}>{kicker}</div>
       <div style={{ fontSize: style.sizes.topLine, fontWeight: 700, letterSpacing: "-0.01em", color: INK }} dangerouslySetInnerHTML={{ __html: html }} />
     </div>
     {callout && show.panelCaptions ? <Callout x={WINDOW.left + callout[0] + 113} y={WINDOW.top + callout[1] - 9} html={html} k={co} opacity={fade * transform(lt, [dur - 0.4, dur - 0.1], [1, 0], { ease: easeInOut })}
-      lineK={(i) => transform(lt, [1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1)], [0, 1], { ease: easeOut })} /> : null}
+      lineK={(i, n) => springAt(lt, calloutLines(i - 1, n - 1), 0.35, 0.2)} /> : null}
     {pop != null && show.panelCaptions ? <div className="poppins" style={{ position: "absolute", inset: 0, opacity: fade }}>
       <KineticTitle t={lt} at={pop} out={dur - 0.75} kicker="" html={html} size={style.sizes.panelCaption + 6} pulse={[pop + 0.45]} offsetY={-478} />
     </div> : null}

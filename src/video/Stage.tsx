@@ -2,7 +2,7 @@
 import React from "react";
 import { Img, staticFile } from "remotion";
 import { mix, transform } from "motion";
-import { easeIn, easeInOut, easeOut, easeOutBack } from "./anim";
+import { blend, easeIn, easeInOut, easeOut, linear, springAt } from "./anim";
 import { KineticTitle } from "./Impact";
 import { cardText, md, useCfg } from "./config";
 import { BUILD_LINES, BUILD_LINES_START, CAPTIONS, CHAPTERS, FLASHES, HEADLINES, M, MESSAGE, TABS, TITLE_CARDS, WALLS } from "./script";
@@ -42,6 +42,7 @@ export const Background: React.FC = () => {
 };
 
 // ── Browser tabs piling up above the window ──────────────────────────────────
+const TAB_BG = "#E4ECF7";
 const WorkflowIcon: React.FC<{ size: number; color: string }> = ({ size, color }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" style={{ color, flexShrink: 0, display: "block" }}>
     <path fill="currentColor" d="M9 2v6h2v3H5c-1.11 0-2 .89-2 2v3H1v6h6v-6H5v-3h6v3H9v6h6v-6h-2v-3h6v3h-2v6h6v-6h-2v-3c0-1.11-.89-2-2-2h-6V8h2V2z" />
@@ -51,18 +52,27 @@ const WorkflowIcon: React.FC<{ size: number; color: string }> = ({ size, color }
 export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
   const { text, show } = useCfg();
   const n = show.browserTabs && t < TABS.b ? TABS.times.filter((x) => t >= x).length : 0;
-  const pop = n ? transform(t, [TABS.times[n - 1], TABS.times[n - 1] + 0.12], [0, 1]) : 1;
   if (!n) return null;
+  const opened = TABS.times[n - 1], pop = springAt(t, opened, 0.25, 0.35);
   // the active tab: the last one opened, unless a later flip switched back to an earlier one
-  let active = n - 1;
-  TABS.flips.forEach(([at, i]) => { if (t >= at && at >= TABS.times[n - 1] && i < n) active = i; });
+  const activeAt = (x: number) => {
+    const m = TABS.times.filter((y) => x >= y).length;
+    let a = m - 1;
+    TABS.flips.forEach(([at, i]) => { if (x >= at && at >= TABS.times[m - 1] && i < m) a = i; });
+    return a;
+  };
+  const active = activeAt(t);
+  // on each switch the old tab's white fades into the new one over 0.15 s
+  const switched = Math.max(opened, ...TABS.flips.map(([at]) => at).filter((at) => at <= t && at >= opened));
+  const was = activeAt(switched - 0.001), sw = transform(t, [switched, switched + 0.15], [0, 1]);
+  const tabBg = (i: number) => (i === active ? (i === was ? "#fff" : blend(TAB_BG, "#fff", sw)) : i === was ? blend("#fff", TAB_BG, sw) : TAB_BG);
   return (
     <div style={{ position: "absolute", left: 150, top: 70, width: 1620, height: 48, display: "flex", alignItems: "flex-end", gap: 2, paddingLeft: 10, boxSizing: "border-box" }}>
       {TABS.names.slice(0, n).map((_, i) => text.browserTabs[i] ?? TABS.names[i]).map((name, i) => (
         <div key={i} style={{
           display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontSize: 12, fontWeight: 500, color: "#344054",
           overflow: "hidden", whiteSpace: "nowrap", height: 38, borderRadius: "10px 10px 0 0",
-          background: i === active ? "#fff" : "#E4ECF7", boxShadow: "0 -1px 0 rgba(16,24,40,.06)", flex: "1 1 0", minWidth: 0, maxWidth: 220,
+          background: tabBg(i), boxShadow: "0 -1px 0 rgba(16,24,40,.06)", flex: "1 1 0", minWidth: 0, maxWidth: 220,
           transform: i === n - 1 ? `translateY(${(1 - pop) * 14}px)` : undefined, opacity: i === n - 1 ? pop : 1,
         }}>
           <WorkflowIcon size={14} color={BLUE} />
@@ -80,8 +90,8 @@ const SHOW_BUILD_LINES = false;
 
 export const Titles: React.FC<{ t: number }> = ({ t }) => {
   const cfg = useCfg(), { text, show, style } = cfg;
-  const logoO = show.opening && t < 3.9 ? transform(t, [0.2, 0.8], [0, 1], { ease: easeOut }) * transform(t, [3.6, 3.9], [1, 0], { ease: easeInOut }) : 0;
-  const pillO = show.opening && t < 3.9 ? transform(t, [0.5, 1.0], [0, 1], { ease: easeOut }) * transform(t, [3.6, 3.9], [1, 0], { ease: easeInOut }) : 0;
+  const logoO = show.opening && t < 3.9 ? transform(t, [0.2, 0.8, 3.6, 3.9], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }) : 0;
+  const pillO = show.opening && t < 3.9 ? transform(t, [0.5, 1.0, 3.6, 3.9], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }) : 0;
 
   // the two headlines: the opening one and "And when something breaks?", each with its own text and switch
   const hi = HEADLINES.findIndex((h, i) => (i === 0 ? show.opening : show.breaksHeadline) && transform(t, [h.a, h.a + 0.5, h.b - 0.35, h.b], [0, 1, 1, 0]) > 0);
@@ -92,7 +102,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
   const card = show.titleCards ? TITLE_CARDS.find((c) => transform(t, [c.a, c.a + 0.18, c.b - 0.3, c.b], [0, 1, 1, 0]) > 0) : undefined;
   // the build lines sit in timeline 93–100.6, which the edit skips; only a faint ghost leaked into the panel shot's fade, so they're off
   const buildOn = SHOW_BUILD_LINES && t >= M.B2 && t < M.D2;
-  const lk = show.lockup ? transform(t, [M.LOGO, M.LOGO + 0.7], [0, 1], { ease: easeOutBack }) * transform(t, [M.END - 0.9, M.END], [1, 0], { ease: easeInOut }) : 0;
+  const lkIn = springAt(t, M.LOGO, 0.7, 0.35), lk = show.lockup ? lkIn * transform(t, [M.END - 0.9, M.END], [1, 0], { ease: easeInOut }) : 0;
 
   return (
     <div className="poppins" style={{ position: "absolute", inset: 0, color: INK }}>
@@ -101,7 +111,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       <div style={{
         position: "absolute", left: 110, top: 170, height: 56, padding: "0 34px", borderRadius: 999, background: "var(--pill, #4A90F7)", color: INK,
         fontSize: 26, fontWeight: 600, display: "flex", alignItems: "center", letterSpacing: ".02em",
-        transform: `translateY(${transform(t, [0.5, 1.0], [1, 0], { ease: easeOut }) * 20}px)`, ...hidden(pillO),
+        transform: `translateY(${(1 - springAt(t, 0.5, 0.5, 0.3)) * 20}px)`, ...hidden(pillO),
       }}>{text.opening.pill}</div>
 
       {/* Headline */}
@@ -109,7 +119,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
         <div dangerouslySetInnerHTML={html(hl.html)} style={{
           position: "absolute", left: hl.center ? 0 : 106, width: hl.center ? 1920 : 1400, textAlign: hl.center ? "center" : "left",
           top: hl.top, fontSize: hl.size, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em",
-          transform: `translateY(${transform(t, [hl.a, hl.a + 0.6], [1, 0], { ease: easeOut }) * 60 - transform(t, [hl.b - 0.35, hl.b], [0, 1], { ease: easeIn }) * 40}px)`,
+          transform: `translateY(${transform(t, [hl.a, hl.a + 0.6, hl.b - 0.35, hl.b], [60, 0, 0, -40], { ease: [easeOut, linear, easeIn] })}px)`,
           ...hidden(transform(t, [hl.a, hl.a + 0.5, hl.b - 0.35, hl.b], [0, 1, 1, 0])),
         }} />
       ) : null}
@@ -118,7 +128,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       {cap ? (
         <div dangerouslySetInnerHTML={html(cap.html)} style={{
           position: "absolute", left: 0, right: 0, top: 22, textAlign: "center", fontWeight: 700, fontSize: 40, letterSpacing: "-0.01em",
-          transform: `translateY(${transform(t, [cap.a, cap.a + 0.4], [1, 0], { ease: easeOut }) * 24}px)`, ...hidden(transform(t, [cap.a, cap.a + 0.3, cap.b - 0.25, cap.b], [0, 1, 1, 0])),
+          transform: `translateY(${(1 - springAt(t, cap.a, 0.4, 0.25)) * 24}px)`, ...hidden(transform(t, [cap.a, cap.a + 0.3, cap.b - 0.25, cap.b], [0, 1, 1, 0])),
         }} />
       ) : null}
 
@@ -152,7 +162,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       </div>
 
       {/* Logo lockup */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: 300, display: "flex", flexDirection: "column", alignItems: "center", transform: `scale(${mix(0.9, 1, lk)})`, ...hidden(lk) }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 300, display: "flex", flexDirection: "column", alignItems: "center", transform: `scale(${mix(0.9, 1, lkIn)})`, ...hidden(lk) }}>
         <Img src={staticFile("brand/highlevel-logo-dark.png")} style={{ height: 70 }} />
         <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 32, fontSize: style.sizes.lockup, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1 }}>
           {text.lockup.name} <span className="grad-text">{text.lockup.accent}</span>
@@ -175,7 +185,7 @@ export const Message: React.FC<{ t: number }> = ({ t }) => {
   let origin = "0 0";
   let check = 0;
   if (t >= MESSAGE.from && t < MESSAGE.to) {
-    const mk = transform(t, [MESSAGE.from, MESSAGE.from + 0.4], [0, 1], { ease: easeOutBack });
+    const mk = springAt(t, MESSAGE.from, 0.45, 0.35);
     left = 1290;
     top = 24;
     o = mk * transform(t, [MESSAGE.to - 0.4, MESSAGE.to], [1, 0], { ease: easeInOut });

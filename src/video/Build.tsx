@@ -3,7 +3,7 @@
 // item lifts out of its row, flies across and lands where its node appears in the film (BUILD in script.ts).
 import React from "react";
 import { mix, transform } from "motion";
-import { easeInOut, easeOut } from "./anim";
+import { blend, easeInOut, springAt } from "./anim";
 import { WINDOW } from "./AppWindow";
 import { BUILD } from "./script";
 import { md, useCfg } from "./config";
@@ -84,11 +84,11 @@ const cardH = (k: number) => cardRows(k).h;
 
 /** `part` (editor export): "panel" = the left panel only, a number = that one flying item only; default both. */
 export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number }> = ({ t, part = "all" }) => {
-  const { text, show, motion } = useCfg(), T = text.mapBuild, FLY = motion.flights.duration;
+  const { text, show, motion, style } = useCfg(), T = text.mapBuild, FLY = motion.flights.duration;
   const stepText = [[T.step1, T.step1List, T.step1Count], [T.step2, T.step2List, T.step2Count], [T.step3, T.step3List, T.step3Count]];
   const b = t - BUILD.at;
   if (b < 0 || b > BUILD.release[1] + 0.05) return null;
-  const panelIn = transform(b, [0.45, 0.95], [0, 1], { ease: easeOut }), panelOut = transform(b, [BUILD.release[0] - 0.1, BUILD.release[1] - 0.1], [0, 1], { ease: easeInOut });
+  const panelIn = springAt(b, 0.45, 0.5, 0.2), panelOut = transform(b, [BUILD.release[0] - 0.1, BUILD.release[1] - 0.1], [0, 1], { ease: easeInOut });
   const po = panelIn * (1 - panelOut);
   // active step and the eased layout between steps
   const st = BUILD.steps.reduce((a, s, i) => (b >= s.a ? i : a), 0);
@@ -114,16 +114,18 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
           dangerouslySetInnerHTML={{ __html: md(T.headline) }} />
         {BUILD.steps.map((s, j) => {
           const state = allDone || j < st ? "done" : j === st && b >= s.a - 0.6 ? "active" : "next";
-          const pill = j === st && !allDone ? transform(b, [s.a - 0.05, s.a + 0.3], [0, 1], { ease: easeOut }) : 0;
+          const pill = j === st && !allDone ? springAt(b, s.a - 0.05, 0.35, 0.3) : 0;
+          // colours ease between states: grey → accent / ink as the step comes up, ink → grey as the next one takes over
+          const act = j === st && !allDone ? transform(b, [s.a, s.a + 0.3], [0, 1]) : 0, left = j === st - 1 && !allDone ? 1 - tr : 0;
           return (
             <div key={j} style={{ position: "absolute", left: PANEL.left, top: stepY[j], height: 48, display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 34, display: "flex", justifyContent: "center", position: "relative", height: 16 }}>
                 {state === "done" ? <Check c={allDone ? "#12B76A" : "#98A2B3"} /> : (
-                  <div style={{ position: "absolute", top: 3.5, width: 9 + 21 * pill, height: 9, borderRadius: 5, background: pill > 0 ? BLUE : "#C3CDDC" }} />
+                  <div style={{ position: "absolute", top: 3.5, width: 9 + 21 * pill, height: 9, borderRadius: 5, background: blend("#C3CDDC", style.accent, pill) }} />
                 )}
               </div>
-              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 1.5, color: state === "active" ? BLUE : "#98A2B3", width: 26 }}>0{j + 1}</span>
-              <span style={{ fontSize: 24 + 3 * pill, fontWeight: pill > 0.5 ? 600 : 500, color: state === "active" ? INK : allDone ? "#475467" : "#98A2B3" }}>{stepText[j][0]}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 1.5, color: state === "active" ? blend("#98A2B3", style.accent, act) : blend("#98A2B3", style.accent, left), width: 26 }}>0{j + 1}</span>
+              <span style={{ fontSize: 24 + 3 * pill, fontWeight: pill > 0.5 ? 600 : 500, color: state === "active" ? blend("#98A2B3", style.ink, act) : allDone ? "#475467" : blend("#98A2B3", style.ink, left) }}>{stepText[j][0]}</span>
             </div>
           );
         })}
@@ -142,17 +144,17 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
                   <Node s={17} />{r.group}
                 </div>
               );
-              const it = r.it, gone = b >= it.land - FLY;
+              const it = r.it, gone = b >= it.land - FLY, grey = transform(b, [it.land - FLY, it.land - FLY + 0.2], [0, 1]);
               return (
                 <div key={it.name} style={{
                   height: ROW_H[k], display: "flex", alignItems: "center", gap: 9, padding: k === 2 ? "0 14px 0 36px" : "0 14px", boxSizing: "border-box", borderTop: "1px solid #EAECF0",
-                  fontSize: 15, fontWeight: 500, color: gone ? "#98A2B3" : "#101828",
+                  fontSize: 15, fontWeight: 500, color: blend("#101828", "#98A2B3", grey),
                 }}>
                   <span style={{ width: k === 2 ? 22 : 18, display: "flex", justifyContent: "center", opacity: k === 2 && gone ? 0.45 : 1 }}>{k === 2 ? icon(it, 20) : gone && b >= it.land ? <Check /> : gone ? null : icon(it, 17)}</span>
                   <span>{it.name}</span>
                   {k === 1 && !gone ? <Ext /> : null}
                   {k === 1 ? <span style={{ marginLeft: "auto", height: 22, padding: "0 8px", borderRadius: 11, fontSize: 12, display: "flex", alignItems: "center", border: "1px solid #75E0A7", background: "#ECFDF3", color: "#067647", opacity: gone ? 0.4 : 1 }}>Published</span> : null}
-                  {k === 2 ? <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: gone ? "#98A2B3" : it.color, fontWeight: 600 }}>{it.kind}{b >= it.land ? <Check /> : null}</span> : null}
+                  {k === 2 ? <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: blend(it.color, "#98A2B3", grey), fontWeight: 600 }}>{it.kind}{b >= it.land ? <Check /> : null}</span> : null}
                 </div>
               );
             })}
