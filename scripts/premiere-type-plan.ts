@@ -7,7 +7,7 @@ import { MyComposition } from "../src/Composition";
 import { cardText, Cfg, introCardHtml } from "../src/video/config";
 import { CUT_LEN, EDIT, editTime, FPS, HEADLINES, INTRO_CUT, INTRO_CARDS, MUSIC, TITLE_CARDS, TITLE_DROP, uncut, VIDEO_END } from "../src/video/script";
 import type { MusicSettings } from "../src/video/musicProps";
-import { win } from "../src/video/anim";
+import { transform } from "motion";
 
 const dir = resolve("out/premiere-computer-use/animated-type");
 mkdirSync(resolve(dir, "media"), {recursive: true});
@@ -30,9 +30,10 @@ const bounds = (a: number, b: number) => {
     const contIn = !!seg?.clip && prev?.clip?.[1] === seg.clip[0];
     const contOut = !!seg?.clip && next?.clip?.[0] === seg.clip[1];
     const afterCard = !!seg?.clip && !!prev?.hold && !prev.clip && !prev.panels && !prev.card?.top;
-    const trio = seg?.panels ? win(tn, seg.n0, seg.n1, .35, .35)
-      : seg?.clip ? win(tn, contIn || afterCard ? seg.n0 - 1 / FPS : seg.n0, seg.n1,
-        contIn || afterCard ? .001 : .2, next?.card?.over || contOut || next?.panels ? .001 : .25)
+    const clipStart = seg && (contIn || afterCard) ? seg.n0 - 1 / FPS : seg?.n0 ?? 0;
+    const trio = seg?.panels ? transform(tn, [seg.n0, seg.n0 + .35, seg.n1 - .35, seg.n1], [0, 1, 1, 0])
+      : seg?.clip ? transform(tn, [clipStart, clipStart + (contIn || afterCard ? .001 : .2),
+        seg.n1 - (next?.card?.over || contOut || next?.panels ? .001 : .25), seg.n1], [0, 1, 1, 0])
       : seg?.hold && seg.card?.over ? 1 : 0;
     const fromClip = seg?.panels && prev?.clip && tn < seg.n0 + .4;
     return !fromClip && 1 - trio > .05;

@@ -1,7 +1,8 @@
 // Beat-synced type layer: the kinetic "Workflow Maps" title on the first drop, the kinetic title cards and the
 // suspense lines before the reveal. Type only — no particles.
 import React from "react";
-import { clamp, lerp } from "./anim";
+import { mix, stagger, transform } from "motion";
+import { easeIn, easeOut, springAt } from "./anim";
 import { INTRO_CARDS, M, TITLE_DROP } from "./script";
 import { introCardHtml, md, useCfg } from "./config";
 
@@ -17,33 +18,30 @@ const parts = (html: string) => {
   return out;
 };
 
-/** Kinetic type: letters rise in one after another (expo ease, a little blur and tilt), the accent word sweeps in
+/** Kinetic type: letters spring up one after another (a little blur and tilt), the accent word sweeps in
  *  as one piece, the kicker's tracking closes up; on `out` the letters lift away in the same order. */
 export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker: string; html: string; size: number; pulse?: number[]; offsetY?: number }> = ({ t, at, out, kicker, html, size, pulse = [], offsetY = 0 }) => {
   const T = useCfg().motion.titles;
   const calm = T.mode === "calm";
   if (t < at - 0.05 || t > out + 0.6) return null;
-  const ex = (x: number) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp(x)));
   const total = parts(html).reduce((n, p) => n + p.text.length, 0);
-  const st = calm ? 0 : Math.min(T.letterDelay, 0.55 / Math.max(1, total)), so = calm ? 0 : Math.min(0.016, 0.3 / Math.max(1, total));
-  const enter = 1 - Math.pow(1 - clamp((t - at) / 0.3), 3);
-  // Complete the exit before a chapter's visibility gate closes at out + .25 s.
-  const leave = Math.pow(clamp((t - out) / 0.2), 2);
+  // the cascade: letters start `enter` apart (the whole line within 0.55 s) and lift away `leave` apart
+  const enter = stagger(Math.min(T.letterDelay, 0.55 / Math.max(1, total)), { startDelay: 0.08 }), leave = stagger(Math.min(0.016, 0.3 / Math.max(1, total)));
   let i = 0;
   const glyph = (ch: string, key: string, accent = false) => {
     const k = i++;
-    const p = calm ? enter : ex((t - at - 0.08 - k * st) / T.duration);
-    const q = calm ? leave : clamp((t - out - k * so) / 0.3);
+    const p = calm ? transform(t, [at, at + 0.3], [0, 1], { ease: easeOut }) : springAt(t, at + enter(k, total), T.duration * 0.8, 0.2);
+    const q0 = out + leave(k, total), q = calm ? transform(t, [out, out + 0.2], [0, 1], { ease: easeIn }) : transform(t, [q0, q0 + 0.3], [0, 1]);
     const y = (1 - p) * T.rise - q * T.exitLift, o = p * (1 - q);
     return (
       <span key={key} className={accent ? "grad-text" : undefined} style={{ display: "inline-block", whiteSpace: "pre", transform: `translateY(${y.toFixed(3)}em) rotate(${((1 - p) * T.tilt).toFixed(2)}deg)`, opacity: o, filter: !calm && (1 - p) * T.blur + q * 6 > 0.3 ? `blur(${((1 - p) * T.blur + q * 6).toFixed(1)}px)` : undefined }}>{ch}</span>
     );
   };
-  const pul = calm ? 0 : pulse.reduce((s, w) => s + (t >= w && t < w + 0.35 ? T.pulse * Math.pow(1 - (t - w) / 0.35, 2) : 0), 0);
-  const kp = calm ? enter : ex((t - at) / 0.5), kq = calm ? leave : clamp((t - out) / 0.25);
+  const pul = calm ? 0 : pulse.reduce((s, w) => s + (t >= w && t < w + 0.35 ? T.pulse * transform(t, [w, w + 0.35], [1, 0]) ** 2 : 0), 0);
+  const kp = calm ? transform(t, [at, at + 0.3], [0, 1], { ease: easeOut }) : springAt(t, at, 0.5, 0.15), kq = transform(t, [out, out + (calm ? 0.2 : 0.25)], [0, 1]);
   return (
     <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", transform: `translateY(${offsetY}px) scale(${(1 + pul).toFixed(4)})` }}>
-      {kicker ? <div style={{ fontSize: Math.max(22, size * 0.2), fontWeight: 600, color: BLUE, letterSpacing: `${calm ? 0.08 : lerp(0.5, 0.08, kp).toFixed(3)}em`, opacity: kp * (1 - kq) }}>{kicker}</div> : null}
+      {kicker ? <div style={{ fontSize: Math.max(22, size * 0.2), fontWeight: 600, color: BLUE, letterSpacing: `${calm ? 0.08 : mix(0.5, 0.08, kp).toFixed(3)}em`, opacity: kp * (1 - kq) }}>{kicker}</div> : null}
       <div style={{ fontSize: size, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.12, marginTop: size * 0.05, color: INK, maxWidth: 1500 }}>
         {parts(html).map((pt, j) => pt.text.split(/(\s+)/).map((w, wi) => /^\s+$/.test(w)
           ? <span key={`${j}-s${wi}`}>{w.split("").map((c, n) => glyph(c, `${j}-${wi}-${n}`, pt.accent))}</span>
@@ -74,7 +72,7 @@ export const ImpactBack: React.FC<{ t: number }> = () => null;
 export const shakeAt = (t: number, hits: number[], sh = { x: 9, y: 5, duration: 0.22 }) => {
   let x = 0, y = 0;
   for (const h of hits) if (t >= h && t < h + sh.duration) {
-    const k = 1 - (t - h) / sh.duration;
+    const k = transform(t, [h, h + sh.duration], [1, 0]);
     x += Math.sin((t - h) * 90) * sh.x * k; y += Math.cos((t - h) * 70) * sh.y * k;
   }
   return [x, y];

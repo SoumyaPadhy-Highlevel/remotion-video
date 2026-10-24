@@ -15,19 +15,49 @@ Give each re-render a new file name (browsers cache half-written files).
 | `src/video/script.ts` | **Start here.** Music markers, the 19 beats, and every piece of on-screen text with its timing (headlines, captions, chapter pills, title cards, build lines, client message, browser tabs, lockup, flashes). |
 | `src/video/choreography.ts` | App-window motion (rise, push-ins `ZOOMS`, receding behind titles `RECEDES`) and the mascot's position and reaction per beat (`mascotAt`). |
 | `src/video/AppWindow.tsx` | The 1620×880 app window at (150, 118). Plays one footage clip per beat. |
-| `src/video/Stage.tsx` | Background, browser tabs, titles, client message bubble, white flash. |
+| `src/video/Browser.tsx` | The intro's device: tablet-style bezel and a desktop browser tab strip around the app window (tabs from `TABS`), gone from the first drop. |
+| `src/video/Stage.tsx` | Background, titles, client message bubble, white flash. |
 | `src/video/Impact.tsx` | Kinetic type: the "Workflow Maps" title on the drop, title cards, the three intro questions. |
 | `src/video/Mascot.tsx` | Mascot artwork with animated SVG eyes (normal, happy, wow, worried, star, squint), sparkles, speed streak, question mark. |
 | `src/video/WorkflowMapsVideo.tsx` | Layer order and the music. |
 | `public/footage/` | What the app shows during each beat. Defaults to `<beat-id>.mp4` (1620×880, 30 fps, exactly the beat's length). |
+| `src/video/builder/` | The workflow builder, drawn as the product draws it. `tokens.ts` (colours, sizes from the real `WorkflowTreeV2.vue` canvas), `layout.ts` (node and edge positions, ported from `canvas_helper.ts`), `Nodes.tsx` / `Canvas.tsx` (trigger card, Add new trigger, action card, If/Else branch, END, "+", grid, controls, minimap), `icons.ts` (generated). Workflow Maps' own canvas (its workflow view and a contact's runs, `AdvancedWorkflowCanvas` in vertical mode): `mapsLayout.ts` / `MapsCanvas.tsx` (240 × 72 cards, handles, arrowed edges, Linked badges, the run's green path, chips). `scenes.tsx` redraws every builder and Maps-canvas shot of the film over it (`introShots`, `linkedShots`, `runShots`); `BuilderShots` composition shows film + redraw on film time. |
 
 ## Rules for edits
 
 - Everything is a pure function of time: `t = frame / 30`. Never use `Math.random()`, `Date`, timers or state; use `rand(i)` from `anim.ts` for variety.
+- Animate with Motion's pure helpers (`motion` package): `transform(t, [a, b], [from, to], { ease })` for a timed move or fade,
+  `transform(t, [a, a + fadeIn, b - fadeOut, b], [0, 1, 1, 0])` for a visibility window, `mix` to blend, `clamp`.
+  Multi-step moves are one keyframe list with an ease per segment: `transform(t, [a, b, c, d], [60, 0, 0, -40], { ease: [easeOut, linear, easeIn] })`
+  (inputs must ascend).
+  Entrances use springs: `springAt(t, start, visualDuration, bounce)` from `anim.ts` (a Motion `spring`) gives 0 → 1 with overshoot, for a `mix`.
+  Cascades use Motion's `stagger(gap, { startDelay })(i, count)` for the start time of item `i`.
+  Colour changes use `blend(from, to, p)` (Motion's `mixColor`); pass hex colours, e.g. `cfg.style.accent`, not CSS variables.
+  Easing curves (`easeOut`, `easeIn`, `easeInOut`, `easeOutBack`, `easeOutExpo`, `linear`) are in `anim.ts`.
+  Don't use `<motion.div animate>`, `useAnimate` or motion values: they run on wall-clock time, and Remotion renders each frame separately.
 - Times are seconds on the edited music. Beats must stay contiguous and keep their start/end, or the music stops matching.
 - Keep text in `script.ts`. Components read from it.
 - Positions are in 1920×1080 frame pixels; inside the window they are window pixels (1620×880).
 - The footage is the app only. Titles, mascot, tabs and the client message are drawn here, not in the footage.
+- Anything that shows the workflow builder (triggers, actions, branches, edges, the canvas) uses `src/video/builder`, never
+  hand-picked styles: `<WorkflowCanvas wf={...} view={...} />` with a workflow from `BUILDER_WORKFLOWS` in `script.ts`. Colours and
+  sizes come from `builder/tokens.ts`, which mirrors automation-workflows-frontend (`WorkflowTreeV2.vue` and the
+  `workflow-canvas/` node components); when the product's builder changes, update the tokens there, not in a scene.
+  The film's builder shots carry the film's old styling; `builder/scenes.tsx` redraws each one over it (window px, film time).
+  A new film with builder shots needs its shots added there, with cursor paths from `scripts/track_builder_film.py`.
+  Workflow Maps' modal canvas is a different component (`AdvancedWorkflowCanvas`, `workflow-canvas-modal/`): draw it with
+  `<MapsCanvas>`, not `<WorkflowCanvas>`. Not redrawn: the 2.3 s "open every workflow" montage of half-size windows (film
+  42.65–45.1 s) and the multi-workflow linked view (film 193.4–208.1 s, camera moving across frames), which is the film's own
+  and close to the product except for square corners where branches fan out.
+- The 3D map (Workflow Maps' Three.js scene) is redrawn over the film with the product's own renderer: `src/video/map3d/`.
+  `geometry.ts` is ported line for line from the frontend (`workflow-grid/libs/objects/GridBox.ts`, `GridPlaneGeometryCache.ts`);
+  `MapScene.tsx` renders it like `SceneManager` (orthographic camera along (7, 9, 8), `public/env-map-3.hdr` lighting, emissive
+  nodes, unlit slabs and edge ribbons, label pills); tokens in `builder/mapTokens.ts`. `MapShots.tsx` plays the film's map shots
+  from `filmMap.ts`, generated by `scripts/map_film/` from the film itself: the camera per frame, every node's and folder's
+  look per frame, where the film's panels, notes, tooltips and contact chips sit (left to the film), and its cursor.
+  The worlds (folder rects, node positions, links, names) are `scripts/map_film/world_*.json`; Organise's drags and recolours
+  are `map3d/organise.ts` (mirrored in `organise.py`). A new film with map shots: see `scripts/map_film/README.md`.
+  Not redrawn: the film's map-forming intro (film 45–49.3 s, dots morphing into the map).
 
 ## Common tasks
 
@@ -40,5 +70,9 @@ Give each re-render a new file name (browsers cache half-written files).
 ## Commands
 
 - Preview: `npm run dev`, then open the `WorkflowMaps` composition.
-- Render: `npx remotion render src/index.ts WorkflowMaps out/workflow-maps.mp4 --port=3021` (Studio holds 3000)
+- Render: `npx remotion render src/index.ts WorkflowMaps out/workflow-maps.mp4` (renders serve on port 3021, set in `remotion.config.ts`, because Studio holds 3000)
 - Render one range: `npx remotion render WorkflowMaps out/clip.mp4 --frames=2640-2910`
+- Check a builder redraw against the film: `npx remotion still src/index.ts BuilderShots out/check.png --frame=<film s × 30>`
+  (pass `--props='{"overlay":false}'` for the bare film).
+- Tests (builder layout and shot helpers): `npm test`.
+- Builder icons: add the Iconify / ghl-icons name to `scripts/builder-icons.mjs`, then `node scripts/builder-icons.mjs ../automation-workflows-frontend`.

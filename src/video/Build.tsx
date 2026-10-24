@@ -2,10 +2,12 @@
 // three steps. Under the active step, the source list (folders, then Lead Capture's workflows, then their assets); each
 // item lifts out of its row, flies across and lands where its node appears in the film (BUILD in script.ts).
 import React from "react";
-import { clamp, easeInOut, easeOut, prog } from "./anim";
+import { mix, transform } from "motion";
+import { blend, easeInOut, springAt } from "./anim";
 import { WINDOW } from "./AppWindow";
 import { BUILD } from "./script";
 import { md, useCfg } from "./config";
+import { MAP_WORKFLOW } from "./builder/mapTokens";
 
 const INK = "var(--ink, #0B1B3A)";
 const BLUE = "var(--accent, #155EEF)";
@@ -14,13 +16,13 @@ const S = BUILD.win.width / WINDOW.width;
 /** Window split (0 = normal, 1 = shrunk right), on timeline time. */
 export const splitAt = (t: number) => {
   const b = t - BUILD.at;
-  return prog(b, 0, 0.6, easeInOut) * (1 - prog(b, BUILD.release[0], BUILD.release[1], easeInOut));
+  return transform(b, [0, 0.6], [0, 1], { ease: easeInOut }) * transform(b, [BUILD.release[0], BUILD.release[1]], [1, 0], { ease: easeInOut });
 };
 /** Wrapper transform for the window (and anything inside its frame). */
 export const splitStyle = (t: number): React.CSSProperties => {
   const sp = splitAt(t);
   if (sp <= 0) return {};
-  const s = 1 - (1 - S) * sp, dx = (BUILD.win.left - WINDOW.left) * sp, dy = (BUILD.win.top - WINDOW.top) * sp;
+  const s = mix(1, S, sp), dx = mix(0, BUILD.win.left - WINDOW.left, sp), dy = mix(0, BUILD.win.top - WINDOW.top, sp);
   return { transformOrigin: `${WINDOW.left}px ${WINDOW.top}px`, transform: `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(${s.toFixed(4)})` };
 };
 
@@ -41,7 +43,7 @@ const Folder = ({ c, s = 16 }: { c: string; s?: number }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
 );
 const Node = ({ s = 22 }: { s?: number }) => (
-  <svg width={s} height={s} viewBox="0 0 24 24"><path fill="#2455D6" d="M12 1.8 21.2 6.6v10.8L12 22.2 2.8 17.4V6.6z" /><path fill="#fff" d="M9 7v3h1.4v1.6H7.6c-.6 0-1 .4-1 1V14H5.4v3h3v-3H7.8v-1.2h3.4V14h-.8v3h3v-3h-.8v-1.2h3.4V14H15v3h3v-3h-1.2v-1.4c0-.6-.4-1-1-1h-2.8V10H14V7z" /></svg>
+  <svg width={s} height={s} viewBox="0 0 24 24"><polygon fill={MAP_WORKFLOW.color} points="12.00 1.80 18.56 4.19 22.05 10.23 20.83 17.10 15.49 21.58 8.51 21.58 3.17 17.10 1.95 10.23 5.44 4.19" /><path fill="#fff" d="M9 7v3h1.4v1.6H7.6c-.6 0-1 .4-1 1V14H5.4v3h3v-3H7.8v-1.2h3.4V14h-.8v3h3v-3h-.8v-1.2h3.4V14H15v3h3v-3h-1.2v-1.4c0-.6-.4-1-1-1h-2.8V10H14V7z" /></svg>
 );
 const GLYPH: Record<string, string> = {
   Tag: "M5.5 7A1.5 1.5 0 0 1 4 5.5A1.5 1.5 0 0 1 5.5 4A1.5 1.5 0 0 1 7 5.5A1.5 1.5 0 0 1 5.5 7m15.91 4.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.11 0-2 .89-2 2v7c0 .55.22 1.05.59 1.41l8.99 9c.37.36.87.59 1.42.59s1.05-.23 1.41-.59l7-7c.37-.36.59-.86.59-1.41c0-.56-.23-1.06-.59-1.42",
@@ -83,22 +85,22 @@ const cardH = (k: number) => cardRows(k).h;
 
 /** `part` (editor export): "panel" = the left panel only, a number = that one flying item only; default both. */
 export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number }> = ({ t, part = "all" }) => {
-  const { text, show, motion } = useCfg(), T = text.mapBuild, FLY = motion.flights.duration;
+  const { text, show, motion, style } = useCfg(), T = text.mapBuild, FLY = motion.flights.duration;
   const stepText = [[T.step1, T.step1List, T.step1Count], [T.step2, T.step2List, T.step2Count], [T.step3, T.step3List, T.step3Count]];
   const b = t - BUILD.at;
   if (b < 0 || b > BUILD.release[1] + 0.05) return null;
-  const panelIn = prog(b, 0.45, 0.95, easeOut), panelOut = prog(b, BUILD.release[0] - 0.1, BUILD.release[1] - 0.1, easeInOut);
+  const panelIn = springAt(b, 0.45, 0.5, 0.2), panelOut = transform(b, [BUILD.release[0] - 0.1, BUILD.release[1] - 0.1], [0, 1], { ease: easeInOut });
   const po = panelIn * (1 - panelOut);
   // active step and the eased layout between steps
   const st = BUILD.steps.reduce((a, s, i) => (b >= s.a ? i : a), 0);
-  const tr = st > 0 ? prog(b, BUILD.steps[st].a, BUILD.steps[st].a + 0.4, easeInOut) : 1;
+  const tr = st > 0 ? transform(b, [BUILD.steps[st].a, BUILD.steps[st].a + 0.4], [0, 1], { ease: easeInOut }) : 1;
   const layout = (k: number) => BUILD.steps.map((_, j) => STEP0 + j * STEP_H + (j > k ? cardH(k) + 22 : 0));
   const L0 = layout(Math.max(0, st - 1)), L1 = layout(st);
-  const stepY = L1.map((y, j) => L0[j] + (y - L0[j]) * tr);
+  const stepY = L1.map((y, j) => mix(L0[j], y, tr));
   const cardY = (k: number) => stepY[k] + 52;
   const allDone = b >= BUILD.done;
   // the card on screen: the previous one fades out as the new one comes in
-  const cards = [st - 1, st].filter((k) => k >= 0).map((k) => ({ k, o: k === st ? prog(b, BUILD.steps[k].a + 0.15, BUILD.steps[k].a + 0.45) : 1 - prog(b, BUILD.steps[st].a, BUILD.steps[st].a + 0.2) }));
+  const cards = [st - 1, st].filter((k) => k >= 0).map((k) => ({ k, o: k === st ? transform(b, [BUILD.steps[k].a + 0.15, BUILD.steps[k].a + 0.45], [0, 1], { ease: easeInOut }) : transform(b, [BUILD.steps[st].a, BUILD.steps[st].a + 0.2], [1, 0], { ease: easeInOut }) }));
   const rowCenter = (it: Item): [number, number] => {
     const r = cardRows(it.step).out.find((x) => "it" in x && x.it === it)!;
     return [CARD_X + 34 + 120, cardY(it.step) + r.y + ROW_H[it.step] / 2];
@@ -113,16 +115,18 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
           dangerouslySetInnerHTML={{ __html: md(T.headline) }} />
         {BUILD.steps.map((s, j) => {
           const state = allDone || j < st ? "done" : j === st && b >= s.a - 0.6 ? "active" : "next";
-          const pill = j === st && !allDone ? prog(b, s.a - 0.05, s.a + 0.3, easeOut) : 0;
+          const pill = j === st && !allDone ? springAt(b, s.a - 0.05, 0.35, 0.3) : 0;
+          // colours ease between states: grey → accent / ink as the step comes up, ink → grey as the next one takes over
+          const act = j === st && !allDone ? transform(b, [s.a, s.a + 0.3], [0, 1]) : 0, left = j === st - 1 && !allDone ? 1 - tr : 0;
           return (
             <div key={j} style={{ position: "absolute", left: PANEL.left, top: stepY[j], height: 48, display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 34, display: "flex", justifyContent: "center", position: "relative", height: 16 }}>
                 {state === "done" ? <Check c={allDone ? "#12B76A" : "#98A2B3"} /> : (
-                  <div style={{ position: "absolute", top: 3.5, width: 9 + 21 * pill, height: 9, borderRadius: 5, background: pill > 0 ? BLUE : "#C3CDDC" }} />
+                  <div style={{ position: "absolute", top: 3.5, width: 9 + 21 * pill, height: 9, borderRadius: 5, background: blend("#C3CDDC", style.accent, pill) }} />
                 )}
               </div>
-              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 1.5, color: state === "active" ? BLUE : "#98A2B3", width: 26 }}>0{j + 1}</span>
-              <span style={{ fontSize: 24 + 3 * pill, fontWeight: pill > 0.5 ? 600 : 500, color: state === "active" ? INK : allDone ? "#475467" : "#98A2B3" }}>{stepText[j][0]}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 1.5, color: state === "active" ? blend("#98A2B3", style.accent, act) : blend("#98A2B3", style.accent, left), width: 26 }}>0{j + 1}</span>
+              <span style={{ fontSize: 24 + 3 * pill, fontWeight: pill > 0.5 ? 600 : 500, color: state === "active" ? blend("#98A2B3", style.ink, act) : allDone ? "#475467" : blend("#98A2B3", style.ink, left) }}>{stepText[j][0]}</span>
             </div>
           );
         })}
@@ -141,17 +145,17 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
                   <Node s={17} />{r.group}
                 </div>
               );
-              const it = r.it, gone = b >= it.land - FLY;
+              const it = r.it, gone = b >= it.land - FLY, grey = transform(b, [it.land - FLY, it.land - FLY + 0.2], [0, 1]);
               return (
                 <div key={it.name} style={{
                   height: ROW_H[k], display: "flex", alignItems: "center", gap: 9, padding: k === 2 ? "0 14px 0 36px" : "0 14px", boxSizing: "border-box", borderTop: "1px solid #EAECF0",
-                  fontSize: 15, fontWeight: 500, color: gone ? "#98A2B3" : "#101828",
+                  fontSize: 15, fontWeight: 500, color: blend("#101828", "#98A2B3", grey),
                 }}>
                   <span style={{ width: k === 2 ? 22 : 18, display: "flex", justifyContent: "center", opacity: k === 2 && gone ? 0.45 : 1 }}>{k === 2 ? icon(it, 20) : gone && b >= it.land ? <Check /> : gone ? null : icon(it, 17)}</span>
                   <span>{it.name}</span>
                   {k === 1 && !gone ? <Ext /> : null}
                   {k === 1 ? <span style={{ marginLeft: "auto", height: 22, padding: "0 8px", borderRadius: 11, fontSize: 12, display: "flex", alignItems: "center", border: "1px solid #75E0A7", background: "#ECFDF3", color: "#067647", opacity: gone ? 0.4 : 1 }}>Published</span> : null}
-                  {k === 2 ? <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: gone ? "#98A2B3" : it.color, fontWeight: 600 }}>{it.kind}{b >= it.land ? <Check /> : null}</span> : null}
+                  {k === 2 ? <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: blend(it.color, "#98A2B3", grey), fontWeight: 600 }}>{it.kind}{b >= it.land ? <Check /> : null}</span> : null}
                 </div>
               );
             })}
@@ -164,20 +168,21 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
         const t0 = it.land - FLY, u = (b - t0) / FLY;
         if (u < -0.05 || u > 1.6) return null;
         const [x0, y0] = rowCenter(it as Item), [x1, y1] = target(it);
-        const ring = prog(b, it.land - 0.05, it.land + 0.45);
+        const ring = transform(b, [it.land - 0.05, it.land + 0.45], [0, 1], { ease: easeInOut });
         const ringEl = ring > 0 && ring < 1 ? (
           <div style={{ position: "absolute", left: x1, top: y1, width: 0, height: 0 }}>
             <div style={{ position: "absolute", left: -26 * (0.6 + ring), top: -26 * (0.6 + ring), width: 52 * (0.6 + ring), height: 52 * (0.6 + ring), borderRadius: "50%", border: `2px solid ${it.kind === "folder" ? it.color : BLUE}`, opacity: 0.7 * (1 - ring) }} />
           </div>
         ) : null;
         if (u < 0 || u >= 1) return <React.Fragment key={i}>{ringEl}</React.Fragment>;
-        const e = easeInOut(clamp(u));
+        const e = transform(u, [0, 1], [0, 1], { ease: easeInOut });
         const cx = (x0 + x1) / 2, cy = Math.min(y0, y1) - motion.flights.arcHeight;
-        const x = (1 - e) * (1 - e) * x0 + 2 * (1 - e) * e * cx + e * e * x1, y = (1 - e) * (1 - e) * y0 + 2 * (1 - e) * e * cy + e * e * y1;
-        const sc = 1 - motion.flights.shrink * e, fade = 1 - prog(u, 0.82, 1), textO = 1 - prog(u, 0.55, 0.85);
+        // a quadratic bezier through (cx, cy): mix of two mixes
+        const x = mix(mix(x0, cx, e), mix(cx, x1, e), e), y = mix(mix(y0, cy, e), mix(cy, y1, e), e);
+        const sc = 1 - motion.flights.shrink * e, fade = transform(u, [0.82, 1], [1, 0], { ease: easeInOut }), textO = transform(u, [0.55, 0.85], [1, 0], { ease: easeInOut });
         return (
           <React.Fragment key={i}>
-            <svg width={1920} height={1080} style={{ position: "absolute", left: 0, top: 0, overflow: "visible", opacity: 0.5 * (1 - prog(u, 0.7, 1)) }}>
+            <svg width={1920} height={1080} style={{ position: "absolute", left: 0, top: 0, overflow: "visible", opacity: 0.5 * transform(u, [0.7, 1], [1, 0], { ease: easeInOut }) }}>
               <path d={`M${x0} ${y0} Q${cx} ${cy} ${x} ${y}`} fill="none" stroke={it.kind === "folder" ? it.color : BLUE} strokeOpacity={0.6} strokeWidth={2} strokeDasharray="2 7" strokeLinecap="round" />
             </svg>
             <div style={{

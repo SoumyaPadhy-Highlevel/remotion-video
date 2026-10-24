@@ -1,6 +1,7 @@
 // Static mock of the "list → map" build (one frame, for review): the app window shrinks to the right on a zoomed map, the
 // left panel walks through the three steps, and list items fly across and become map nodes. Mid-way through step 2 here.
 import React from "react";
+import { mix } from "motion";
 import { AbsoluteFill, Img, staticFile } from "remotion";
 import { Background } from "./Stage";
 import { GLOBAL_CSS, loadFonts } from "./fonts";
@@ -59,7 +60,7 @@ export const MapBuildMock: React.FC = () => {
   // flight: from the empty slot in the stack to the node's spot on the map, drawn ~60% of the way
   const from: [number, number] = [575, 664], to = TARGET;
   const ctrl: [number, number] = [(from[0] + to[0]) / 2, Math.min(from[1], to[1]) - 90];
-  const at = (u: number) => [0, 1].map((k) => (1 - u) * (1 - u) * from[k] + 2 * (1 - u) * u * ctrl[k] + u * u * to[k]);
+  const at = (u: number) => [0, 1].map((k) => mix(mix(from[k], ctrl[k], u), mix(ctrl[k], to[k], u), u));
   const [fx, fy] = at(0.5);
   return (
     <AbsoluteFill style={{ fontFamily: "Inter, sans-serif" }}>
