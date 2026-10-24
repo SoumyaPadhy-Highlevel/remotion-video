@@ -12,3 +12,5 @@ Config.setVideoImageFormat("jpeg");
 Config.setOverwriteOutput(true);
 Config.setDefaultPremountInSeconds(2);
 Config.setDefaultCodingAgent("codex");
+// Studio holds 3000; CLI renders serve their bundle elsewhere so they don't load the Studio page.
+Config.setRendererPort(3021);

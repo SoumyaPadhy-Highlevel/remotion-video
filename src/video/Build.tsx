@@ -2,7 +2,8 @@
 // three steps. Under the active step, the source list (folders, then Lead Capture's workflows, then their assets); each
 // item lifts out of its row, flies across and lands where its node appears in the film (BUILD in script.ts).
 import React from "react";
-import { clamp, easeInOut, easeOut, prog } from "./anim";
+import { mix, transform } from "motion";
+import { easeInOut, easeOut } from "./anim";
 import { WINDOW } from "./AppWindow";
 import { BUILD } from "./script";
 import { md, useCfg } from "./config";
@@ -14,13 +15,13 @@ const S = BUILD.win.width / WINDOW.width;
 /** Window split (0 = normal, 1 = shrunk right), on timeline time. */
 export const splitAt = (t: number) => {
   const b = t - BUILD.at;
-  return prog(b, 0, 0.6, easeInOut) * (1 - prog(b, BUILD.release[0], BUILD.release[1], easeInOut));
+  return transform(b, [0, 0.6], [0, 1], { ease: easeInOut }) * transform(b, [BUILD.release[0], BUILD.release[1]], [1, 0], { ease: easeInOut });
 };
 /** Wrapper transform for the window (and anything inside its frame). */
 export const splitStyle = (t: number): React.CSSProperties => {
   const sp = splitAt(t);
   if (sp <= 0) return {};
-  const s = 1 - (1 - S) * sp, dx = (BUILD.win.left - WINDOW.left) * sp, dy = (BUILD.win.top - WINDOW.top) * sp;
+  const s = mix(1, S, sp), dx = mix(0, BUILD.win.left - WINDOW.left, sp), dy = mix(0, BUILD.win.top - WINDOW.top, sp);
   return { transformOrigin: `${WINDOW.left}px ${WINDOW.top}px`, transform: `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(${s.toFixed(4)})` };
 };
 
@@ -87,18 +88,18 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
   const stepText = [[T.step1, T.step1List, T.step1Count], [T.step2, T.step2List, T.step2Count], [T.step3, T.step3List, T.step3Count]];
   const b = t - BUILD.at;
   if (b < 0 || b > BUILD.release[1] + 0.05) return null;
-  const panelIn = prog(b, 0.45, 0.95, easeOut), panelOut = prog(b, BUILD.release[0] - 0.1, BUILD.release[1] - 0.1, easeInOut);
+  const panelIn = transform(b, [0.45, 0.95], [0, 1], { ease: easeOut }), panelOut = transform(b, [BUILD.release[0] - 0.1, BUILD.release[1] - 0.1], [0, 1], { ease: easeInOut });
   const po = panelIn * (1 - panelOut);
   // active step and the eased layout between steps
   const st = BUILD.steps.reduce((a, s, i) => (b >= s.a ? i : a), 0);
-  const tr = st > 0 ? prog(b, BUILD.steps[st].a, BUILD.steps[st].a + 0.4, easeInOut) : 1;
+  const tr = st > 0 ? transform(b, [BUILD.steps[st].a, BUILD.steps[st].a + 0.4], [0, 1], { ease: easeInOut }) : 1;
   const layout = (k: number) => BUILD.steps.map((_, j) => STEP0 + j * STEP_H + (j > k ? cardH(k) + 22 : 0));
   const L0 = layout(Math.max(0, st - 1)), L1 = layout(st);
-  const stepY = L1.map((y, j) => L0[j] + (y - L0[j]) * tr);
+  const stepY = L1.map((y, j) => mix(L0[j], y, tr));
   const cardY = (k: number) => stepY[k] + 52;
   const allDone = b >= BUILD.done;
   // the card on screen: the previous one fades out as the new one comes in
-  const cards = [st - 1, st].filter((k) => k >= 0).map((k) => ({ k, o: k === st ? prog(b, BUILD.steps[k].a + 0.15, BUILD.steps[k].a + 0.45) : 1 - prog(b, BUILD.steps[st].a, BUILD.steps[st].a + 0.2) }));
+  const cards = [st - 1, st].filter((k) => k >= 0).map((k) => ({ k, o: k === st ? transform(b, [BUILD.steps[k].a + 0.15, BUILD.steps[k].a + 0.45], [0, 1], { ease: easeInOut }) : transform(b, [BUILD.steps[st].a, BUILD.steps[st].a + 0.2], [1, 0], { ease: easeInOut }) }));
   const rowCenter = (it: Item): [number, number] => {
     const r = cardRows(it.step).out.find((x) => "it" in x && x.it === it)!;
     return [CARD_X + 34 + 120, cardY(it.step) + r.y + ROW_H[it.step] / 2];
@@ -113,7 +114,7 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
           dangerouslySetInnerHTML={{ __html: md(T.headline) }} />
         {BUILD.steps.map((s, j) => {
           const state = allDone || j < st ? "done" : j === st && b >= s.a - 0.6 ? "active" : "next";
-          const pill = j === st && !allDone ? prog(b, s.a - 0.05, s.a + 0.3, easeOut) : 0;
+          const pill = j === st && !allDone ? transform(b, [s.a - 0.05, s.a + 0.3], [0, 1], { ease: easeOut }) : 0;
           return (
             <div key={j} style={{ position: "absolute", left: PANEL.left, top: stepY[j], height: 48, display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 34, display: "flex", justifyContent: "center", position: "relative", height: 16 }}>
@@ -164,20 +165,21 @@ export const BuildOverlay: React.FC<{ t: number; part?: "all" | "panel" | number
         const t0 = it.land - FLY, u = (b - t0) / FLY;
         if (u < -0.05 || u > 1.6) return null;
         const [x0, y0] = rowCenter(it as Item), [x1, y1] = target(it);
-        const ring = prog(b, it.land - 0.05, it.land + 0.45);
+        const ring = transform(b, [it.land - 0.05, it.land + 0.45], [0, 1], { ease: easeInOut });
         const ringEl = ring > 0 && ring < 1 ? (
           <div style={{ position: "absolute", left: x1, top: y1, width: 0, height: 0 }}>
             <div style={{ position: "absolute", left: -26 * (0.6 + ring), top: -26 * (0.6 + ring), width: 52 * (0.6 + ring), height: 52 * (0.6 + ring), borderRadius: "50%", border: `2px solid ${it.kind === "folder" ? it.color : BLUE}`, opacity: 0.7 * (1 - ring) }} />
           </div>
         ) : null;
         if (u < 0 || u >= 1) return <React.Fragment key={i}>{ringEl}</React.Fragment>;
-        const e = easeInOut(clamp(u));
+        const e = transform(u, [0, 1], [0, 1], { ease: easeInOut });
         const cx = (x0 + x1) / 2, cy = Math.min(y0, y1) - motion.flights.arcHeight;
-        const x = (1 - e) * (1 - e) * x0 + 2 * (1 - e) * e * cx + e * e * x1, y = (1 - e) * (1 - e) * y0 + 2 * (1 - e) * e * cy + e * e * y1;
-        const sc = 1 - motion.flights.shrink * e, fade = 1 - prog(u, 0.82, 1), textO = 1 - prog(u, 0.55, 0.85);
+        // a quadratic bezier through (cx, cy): mix of two mixes
+        const x = mix(mix(x0, cx, e), mix(cx, x1, e), e), y = mix(mix(y0, cy, e), mix(cy, y1, e), e);
+        const sc = 1 - motion.flights.shrink * e, fade = transform(u, [0.82, 1], [1, 0], { ease: easeInOut }), textO = transform(u, [0.55, 0.85], [1, 0], { ease: easeInOut });
         return (
           <React.Fragment key={i}>
-            <svg width={1920} height={1080} style={{ position: "absolute", left: 0, top: 0, overflow: "visible", opacity: 0.5 * (1 - prog(u, 0.7, 1)) }}>
+            <svg width={1920} height={1080} style={{ position: "absolute", left: 0, top: 0, overflow: "visible", opacity: 0.5 * transform(u, [0.7, 1], [1, 0], { ease: easeInOut }) }}>
               <path d={`M${x0} ${y0} Q${cx} ${cy} ${x} ${y}`} fill="none" stroke={it.kind === "folder" ? it.color : BLUE} strokeOpacity={0.6} strokeWidth={2} strokeDasharray="2 7" strokeLinecap="round" />
             </svg>
             <div style={{

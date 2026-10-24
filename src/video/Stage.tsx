@@ -1,7 +1,8 @@
 // Everything outside the app window: background, browser tabs, titles, client message, flash.
 import React from "react";
 import { Img, staticFile } from "remotion";
-import { easeIn, easeOut, easeOutBack, prog, win } from "./anim";
+import { mix, transform } from "motion";
+import { easeIn, easeInOut, easeOut, easeOutBack } from "./anim";
 import { KineticTitle } from "./Impact";
 import { cardText, md, useCfg } from "./config";
 import { BUILD_LINES, BUILD_LINES_START, CAPTIONS, CHAPTERS, FLASHES, HEADLINES, M, MESSAGE, TABS, TITLE_CARDS, WALLS } from "./script";
@@ -50,7 +51,7 @@ const WorkflowIcon: React.FC<{ size: number; color: string }> = ({ size, color }
 export const BrowserTabs: React.FC<{ t: number }> = ({ t }) => {
   const { text, show } = useCfg();
   const n = show.browserTabs && t < TABS.b ? TABS.times.filter((x) => t >= x).length : 0;
-  const pop = n ? Math.min(1, (t - TABS.times[n - 1]) / 0.12) : 1;
+  const pop = n ? transform(t, [TABS.times[n - 1], TABS.times[n - 1] + 0.12], [0, 1]) : 1;
   if (!n) return null;
   // the active tab: the last one opened, unless a later flip switched back to an earlier one
   let active = n - 1;
@@ -79,19 +80,19 @@ const SHOW_BUILD_LINES = false;
 
 export const Titles: React.FC<{ t: number }> = ({ t }) => {
   const cfg = useCfg(), { text, show, style } = cfg;
-  const logoO = show.opening && t < 3.9 ? prog(t, 0.2, 0.8, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
-  const pillO = show.opening && t < 3.9 ? prog(t, 0.5, 1.0, easeOut) * (1 - prog(t, 3.6, 3.9)) : 0;
+  const logoO = show.opening && t < 3.9 ? transform(t, [0.2, 0.8], [0, 1], { ease: easeOut }) * transform(t, [3.6, 3.9], [1, 0], { ease: easeInOut }) : 0;
+  const pillO = show.opening && t < 3.9 ? transform(t, [0.5, 1.0], [0, 1], { ease: easeOut }) * transform(t, [3.6, 3.9], [1, 0], { ease: easeInOut }) : 0;
 
   // the two headlines: the opening one and "And when something breaks?", each with its own text and switch
-  const hi = HEADLINES.findIndex((h, i) => (i === 0 ? show.opening : show.breaksHeadline) && win(t, h.a, h.b, 0.5, 0.35) > 0);
+  const hi = HEADLINES.findIndex((h, i) => (i === 0 ? show.opening : show.breaksHeadline) && transform(t, [h.a, h.a + 0.5, h.b - 0.35, h.b], [0, 1, 1, 0]) > 0);
   const hl = hi >= 0 ? { ...HEADLINES[hi], html: md(hi === 0 ? text.opening.headline : text.breaksHeadline) } : undefined;
   // after the intro the statement cards carry the text (WorkflowMapsVideo), so no caption or chapter pill competes with the visuals
-  const cap = CAPTIONS.find((c) => c.a < M.D1 && win(t, c.a, c.b, 0.3, 0.25) > 0);
-  const chap = SHOW_CHAPTERS ? CHAPTERS.find((c) => win(t, c.a, c.b, 0.3, 0.3) > 0) : undefined;
-  const card = show.titleCards ? TITLE_CARDS.find((c) => win(t, c.a, c.b, 0.18, 0.3) > 0) : undefined;
+  const cap = CAPTIONS.find((c) => c.a < M.D1 && transform(t, [c.a, c.a + 0.3, c.b - 0.25, c.b], [0, 1, 1, 0]) > 0);
+  const chap = SHOW_CHAPTERS ? CHAPTERS.find((c) => transform(t, [c.a, c.a + 0.3, c.b - 0.3, c.b], [0, 1, 1, 0]) > 0) : undefined;
+  const card = show.titleCards ? TITLE_CARDS.find((c) => transform(t, [c.a, c.a + 0.18, c.b - 0.3, c.b], [0, 1, 1, 0]) > 0) : undefined;
   // the build lines sit in timeline 93–100.6, which the edit skips; only a faint ghost leaked into the panel shot's fade, so they're off
   const buildOn = SHOW_BUILD_LINES && t >= M.B2 && t < M.D2;
-  const lk = show.lockup ? prog(t, M.LOGO, M.LOGO + 0.7, easeOutBack) * (1 - prog(t, M.END - 0.9, M.END)) : 0;
+  const lk = show.lockup ? transform(t, [M.LOGO, M.LOGO + 0.7], [0, 1], { ease: easeOutBack }) * transform(t, [M.END - 0.9, M.END], [1, 0], { ease: easeInOut }) : 0;
 
   return (
     <div className="poppins" style={{ position: "absolute", inset: 0, color: INK }}>
@@ -100,7 +101,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       <div style={{
         position: "absolute", left: 110, top: 170, height: 56, padding: "0 34px", borderRadius: 999, background: "var(--pill, #4A90F7)", color: INK,
         fontSize: 26, fontWeight: 600, display: "flex", alignItems: "center", letterSpacing: ".02em",
-        transform: `translateY(${(1 - prog(t, 0.5, 1.0, easeOut)) * 20}px)`, ...hidden(pillO),
+        transform: `translateY(${transform(t, [0.5, 1.0], [1, 0], { ease: easeOut }) * 20}px)`, ...hidden(pillO),
       }}>{text.opening.pill}</div>
 
       {/* Headline */}
@@ -108,8 +109,8 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
         <div dangerouslySetInnerHTML={html(hl.html)} style={{
           position: "absolute", left: hl.center ? 0 : 106, width: hl.center ? 1920 : 1400, textAlign: hl.center ? "center" : "left",
           top: hl.top, fontSize: hl.size, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em",
-          transform: `translateY(${(1 - prog(t, hl.a, hl.a + 0.6, easeOut)) * 60 - prog(t, hl.b - 0.35, hl.b, easeIn) * 40}px)`,
-          ...hidden(win(t, hl.a, hl.b, 0.5, 0.35)),
+          transform: `translateY(${transform(t, [hl.a, hl.a + 0.6], [1, 0], { ease: easeOut }) * 60 - transform(t, [hl.b - 0.35, hl.b], [0, 1], { ease: easeIn }) * 40}px)`,
+          ...hidden(transform(t, [hl.a, hl.a + 0.5, hl.b - 0.35, hl.b], [0, 1, 1, 0])),
         }} />
       ) : null}
 
@@ -117,7 +118,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       {cap ? (
         <div dangerouslySetInnerHTML={html(cap.html)} style={{
           position: "absolute", left: 0, right: 0, top: 22, textAlign: "center", fontWeight: 700, fontSize: 40, letterSpacing: "-0.01em",
-          transform: `translateY(${(1 - prog(t, cap.a, cap.a + 0.4, easeOut)) * 24}px)`, ...hidden(win(t, cap.a, cap.b, 0.3, 0.25)),
+          transform: `translateY(${transform(t, [cap.a, cap.a + 0.4], [1, 0], { ease: easeOut }) * 24}px)`, ...hidden(transform(t, [cap.a, cap.a + 0.3, cap.b - 0.25, cap.b], [0, 1, 1, 0])),
         }} />
       ) : null}
 
@@ -126,8 +127,8 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
         <div style={{
           position: "absolute", left: 150, top: 58, height: 46, padding: "0 20px 0 8px", display: "flex", alignItems: "center", gap: 12,
           borderRadius: 999, background: "#fff", boxShadow: "0 8px 24px rgba(16,44,102,.12), 0 0 0 1px rgba(16,44,102,.06)",
-          fontWeight: 600, fontSize: 20, transform: `translateY(${(1 - prog(t, chap.a, chap.a + 0.4, easeOut)) * -16}px)`,
-          ...hidden(win(t, chap.a, chap.b, 0.3, 0.3)),
+          fontWeight: 600, fontSize: 20, transform: `translateY(${transform(t, [chap.a, chap.a + 0.4], [1, 0], { ease: easeOut }) * -16}px)`,
+          ...hidden(transform(t, [chap.a, chap.a + 0.3, chap.b - 0.3, chap.b], [0, 1, 1, 0])),
         }}>
           <span style={{ width: 32, height: 32, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#fff", background: BLUE }}>{chap.n}</span>
           {chap.text}
@@ -141,8 +142,8 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       <div style={{ position: "absolute", left: 120, top: 300, fontWeight: 800, fontSize: 84, lineHeight: 1.12 }}>
         {BUILD_LINES.map((line, i) => {
           const a = BUILD_LINES_START + i * M.BAR;
-          const k = buildOn ? prog(t, a, a + 0.35, easeOut) : 0;
-          const o = k * (t > M.SIL ? 1 - prog(t, M.SIL + 0.4, M.D2) : 1);
+          const k = buildOn ? transform(t, [a, a + 0.35], [0, 1], { ease: easeOut }) : 0;
+          const o = k * (t > M.SIL ? transform(t, [M.SIL + 0.4, M.D2], [1, 0], { ease: easeInOut }) : 1);
           return (
             <div key={line} className={i === BUILD_LINES.length - 1 ? "grad-text" : undefined}
               style={{ opacity: o, transform: `translateX(${(1 - k) * -40}px)` }}>{line}</div>
@@ -151,7 +152,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
       </div>
 
       {/* Logo lockup */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: 300, display: "flex", flexDirection: "column", alignItems: "center", transform: `scale(${0.9 + 0.1 * lk})`, ...hidden(lk) }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 300, display: "flex", flexDirection: "column", alignItems: "center", transform: `scale(${mix(0.9, 1, lk)})`, ...hidden(lk) }}>
         <Img src={staticFile("brand/highlevel-logo-dark.png")} style={{ height: 70 }} />
         <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 32, fontSize: style.sizes.lockup, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1 }}>
           {text.lockup.name} <span className="grad-text">{text.lockup.accent}</span>
@@ -174,13 +175,13 @@ export const Message: React.FC<{ t: number }> = ({ t }) => {
   let origin = "0 0";
   let check = 0;
   if (t >= MESSAGE.from && t < MESSAGE.to) {
-    const mk = prog(t, MESSAGE.from, MESSAGE.from + 0.4, easeOutBack);
+    const mk = transform(t, [MESSAGE.from, MESSAGE.from + 0.4], [0, 1], { ease: easeOutBack });
     left = 1290;
     top = 24;
-    o = mk * (1 - prog(t, MESSAGE.to - 0.4, MESSAGE.to));
-    scale = 0.8 * (0.85 + 0.15 * mk);
+    o = mk * transform(t, [MESSAGE.to - 0.4, MESSAGE.to], [1, 0], { ease: easeInOut });
+    scale = 0.8 * mix(0.85, 1, mk);
     origin = "100% 0";
-    check = prog(t, MESSAGE.answeredAt, MESSAGE.answeredAt + 0.3);
+    check = transform(t, [MESSAGE.answeredAt, MESSAGE.answeredAt + 0.3], [0, 1], { ease: easeInOut });
   }
   if (o <= 0.001) return null;
   return (
@@ -204,6 +205,6 @@ export const Message: React.FC<{ t: number }> = ({ t }) => {
 // ── White flash on drops and hits ────────────────────────────────────────────
 export const Flash: React.FC<{ t: number }> = ({ t }) => {
   const F = useCfg().fx.flash;
-  const o = Math.max(0, ...FLASHES.map((d) => (t >= d && t < d + F.duration ? F.strength * (1 - (t - d) / F.duration) : 0)));
+  const o = Math.max(0, ...FLASHES.map((d) => (t >= d && t < d + F.duration ? transform(t, [d, d + F.duration], [F.strength, 0]) : 0)));
   return o > 0 ? <div style={{ position: "absolute", inset: 0, background: "#fff", opacity: o }} /> : null;
 };

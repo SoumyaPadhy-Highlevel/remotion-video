@@ -3,7 +3,8 @@
 // Also the film clip window (a stretch of film shown in the app window, e.g. the hand-offs on the second drop).
 import React from "react";
 import { Freeze, OffthreadVideo, staticFile } from "remotion";
-import { clamp, easeInOut, easeOut, lerp, prog } from "./anim";
+import { clamp, mix, transform } from "motion";
+import { easeInOut, easeOut } from "./anim";
 import { PANEL_CLIPS } from "./panelCursor";
 import { APP_FILE, FPS, PanelShot } from "./script";
 import { WINDOW } from "./AppWindow";
@@ -24,7 +25,7 @@ export const Panels: React.FC<{ cfg: PanelShot; lt: number; kicker: string; html
   return (
     <div className="poppins" style={{ position: "absolute", inset: 0, opacity: fade }}>
       {/* the line on top */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: 70, textAlign: "center", opacity: cap * prog(lt, 0, 0.4, easeOut) * (1 - prog(lt, outAt - 0.3, outAt)), transform: `translateY(${(1 - prog(lt, 0, 0.4, easeOut)) * 20}px)` }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 70, textAlign: "center", opacity: cap * transform(lt, [0, 0.4], [0, 1], { ease: easeOut }) * transform(lt, [outAt - 0.3, outAt], [1, 0], { ease: easeInOut }), transform: `translateY(${transform(lt, [0, 0.4], [1, 0], { ease: easeOut }) * 20}px)` }}>
         <div style={{ fontSize: 20, fontWeight: 600, color: BLUE, letterSpacing: "0.12em" }}>{kicker}</div>
         <div style={{ fontSize: style.sizes.panelCaption, fontWeight: 800, letterSpacing: "-0.02em", color: INK, marginTop: 4 }} dangerouslySetInnerHTML={{ __html: html }} />
       </div>
@@ -32,9 +33,9 @@ export const Panels: React.FC<{ cfg: PanelShot; lt: number; kicker: string; html
       {cfg.outro && cap ? <KineticTitle t={lt} at={cfg.outro.at} out={cfg.dur + 1} kicker="" html={md(P.tidyOutro)} size={style.sizes.panelCaption} offsetY={-372} /> : null}
       {cfg.panels.map((p, i) => {
         const [cx, cy, cw] = p.crop, sc = PW / cw;
-        const on = prog(lt, p.at, p.at + 0.35, easeOut);
+        const on = transform(lt, [p.at, p.at + 0.35], [0, 1], { ease: easeOut });
         const pc = p.clip != null ? PANEL_CLIPS[p.clip] : null;
-        const ft = pc ? pc.offset + clamp(lt - p.at - 0.3, 0, (pc.frames.length - 1) / FPS) : p.src[0] + clamp(lt - p.at - 0.3, 0, p.src[1] - p.src[0]);
+        const ft = pc ? pc.offset + clamp(0, (pc.frames.length - 1) / FPS, lt - p.at - 0.3) : p.src[0] + clamp(0, p.src[1] - p.src[0], lt - p.at - 0.3);
         return (
           <div key={p.label} style={{ position: "absolute", left: x0 + i * (PW + GAP), top: TOP - 64 }}>
             <div style={{ height: 52, display: "flex", alignItems: "center", gap: 12, fontSize: 30, fontWeight: 700, color: INK, opacity: on * cap, transform: `translateY(${(1 - on) * 14}px)` }}>
@@ -72,8 +73,8 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
   let x = 0, y = 0, sc = 1, op = 1, ring = 0;
   const first = legs[0], f0 = first.map(first.pc.frames[0]);
   if (lt < first.t0) {
-    const k = prog(lt, 0, first.t0, easeInOut);
-    x = lerp(960, f0[0], k); y = lerp(1120, f0[1], k) - 60 * Math.sin(Math.PI * k); sc = lerp(1, first.sc, k);
+    const k = transform(lt, [0, first.t0], [0, 1], { ease: easeInOut });
+    x = mix(960, f0[0], k); y = mix(1120, f0[1], k) - 60 * Math.sin(Math.PI * k); sc = mix(1, first.sc, k);
   } else {
     for (let i = 0; i < legs.length; i++) {
       const L = legs[i];
@@ -85,8 +86,8 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
       const N = legs[i + 1];
       if (lt < N.t0) {
         // glide to the next panel (a slight arc), resizing to its scale
-        const a = L.map(L.pc.frames[L.pc.frames.length - 1]), b = N.map(N.pc.frames[0]), k = prog(lt, L.t1, N.t0, easeInOut);
-        x = lerp(a[0], b[0], k); y = lerp(a[1], b[1], k) - 50 * Math.sin(Math.PI * k); sc = lerp(L.sc, N.sc, k);
+        const a = L.map(L.pc.frames[L.pc.frames.length - 1]), b = N.map(N.pc.frames[0]), k = transform(lt, [L.t1, N.t0], [0, 1], { ease: easeInOut });
+        x = mix(a[0], b[0], k); y = mix(a[1], b[1], k) - 50 * Math.sin(Math.PI * k); sc = mix(L.sc, N.sc, k);
         break;
       }
     }
@@ -106,7 +107,7 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
 export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number; dur: number; callout?: [number, number]; pop?: number }> = ({ film, lt, kicker, html, fade, dur, callout, pop }) => {
   const { show, style } = useCfg();
   const capOut = callout || pop != null ? 0 : 1;
-  const co = prog(lt, 1.05, 1.4, easeOut);
+  const co = transform(lt, [1.05, 1.4], [0, 1], { ease: easeOut });
   return <>
     <div style={{
       position: "absolute", left: WINDOW.left, top: WINDOW.top, width: WINDOW.width, height: WINDOW.height, borderRadius: 18, background: "#fff", overflow: "hidden", opacity: fade,
@@ -116,12 +117,12 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
         <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted style={{ width: WINDOW.width, height: WINDOW.height }} />
       </Freeze>
     </div>
-    <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * prog(lt, 0.1, 0.5, easeOut) * (1 - prog(lt, dur - 0.35, dur - 0.05)), transform: `translateY(${((1 - prog(lt, 0.1, 0.5, easeOut)) * 20).toFixed(1)}px)` }}>
+    <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * transform(lt, [0.1, 0.5], [0, 1], { ease: easeOut }) * transform(lt, [dur - 0.35, dur - 0.05], [1, 0], { ease: easeInOut }), transform: `translateY(${(transform(lt, [0.1, 0.5], [1, 0], { ease: easeOut }) * 20).toFixed(1)}px)` }}>
       <div style={{ fontSize: 17, fontWeight: 600, color: BLUE, letterSpacing: "0.12em", marginBottom: 2 }}>{kicker}</div>
       <div style={{ fontSize: style.sizes.topLine, fontWeight: 700, letterSpacing: "-0.01em", color: INK }} dangerouslySetInnerHTML={{ __html: html }} />
     </div>
-    {callout && show.panelCaptions ? <Callout x={WINDOW.left + callout[0] + 113} y={WINDOW.top + callout[1] - 9} html={html} k={co} opacity={fade * (1 - prog(lt, dur - 0.4, dur - 0.1))}
-      lineK={(i) => prog(lt, 1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1), easeOut)} /> : null}
+    {callout && show.panelCaptions ? <Callout x={WINDOW.left + callout[0] + 113} y={WINDOW.top + callout[1] - 9} html={html} k={co} opacity={fade * transform(lt, [dur - 0.4, dur - 0.1], [1, 0], { ease: easeInOut })}
+      lineK={(i) => transform(lt, [1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1)], [0, 1], { ease: easeOut })} /> : null}
     {pop != null && show.panelCaptions ? <div className="poppins" style={{ position: "absolute", inset: 0, opacity: fade }}>
       <KineticTitle t={lt} at={pop} out={dur - 0.75} kicker="" html={html} size={style.sizes.panelCaption + 6} pulse={[pop + 0.45]} offsetY={-478} />
     </div> : null}

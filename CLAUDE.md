@@ -24,6 +24,10 @@ Give each re-render a new file name (browsers cache half-written files).
 ## Rules for edits
 
 - Everything is a pure function of time: `t = frame / 30`. Never use `Math.random()`, `Date`, timers or state; use `rand(i)` from `anim.ts` for variety.
+- Animate with Motion's pure helpers (`motion` package): `transform(t, [a, b], [from, to], { ease })` for a timed move or fade,
+  `transform(t, [a, a + fadeIn, b - fadeOut, b], [0, 1, 1, 0])` for a visibility window, `mix` to blend, `clamp`, and `spring({ keyframes: [0, 1], … }).next(ms).value`.
+  Easing curves (`easeOut`, `easeIn`, `easeInOut`, `easeOutBack`, `easeOutExpo`) are Motion `cubicBezier`s in `anim.ts`.
+  Don't use `<motion.div animate>`, `useAnimate` or motion values: they run on wall-clock time, and Remotion renders each frame separately.
 - Times are seconds on the edited music. Beats must stay contiguous and keep their start/end, or the music stops matching.
 - Keep text in `script.ts`. Components read from it.
 - Positions are in 1920×1080 frame pixels; inside the window they are window pixels (1620×880).
@@ -40,5 +44,5 @@ Give each re-render a new file name (browsers cache half-written files).
 ## Commands
 
 - Preview: `npm run dev`, then open the `WorkflowMaps` composition.
-- Render: `npx remotion render src/index.ts WorkflowMaps out/workflow-maps.mp4 --port=3021` (Studio holds 3000)
+- Render: `npx remotion render src/index.ts WorkflowMaps out/workflow-maps.mp4` (renders serve on port 3021, set in `remotion.config.ts`, because Studio holds 3000)
 - Render one range: `npx remotion render WorkflowMaps out/clip.mp4 --frames=2640-2910`

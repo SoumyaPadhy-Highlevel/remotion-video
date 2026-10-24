@@ -2,7 +2,8 @@
 // 1620×880). The window's own motion (rise, push-ins, receding behind titles) lives here.
 import React from "react";
 import { OffthreadVideo, Sequence, staticFile } from "remotion";
-import { easeInOut, easeOut, prog } from "./anim";
+import { mix, transform } from "motion";
+import { easeInOut, easeOut } from "./anim";
 import { Callout } from "./Callout";
 import { windowAt } from "./choreography";
 import { introCalloutHtml, useCfg } from "./config";
@@ -16,8 +17,8 @@ export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean }> = 
   const w = windowAt(t, plate, cfg.motion);
   const co = tn != null && cfg.show.introCallouts ? introCalloutAt(tn) : undefined, P = cfg.motion.introCallouts;
   if (co && !plate) {
-    const k = Math.min(prog(tn!, co.o0, co.o0 + P.in, easeInOut), 1 - prog(tn!, co.o1 - P.out, co.o1, easeInOut));
-    w.zoom *= 1 + (P.push - 1) * k;
+    const k = Math.min(transform(tn!, [co.o0, co.o0 + P.in], [0, 1], { ease: easeInOut }), transform(tn!, [co.o1 - P.out, co.o1], [1, 0], { ease: easeInOut }));
+    w.zoom *= mix(1, P.push, k);
     w.zoomOrigin = co.c.focus;
   }
   return (
@@ -45,7 +46,7 @@ export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean }> = 
       {co && !plate ? (() => {
         const lt = tn! - co.o0;
         return <Callout x={co.c.x} y={co.c.y} side={co.c.side} ax={co.c.ax} html={introCalloutHtml(cfg, INTRO_CALLOUTS.indexOf(co.c))}
-          k={prog(lt, 0, 0.35, easeOut)} opacity={1 - prog(tn!, co.o1 - 0.3, co.o1)} lineK={(i) => prog(lt, 0.45 + 0.5 * (i - 1), 0.8 + 0.5 * (i - 1), easeOut)} />;
+          k={transform(lt, [0, 0.35], [0, 1], { ease: easeOut })} opacity={transform(tn!, [co.o1 - 0.3, co.o1], [1, 0], { ease: easeInOut })} lineK={(i) => transform(lt, [0.45 + 0.5 * (i - 1), 0.8 + 0.5 * (i - 1)], [0, 1], { ease: easeOut })} />;
       })() : null}
     </div>
   );

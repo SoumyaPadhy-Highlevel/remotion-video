@@ -5,7 +5,7 @@
 // Step 2 (scripts/resolve_dissect.py) renders nothing; it reads the rendered pieces and writes the timeline.
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve } from "path";
-import { win } from "../src/video/anim";
+import { transform } from "motion";
 import { WINDOW } from "../src/video/AppWindow";
 import { splitAt } from "../src/video/Build";
 import { windowAt } from "../src/video/choreography";
@@ -23,8 +23,8 @@ const S = BUILD.win.width / WINDOW.width;
 const motion: number[][] = [];
 for (let f = 0; f < END; f++) {
   const tn = uncut(f / FPS), { t, seg } = editTime(tn);
-  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, seg.n0, seg.n1, 0.2, 0.25) : 0;
-  const k = seg?.hold && !seg.card?.top && !seg.panels && !seg.clip ? win(tn, seg.n0, seg.n1, 0.3, 0.35) : 0;
+  const trio = seg?.panels ? transform(tn, [seg.n0, seg.n0 + 0.35, seg.n1 - 0.35, seg.n1], [0, 1, 1, 0]) : seg?.clip ? transform(tn, [seg.n0, seg.n0 + 0.2, seg.n1 - 0.25, seg.n1], [0, 1, 1, 0]) : 0;
+  const k = seg?.hold && !seg.card?.top && !seg.panels && !seg.clip ? transform(tn, [seg.n0, seg.n0 + 0.3, seg.n1 - 0.35, seg.n1], [0, 1, 1, 0]) : 0;
   const w = windowAt(t), sp = splitAt(t);
   const map = (px: number, py: number): [number, number] => {
     // AppWindow: translate then scale(scale·zoom) about zoomOrigin (window px), placed at WINDOW.left/top

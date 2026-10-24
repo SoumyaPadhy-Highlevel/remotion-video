@@ -1,6 +1,7 @@
 import React from "react";
 import { Img, staticFile } from "remotion";
-import { clamp, rand } from "./anim";
+import { clamp } from "motion";
+import { rand } from "./anim";
 import type { MascotState } from "./choreography";
 
 // Eye centres in the 840×580 mascot artwork (public/brand/mascot-noeyes.png).
@@ -61,7 +62,7 @@ export const Mascot: React.FC<{ t: number; st: MascotState }> = ({ t, st }) => {
     for (let k = 0; k < 7; k++) {
       const a = rand(k) * Math.PI * 2;
       const d = 230 + rand(k + 9) * 90;
-      const ph2 = clamp(sparkle * 1.4 - k * 0.06);
+      const ph2 = clamp(0, 1, sparkle * 1.4 - k * 0.06);
       const cx = 560 + Math.cos(a) * d * (0.6 + ph2 * 0.4);
       const cy = 270 + Math.sin(a) * d * 0.7 * (0.6 + ph2 * 0.4);
       const R = (18 + rand(k + 3) * 18) * Math.sin(ph2 * Math.PI) * (0.8 + 0.2 * Math.sin(t * 9 + k));
