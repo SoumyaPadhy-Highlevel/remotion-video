@@ -4,9 +4,9 @@
 // sticky notes, and the map under them is the product's.
 import React from "react";
 import { transform } from "motion";
-import { easeInOut, springAt } from "../anim";
+import { easeInOut, easeOut, springAt } from "../anim";
 import { BUILD } from "../script";
-import { EdgeLook, MapPlane, MapView, NodeLook } from "./MapScene";
+import { EdgeLook, MapPlane, MapView, NodeLook, projectToCanvas } from "./MapScene";
 import { FILM_MAP_SHOTS, FILM_WORLDS, FilmMapShot } from "./filmMap";
 import { carriedPlane, organiseNodes, organiseRig } from "./organise";
 import { Cursor } from "../builder/shotKit";
@@ -46,6 +46,35 @@ const ease = (from: number, to: number, age: number, duration: number) => from +
 const buildClear = (ft: number) => {
   const bT = ft + 3.9 - BUILD.at;
   return bT >= 0 && bT < 9.6 ? { bT, k: transform(bT, [0.6, 1.25], [0, 1], { ease: easeInOut }) } : null;
+};
+
+/** Organise's documentation notes (film scene "orgdoc", from frame 6245). The film draws each note with a leader line to its
+ *  workflow, but the redraw covers the line, and a note faded during the journey is too pale for ui.py to find. So each note
+ *  gets a hole where its card is (anchor + `off`, `size`, window px, measured on the film against this shot's camera) from
+ *  `at`, and its leader line is drawn again on top, timed as the film's (scene-orgdoc.js docAt / litAt, orgdoc seconds). */
+const ORGDOC_T0 = 6245 / 30;
+const DOC_NOTES: { anchor: string; off: [number, number]; size: [number, number]; color: string; at: number; lit?: number }[] = [
+  { anchor: "plane:lead-mgmt", off: [172, -141], size: [309, 130], color: "#facc15", at: 14.1 },
+  { anchor: "priority-assignment", off: [-411, -51], size: [281, 175], color: "#9ca3af", at: 17.4, lit: 22.3 },
+  { anchor: "medium-priority", off: [236, -130], size: [263, 154], color: "#facc15", at: 18.2, lit: 23.8 },
+  { anchor: "consultation-handoff", off: [107, -20], size: [262, 131], color: "#60a5fa", at: 19.0, lit: 25.3 },
+];
+const docNotes = (shot: FilmMapShot, ft: number, cam: { cx: number; cy: number; s: number }) => {
+  if (shot.world !== "orgdoc") return [];
+  const t = ft - ORGDOC_T0, scene = FILM_WORLDS[shot.world];
+  const dim = transform(t, [21.0, 21.4], [0, 1], { ease: easeOut });
+  return DOC_NOTES.filter((d) => t >= d.at - 0.25).map((d) => {
+    let b: [number, number];
+    if (d.anchor.startsWith("plane:")) { const pl = scene.planes.find((p) => p.id === d.anchor.slice(6))!; b = projectToCanvas(cam, pl.x0, 0, pl.z0) as [number, number]; }
+    else { const n = scene.nodes.find((m) => m.id === d.anchor)!; b = projectToCanvas(cam, n.x, 0.3, n.z) as [number, number]; }
+    const rect = [b[0] + d.off[0], b[1] + d.off[1], d.size[0], d.size[1]];
+    // the card without its 3 px padding; the line runs from the workflow to the card's nearest point
+    const [x, y, w, h] = [rect[0] + 3, rect[1] + 3, rect[2] - 6, rect[3] - 6];
+    const c = [Math.min(Math.max(b[0], x), x + w), Math.min(Math.max(b[1], y), y + h)];
+    const draw = d.lit == null ? transform(t, [d.at, d.at + 0.3], [0, 1], { ease: easeOut }) : transform(t, [d.at - 0.25, d.at + 0.1], [0, 1], { ease: easeOut });
+    const lit = d.lit == null ? 1 : 1 - dim * (1 - transform(t, [d.lit, d.lit + 0.25], [0, 1], { ease: easeOut })) * 0.72;
+    return { rect: t >= d.at ? rect : null, line: { x1: b[0], y1: b[1], x2: b[0] + (c[0] - b[0]) * draw, y2: b[1] + (c[1] - b[1]) * draw, color: d.color, opacity: draw > 0.01 ? 0.9 * lit : 0 } };
+  });
 };
 
 const shotAt = (ft: number) => FILM_MAP_SHOTS.find((s) => ft >= s.from - 1e-6 && ft < s.from + s.frames / 30);
@@ -127,11 +156,14 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean }> = ({ ft, curso
   // the build's folders: dimmed, not gone, until each lands (the film's islIn)
   if (build) for (const id of Object.keys(planeLooks)) planeLooks[id] = { ...planeLooks[id], opacity: Math.max(planeLooks[id].opacity ?? 1, 1 - 0.55 * build.k) };
   const left = unrle(shot.left).charCodeAt(i) - 65, right = unrle(shot.right).charCodeAt(i) - 65;
+  const doc = docNotes(shot, ft, { cx, cy, s }), docRects = doc.flatMap((d) => (d.rect ? [d.rect] : []));
   const ui = [
     ...FIXED_UI,
     ...(left > 0 ? [[0, 0, left * 10 + 2, 880]] : []),
     ...(right > 0 ? [[right * 25 - 4, 0, 1620, 880]] : []),
-    ...shot.notes.filter((n) => n[0] === i).map((n) => n.slice(1)),
+    // one hole per note: the holes mask is even-odd, so a detected rect overlapping a docNotes card would cancel its hole out
+    ...shot.notes.filter((n) => n[0] === i).map((n) => n.slice(1)).filter(([x, y, w, h]) => !docRects.some(([X, Y, W, H]) => x < X + W && X < x + w && y < Y + H && Y < y + h)),
+    ...docRects,
   ].map(([x, y, w, h]) => [x - CANVAS.left, y - CANVAS.top, w, h]);
   const fade = Math.min(transform(ft, [shot.from, shot.from + 0.001], [0, 1]), 1);
   const [mx, my] = shot.cursor.slice(i * 2, i * 2 + 2);
@@ -141,6 +173,10 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean }> = ({ ft, curso
       <MapView scene={scene} width={CANVAS.width} height={CANVAS.height} camera={{ cx: cx - CANVAS.left, cy: cy - CANVAS.top, s }} t={ft}
         looks={looks} edgeLooks={edgeLooksAt(shot, state)} planeLooks={planeLooks} />
     </div>
+    {/* Organise's leader lines (docNotes), over the redrawn map and clipped to its canvas */}
+    {doc.length ? <svg width={1620} height={880} style={{ position: "absolute", left: 0, top: 0, opacity: fade, clipPath: `inset(${CANVAS.top}px ${1620 - CANVAS.left - CANVAS.width}px ${880 - CANVAS.top - CANVAS.height}px ${CANVAS.left}px round ${CANVAS.radius}px)` }}>
+      {doc.map((d, k) => <line key={k} x1={d.line.x1} y1={d.line.y1} x2={d.line.x2} y2={d.line.y2} stroke={d.line.color} strokeWidth={1.6} strokeLinecap="round" opacity={d.line.opacity} />)}
+    </svg> : null}
     {/* the film's cursor, back on top of the redrawn map (outside the film's own panels, which keep theirs) */}
     {cursor && mx >= 0 && (left <= 0 || mx > left * 10 + 2) && (right <= 0 || mx < right * 25 - 4) ? <Cursor x={mx} y={my} /> : null}
   </>);
