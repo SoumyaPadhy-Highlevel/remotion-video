@@ -22,12 +22,15 @@ import { EdgeLook, MapCamera, MapView, NodeLook, projectToCanvas } from "../map3
 import { FILM_WORLDS } from "../map3d/filmMap";
 import { depthForShape, hoverHeightScale } from "../map3d/geometry";
 
-/** The moments of the scene (film s). It opens on the drop (film 143.29) under "Catch it quickly, right on the map.", and
+/** The moments of the scene (film s). It opens on the drop (film 143.29) under "Catch it quickly, right on the map.";
  * "Jump straight to the failed step." comes in above the window when the run is painted (`logs`, script.ts ERRORS_JUMP − 3.9);
- * the edit leaves it at film ~151.05 (ERRORS_END). One click after another, no waiting on a row. */
+ * the edit leaves it at film ~151.27 (ERRORS_END). One click after another, no waiting on a row. */
 export const ERRORS = {
-  from: 143.3, to: 153.6,
-  cardClick: 144.2, rowClick: 145.05, hoverRow: 145.95, execClick: 146.3, logs: 146.7, stepClick: 147.55,
+  from: 143.3, to: 151.3,
+  cardClick: 144.0, rowClick: 144.65, hoverRow: 145.45, execClick: 145.65, logs: 146.0, stepClick: 146.75,
+  // then the deleted asset on the same map ("Catch deleted assets still in use." from closeClick, script.ts ERRORS_DELETED):
+  // close the run, close the panel (the map undims), hover the yellow marker (its tooltip), click it (the asset's panel)
+  closeClick: 148.0, panelClose: 148.35, assetHover: 148.85, assetClick: 149.45,
 };
 const T = ERRORS;
 
@@ -36,6 +39,7 @@ const RED = { 50: "#fef2f2", 100: "#fee2e2", 200: "#fecaca", 500: "#ef4444", 600
 const SUCCESS = { 50: "#ecfdf3", 600: "#039855", 700: "#027a48" };
 const ERROR = { 50: "#fef3f2", 700: "#b42318" };
 const PRIMARY = { 100: "#d1e0ff", 500: "#2970ff", 600: "#155eef", 700: "#004eeb" };
+const PRIMARY_50 = "#eff4ff";
 const COBALT = "#2455d6";
 const FONT = `"Inter var", Inter, system-ui, sans-serif`;
 const SHADOW_XS = "0px 1px 2px 0px #1018280D";
@@ -112,33 +116,74 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 // ── the map ──
-const SCENE = FILM_WORLDS.main;
+const DELETED = { id: "a-coaching-enquiry", formId: "kQ7mZ2xRw9LfT4bN8cVd", usedBy: ["tag-new-enquiries", "new-enquiry-form"] };
+const SCENE = (() => {
+  const w = FILM_WORLDS.main;
+  return {
+    ...w,
+    nodes: w.nodes.map((n) => (n.id === DELETED.id ? { ...n, label: DELETED.formId } : n)),
+    edges: [...w.edges, ...DELETED.usedBy.filter((u) => !w.edges.some((e) => e.from === DELETED.id && e.to === u)).map((u) => ({ from: DELETED.id, to: u }))],
+  };
+})();
 const NODE = SCENE.nodes.find((n) => n.id === WF.id)!;
+const ASSET = SCENE.nodes.find((n) => n.id === DELETED.id)!;
 /** The overview the film holds (canvas px), and where the pan to the workflow ends: PAN_TO_NODE_ZOOM 1 (s = canvas h / 10),
  * the workflow in the middle of the canvas left of the panel. */
 const CAM0: MapCamera = { cx: 813.3 - PAGE.canvasLeft, cy: 333.1 - PAGE.top, s: 39.557 };
 const S1 = CANVAS_H / 10;
-const at = (cam: MapCamera, y = 0) => projectToCanvas(cam, NODE.x, y, NODE.z);
-const camAt = (ft: number): MapCamera => {
-  const k = transform(ft, [T.rowClick, T.rowClick + 0.7], [0, 1], { ease: panEase });
-  const [x0, y0] = at(CAM0), s = mix(CAM0.s, S1, k);
-  const [ox, oy] = at({ cx: 0, cy: 0, s });
+const at = (cam: MapCamera, y = 0, n: { x: number; z: number } = NODE) => projectToCanvas(cam, n.x, y, n.z);
+/** The canvas pans (GridCameraController panToNode: 700 ms, cubic-bezier(0.22, 0.68, 0, 1), to zoom 1): to the workflow from the
+ * summary, then to the deleted asset from its marker; each centres its node in the canvas left of the panel. */
+const PANS = [{ at: T.rowClick, n: NODE as { x: number; z: number } }, { at: T.assetClick, n: ASSET }];
+const pan = (from: MapCamera, p: (typeof PANS)[number], ft: number): MapCamera => {
+  const k = transform(ft, [p.at, p.at + 0.7], [0, 1], { ease: panEase });
+  const [x0, y0] = at(from, 0, p.n), s = mix(from.s, S1, k);
+  const [ox, oy] = at({ cx: 0, cy: 0, s }, 0, p.n);
   return { cx: mix(x0, CANVAS_NARROW / 2, k) - ox, cy: mix(y0, CANVAS_H / 2, k) - oy, s };
 };
+const camAt = (ft: number): MapCamera => {
+  let cam = CAM0;
+  for (const p of PANS) {
+    if (ft < p.at) break;
+    cam = pan(cam, p, ft);
+  }
+  return cam;
+};
+/** Who is selected and how dim the rest is: the workflow (summary row → panel closed), nothing, then the deleted asset. */
+const selectionAt = (ft: number) => {
+  const sp = (a: number, d = 0.45) => Math.min(1, springAt(ft, a, d, 0));
+  if (ft < T.rowClick) return { wf: 0, asset: 0, dim: 0 };
+  if (ft < T.panelClose) return { wf: springAt(ft, T.rowClick, 0.6, 0.2), asset: 0, dim: sp(T.rowClick) };
+  if (ft < T.assetClick) return { wf: 1 - sp(T.panelClose, 0.6), asset: 0, dim: 1 - sp(T.panelClose) };
+  return { wf: 0, asset: springAt(ft, T.assetClick, 0.6, 0.2), dim: sp(T.assetClick) };
+};
+const canvasOpenAt = (ft: number) => (ft >= T.rowClick && ft < T.panelClose) || ft >= T.assetClick;
 
-/** The red diamond over a workflow with recent errors (GridErrorIndicatorRenderer): a 48 px white square turned 45°,
- * 12 px corners, 4 px red-100 border, shadow-lg, holding a 36 px red-500 square with an upright 20 px alert glyph. It
- * stands 14 px above the node's top face and scales with the zoom between 0.35 and 1. */
-const ErrorMarker: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scale }) => (
-  <div style={{ position: "absolute", left: x, top: y, width: 0, height: 0 }}>
+/** The diamond over a node (GridErrorIndicatorRenderer): a 48 px white square turned 45°, 12 px corners, a 4 px ring and
+ * shadow-lg, holding a 36 px square with an upright 20 px alert glyph; red for a workflow with recent errors, yellow for an
+ * asset that's gone but still referenced. It stands 14 px above the node's top face, scales with the zoom between 0.35 and 1,
+ * dims to 0.3 with its node and grows 1.1× on hover, when its tooltip (gray-900, 14 px 500, 250 ms delay) shows above it. */
+const MARKER = { error: { ring: RED[100], fill: RED[500] }, missing: { ring: "#fef7c3", fill: "#eaaa08" } };
+const MARKER_TIP = { error: "This workflow has errors from recent runs.", missing: "This asset seems to be missing, but workflows still reference it." };
+const ErrorMarker: React.FC<{ x: number; y: number; scale: number; kind?: keyof typeof MARKER; opacity?: number; hover?: number; tip?: number }> = ({
+  x, y, scale, kind = "error", opacity = 1, hover = 0, tip = 0,
+}) => (
+  <div style={{ position: "absolute", left: x, top: y, width: 0, height: 0, opacity }}>
     <div style={{ position: "absolute", left: 0, bottom: 14, width: 48, height: 48, transformOrigin: "bottom center", transform: `translateX(-50%) scale(${scale})` }}>
-      <div style={{ width: 48, height: 48, boxSizing: "border-box", transform: "rotate(45deg)", borderRadius: 12, border: `4px solid ${RED[100]}`, background: "#fff",
+      <div style={{ width: 48, height: 48, boxSizing: "border-box", transform: `rotate(45deg) scale(${1 + 0.1 * hover})`, borderRadius: 12, border: `4px solid ${MARKER[kind].ring}`, background: "#fff",
         boxShadow: SHADOW_LG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ width: 36, height: 36, borderRadius: 8, background: RED[500], display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ width: 36, height: 36, borderRadius: 8, background: MARKER[kind].fill, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <BIcon name="mdi:alert-circle" size={20} color="#fff" style={{ transform: "rotate(-45deg)" }} />
         </span>
       </div>
     </div>
+    {tip > 0 ? (
+      <div style={{ position: "absolute", left: 0, bottom: 14 + 48 * scale + 12, transform: "translateX(-50%)", opacity: tip, width: "max-content", maxWidth: 260,
+        borderRadius: 4, background: HR.gray[900], padding: 8, textAlign: "left", fontFamily: FONT, ...txt(14, 20, 500, "#fff") }}>
+        {MARKER_TIP[kind]}
+        <span style={{ position: "absolute", top: "100%", left: "50%", marginTop: -4, marginLeft: -4, width: 8, height: 8, transform: "rotate(45deg)", background: HR.gray[900] }} />
+      </div>
+    ) : null}
   </div>
 );
 
@@ -156,28 +201,37 @@ const TOOLS_L: [number, number, number, number] = [76, 815, 223, 38];
 const TOOLS_R: [number, number, number, number] = [1238, 815, 358, 38];
 
 const MapLayer: React.FC<{ ft: number }> = ({ ft }) => {
-  const picked = ft >= T.rowClick;
-  const w = picked ? CANVAS_NARROW : CANVAS_FULL;
-  const cam = camAt(ft);
-  const sel = springAt(ft, T.rowClick, 0.6, 0.2), dim = Math.min(1, springAt(ft, T.rowClick, 0.45, 0));
+  const w = canvasOpenAt(ft) ? CANVAS_NARROW : CANVAS_FULL;
+  const cam = camAt(ft), sel = selectionAt(ft);
   const looks: Record<string, NodeLook> = {};
-  for (const n of SCENE.nodes) looks[n.id] = n.id === WF.id ? { selected: sel } : { dim };
+  for (const n of SCENE.nodes) looks[n.id] = n.id === WF.id ? { selected: sel.wf, dim: ft >= T.assetClick ? sel.dim : 0 }
+    : n.id === DELETED.id ? { selected: sel.asset, dim: ft >= T.assetClick ? 0 : sel.dim } : { dim: sel.dim };
+  const lit = ft >= T.assetClick ? DELETED.id : ft >= T.rowClick && ft < T.panelClose ? WF.id : null;
   const edgeLooks: Record<string, EdgeLook> = {};
   for (const e of SCENE.edges) {
-    const lit = e.from === WF.id || e.to === WF.id;
-    edgeLooks[`${e.from}>${e.to}`] = { lit: lit ? dim : 0, dim: lit ? 0 : dim };
+    const on = !!lit && (e.from === lit || e.to === lit);
+    edgeLooks[`${e.from}>${e.to}`] = { lit: on ? sel.dim : 0, dim: on ? 0 : sel.dim };
   }
-  // the marker sits on the node's top face (it grows with the selection's height spring)
-  const h = 1 + (hoverHeightScale("plinth") - 1) * sel;
-  const [mx, my] = at(cam, depthForShape("plinth") * h + 0.02);
-  const zoom = cam.s / (CANVAS_H / 10);
+  // the markers sit on their nodes' top faces (growing with the selection's height spring) and dim with them
+  const top = (shape: "plinth" | "hexagon", k: number) => depthForShape(shape) * (1 + (hoverHeightScale(shape) - 1) * k) + 0.02;
+  const [mx, my] = at(cam, top("plinth", sel.wf));
+  const [ax, ay] = at(cam, top("hexagon", sel.asset), ASSET);
+  const zoom = cam.s / (CANVAS_H / 10), scale = Math.max(0.35, Math.min(1, zoom));
+  const hover = ft >= T.assetHover && ft < T.assetClick + 0.15 ? transform(ft, [T.assetHover, T.assetHover + 0.15], [0, 1]) : 0;
+  const tip = transform(ft, [T.assetHover + 0.25, T.assetHover + 0.35, T.assetClick, T.assetClick + 0.1], [0, 1, 1, 0]);
   return (
     <div style={{ position: "absolute", left: PAGE.canvasLeft, top: PAGE.top, width: w, height: CANVAS_H, borderRadius: 8, overflow: "hidden", background: "#fff" }}>
       <MapView scene={SCENE} width={w} height={CANVAS_H} camera={cam} t={ft} looks={looks} edgeLooks={edgeLooks} />
-      <ErrorMarker x={mx} y={my} scale={Math.max(0.35, Math.min(1, zoom))} />
+      <ErrorMarker x={mx} y={my} scale={scale} opacity={1 - 0.7 * (looks[WF.id].dim ?? 0)} />
+      <ErrorMarker x={ax} y={ay} scale={scale} kind="missing" opacity={1 - 0.7 * (looks[DELETED.id].dim ?? 0)} hover={hover} tip={tip} />
     </div>
   );
 };
+/** The deleted asset's marker in window px while the map stands between the two pans (where the cursor goes). */
+const MISSING_AT = (() => {
+  const cam = camAt(T.panelClose), [x, y] = at(cam, depthForShape("hexagon") + 0.02, ASSET);
+  return [PAGE.canvasLeft + x + 4, PAGE.top + y - 14 - 30] as const;
+})();
 
 // ── the attention card (GridErrorSummary): 16 px in from the canvas's left, 60 px down ──
 const SummaryCard: React.FC<{ ft: number }> = ({ ft }) => {
@@ -350,6 +404,93 @@ const Panel: React.FC<{ ft: number; hoverRow: number }> = ({ ft, hoverRow }) => 
   );
 };
 
+// ── the deleted asset's panel (AssetDetailPanel for a missing form), opened from its marker with no panel open ──
+const TEAL = "#14b8a6";
+const ASSET_USERS = [
+  { name: "New Enquiry Form Submitted", usage: "1 trigger" },
+  { name: "Tag New Enquiries", usage: "1 trigger" },
+];
+const AssetPanel: React.FC<{ ft: number }> = ({ ft }) => {
+  const enter = transform(ft, [T.assetClick, T.assetClick + 0.2], [0, 1]);
+  const summary: [string, string, string, number][] = [["Workflows", "mdi:sitemap", COBALT, 2], ["Triggers", "mdi:lightning-bolt", "#f59e0b", 2], ["Actions", "mdi:play", "#22c55e", 0]];
+  return (
+    <div style={{ position: "absolute", left: PAGE.right - PAGE.panelW, top: PAGE.top, width: PAGE.panelW, height: CANVAS_H, borderRadius: 8, background: "#fff",
+      boxShadow: SHADOW_LG, overflow: "hidden", fontFamily: FONT, display: "flex", flexDirection: "column", opacity: enter, transform: `translateX(${20 * (1 - enter)}px)` }}>
+      {/* header: Forms · the id (its name is gone), then the warning (UIAlert: only its title renders) */}
+      <div style={{ padding: 16, borderBottom: `1px solid ${HR.gray[100]}` }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <span style={{ width: 44, height: 44, borderRadius: 6, flex: "none", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <BIcon name="mdi:form-select" size={22} color="#fff" />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+              <span style={txt(14, 20, 400, HR.gray[500])}>Forms</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <BIcon name="ghl:Stars02" size={20} color={HR.purple[700]} />
+                <BIcon name="ghl:XClose" size={20} color={HR.gray[700]} />
+              </span>
+            </div>
+            <div style={{ ...ellipsis, ...txt(16, 24, 600, HR.gray[900]) }}>{DELETED.formId}</div>
+          </div>
+        </div>
+        <div style={{ marginTop: 12, position: "relative", borderRadius: 3, background: "#fef7ed", border: "1px solid #fae0b5", padding: "12px 12px 12px 43px", lineHeight: 1.6 }}>
+          <BIcon name="ghl:AlertTriangle" size={20} color="#f0a020" style={{ position: "absolute", left: 13, top: 13 }} />
+          <p style={{ margin: 0, marginRight: 24, ...txt(14, 20, 500, "#dc6803") }}>This asset may be deleted or no longer available. Please verify it in the workflows below.</p>
+        </div>
+      </div>
+      {/* AssetDetailSummary: Workflows (selected) / Triggers / Actions */}
+      <div style={{ padding: 16, borderBottom: `1px solid ${HR.gray[100]}`, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+        {summary.map(([l, icon, c, n], i) => {
+          const on = i === 0;
+          return (
+            <div key={l} style={{ boxSizing: "border-box", padding: 12, borderRadius: 8, background: on ? PRIMARY_50 : "#fff", border: `1px solid ${on ? "#84adff" : HR.gray[300]}`, boxShadow: SHADOW_XS,
+              display: "grid", gridTemplateColumns: "auto minmax(0,1fr)", columnGap: 8, alignItems: "center", color: on ? PRIMARY[700] : HR.gray[600] }}>
+              <span style={{ gridColumn: "span 2", marginBottom: 4, ...txt(12, 16, 400, "inherit") }}>{l}</span>
+              <span style={{ width: 32, height: 32, borderRadius: 16, background: HR.gray[50], display: "flex", alignItems: "center", justifyContent: "center" }}><BIcon name={icon} size={20} color={c} /></span>
+              <span style={txt(20, 28, 600, "inherit")}>{n}</span>
+            </div>
+          );
+        })}
+      </div>
+      {/* GridDetailListToolbar + WorkflowStatusTabs, then the two workflows that still use it (collapsed) */}
+      <div style={{ padding: "16px 16px 12px", borderBottom: `1px solid ${HR.gray[100]}` }}>
+        <div style={txt(14, 20, 600, HR.gray[900])}>Workflows using this asset ({ASSET_USERS.length})</div>
+        <div style={{ marginTop: 4, ...txt(12, 20, 400, HR.gray[500]) }}>Expand a workflow to see the actions and triggers that use this asset.</div>
+        <div style={{ marginTop: 12, height: 36, boxSizing: "border-box", borderRadius: 6, border: `1px solid ${HR.gray[300]}`, boxShadow: "0px 1px 2px rgba(16,24,40,.05)",
+          display: "flex", alignItems: "center", gap: 8, padding: "0 8px", ...txt(14, 20, 400, HR.gray[500]) }}>
+          <BIcon name="ghl:SearchMd" size={16} color={HR.gray[400]} />Search workflows or folders
+        </div>
+        <div style={{ marginTop: 8, display: "flex", gap: 6, borderBottom: `1px solid ${HR.gray[200]}` }}>
+          {[["Published · 2", true], ["Draft · 0", false]].map(([l, on]) => (
+            <span key={String(l)} style={{ position: "relative", height: 32, boxSizing: "border-box", padding: "6px 8px", whiteSpace: "nowrap", ...txt(14, 20, on ? 600 : 500, on ? PRIMARY[700] : HR.gray[600]) }}>
+              {l}{on ? <span style={{ position: "absolute", left: 0, right: 0, bottom: -1, height: 1, background: PRIMARY[700] }} /> : null}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: "0 8px 16px" }}>
+        {ASSET_USERS.map((w) => (
+          <div key={w.name} style={{ marginBottom: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 8px", marginBottom: 4, borderLeft: "2px solid transparent", background: "#fff" }}>
+              <AssetIcon size={36} type="workflow" />
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: "block", ...ellipsis, ...txt(14, 20, 500, HR.gray[900]) }}>{w.name}</span>
+                <span style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6, ...txt(12, 16, 400, HR.gray[500]) }}>
+                  {w.usage}<span style={{ width: 2, height: 2, borderRadius: 1, background: HR.gray[400] }} />
+                  <BIcon name="ghl:Folder" size={14} color={WF.folderTint} />{WF.folder}
+                </span>
+              </span>
+              <span style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+                <BIcon name="lucide:chevron-down" size={16} color={HR.gray[500]} />
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 /** UISpin small: a primary-700 arc turning once every 0.8 s. */
 const Spinner: React.FC<{ t: number; size: number }> = ({ t, size }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" style={{ transform: `rotate(${(t / 0.8) * 360}deg)` }}>
@@ -517,10 +658,12 @@ const Modal: React.FC<{ ft: number; hoverStep: number }> = ({ ft, hoverStep }) =
 
 // ── the cursor: keyframes (film s → window px), eased between ──
 const CURSOR: [number, number, number][] = [
-  [143.3, 980, 520], [143.45, 980, 520], [144.1, 200, 160], [144.45, 200, 160], [144.95, 215, 276], [145.25, 215, 276],
-  [145.95, 1290, 598], [146.55, 1290, 598], [147.4, 215, 250], [147.8, 215, 250], [148.5, 1290, 600], [153.6, 1290, 600],
+  [143.3, 980, 520], [143.4, 980, 520], [143.95, 200, 160], [144.1, 200, 160], [144.55, 215, 276], [144.75, 215, 276],
+  [145.4, 1290, 598], [145.75, 1290, 598], [146.6, 215, 250], [146.85, 215, 250], [147.4, 1290, 600], [147.55, 1290, 600],
+  [147.92, 1556, 56], [148.05, 1556, 56], [148.3, 1582, 102], [148.4, 1582, 102], [148.85, MISSING_AT[0], MISSING_AT[1]],
+  [149.55, MISSING_AT[0], MISSING_AT[1]], [150.2, 1330, 330], [151.3, 1330, 330],
 ];
-const CLICKS = [T.cardClick, T.rowClick, T.execClick, T.stepClick];
+const CLICKS = [T.cardClick, T.rowClick, T.execClick, T.stepClick, T.closeClick, T.panelClose, T.assetClick];
 const cursorAt = (ft: number) => {
   const ts = CURSOR.map((c) => c[0]), ease = CURSOR.slice(1).map(() => mvEaseInOut);
   return [transform(ft, ts, CURSOR.map((c) => c[1]), { ease }), transform(ft, ts, CURSOR.map((c) => c[2]), { ease })] as const;
@@ -529,12 +672,12 @@ const cursorAt = (ft: number) => {
 /** The scene at film time `ft`, in window px (inside the app window, over the film), or nothing outside it. */
 export const ErrorShots: React.FC<{ ft: number }> = ({ ft }) => {
   if (ft < T.from || ft >= T.to) return null;
-  const picked = ft >= T.rowClick, modal = ft >= T.execClick + 0.05;
+  const wfPanel = ft >= T.rowClick && ft < T.panelClose, assetPanel = ft >= T.assetClick, modal = ft >= T.execClick + 0.05 && ft < T.closeClick + 0.05;
   const [cx, cy] = cursorAt(ft);
   const press = CLICKS.some((c) => ft >= c - 0.05 && ft < c + 0.08);
   const hoverRow = transform(ft, [T.hoverRow - 0.1, T.hoverRow + 0.05], [0, 1]);
   const hoverStep = transform(ft, [T.stepClick - 0.15, T.stepClick - 0.05], [0, 1]);
-  const canvasRight = PAGE.canvasLeft + (picked ? CANVAS_NARROW : CANVAS_FULL);
+  const canvasRight = PAGE.canvasLeft + (canvasOpenAt(ft) ? CANVAS_NARROW : CANVAS_FULL);
   return (
     <>
       {/* the workspace behind the canvas and the panel (the film's #eff2f4) */}
@@ -544,7 +687,8 @@ export const ErrorShots: React.FC<{ ft: number }> = ({ ft }) => {
       <FilmCrop src={TOOLS_L} x={TOOLS_L[0]} y={TOOLS_L[1]} />
       <FilmCrop src={TOOLS_R} x={canvasRight - 12 - TOOLS_R[2]} y={TOOLS_R[1]} />
       <SummaryCard ft={ft} />
-      {picked ? <Panel ft={ft} hoverRow={hoverRow} /> : null}
+      {wfPanel ? <Panel ft={ft} hoverRow={hoverRow} /> : null}
+      {assetPanel ? <AssetPanel ft={ft} /> : null}
       {modal ? <Modal ft={ft} hoverStep={hoverStep} /> : null}
       <div style={{ position: "absolute", left: 0, top: 0, transformOrigin: `${cx}px ${cy}px`, transform: press ? "scale(0.88)" : undefined }}>
         <Cursor x={cx} y={cy} />

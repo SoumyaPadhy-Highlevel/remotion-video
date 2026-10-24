@@ -32,6 +32,9 @@ const NAMES = [
   // ExecutionLogPanel, ExecutionLogDetailPanel)
   "lucide:chevron-down", "lucide:chevron-right", "lucide:x", "heroicons-solid:user", "akar-icons:arrow-up-right",
   "ghl:Folder", "ghl:XClose", "ghl:Stars02", "ghl:ChevronRight", "ghl:LinkExternal01", "ghl:X", "ghl:Share03",
+  // the deleted asset's panel (AssetDetailPanel): search prefix; the summary's trigger / action glyphs are mingcute:lightning-fill
+  // and mingcute:play-fill in the product, which @iconify/json 1.x lacks, so mdi's filled bolt and play stand in
+  "ghl:SearchMd", "mdi:lightning-bolt", "mdi:play",
 ];
 
 const repo = process.argv[2];
