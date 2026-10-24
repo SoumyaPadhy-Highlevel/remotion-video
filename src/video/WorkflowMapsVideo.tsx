@@ -2,10 +2,10 @@ import React from "react";
 import { AbsoluteFill, Audio, Freeze, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { mix, transform } from "motion";
 import { AppWindow } from "./AppWindow";
-import { mascotAt, recedeAt } from "./choreography";
+import { mascotAt, RECEDES, recedeAt } from "./choreography";
 import { GLOBAL_CSS, loadFonts } from "./fonts";
 import { Mascot } from "./Mascot";
-import { EDIT, editTime, FPS, introCalloutAt, M, MUSIC, PANELS, uncut, VIDEO_END } from "./script";
+import { EDIT, editTime, FPS, introCalloutAt, M, MUSIC, MUSIC_CUT, PANELS, uncut, VIDEO_END } from "./script";
 import { Background, Flash, Message, Titles } from "./Stage";
 import { Impact, ImpactBack, KineticTitle } from "./Impact";
 import { ClipWindow, Panels } from "./Panels";
@@ -53,6 +53,13 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
   const clipStart = seg && (contIn || afterCard) ? seg.n0 - 1 / FPS : seg?.n0 ?? 0;
   const trio = seg?.panels ? transform(tn, [seg.n0, seg.n0 + 0.35, seg.n1 - 0.35, seg.n1], [0, 1, 1, 0]) : seg?.clip ? transform(tn, [clipStart, clipStart + (contIn || afterCard ? 0.001 : 0.2), seg.n1 - (intoOver || contOut || intoPanels ? 0.001 : 0.25), seg.n1], [0, 1, 1, 0]) : overSeg ? 1 : 0;
   const k = seg?.hold && !seg.card?.top && !seg.panels && !seg.clip ? transform(tn, [seg.n0, seg.n0 + 0.3, seg.n1 - (EDIT[EDIT.indexOf(seg) + 2]?.clip ? 0.001 : 0.35), seg.n1], [0, 1, 1, 0]) : 0;   // stays receded into a cut to a clip
+  // back to back: a title card that clears less than ~1.5 s before a statement card hands its recede straight to the card,
+  // so the window doesn't come forward for a moment and recede again. `rc` is the title's recede at 1.4 s before the card.
+  const isCard = (s?: (typeof EDIT)[number]) => !!s && s.hold && !s.card?.top && !s.card?.build && !s.card?.cut && !s.panels && !s.clip;
+  const titleRecede = (c: (typeof EDIT)[number]) => { const tt = editTime(c.n0 - 1.4).t; return RECEDES.find(([a, b, d]) => transform(tt, [a, a + 0.45, b - 0.45, b], [0, 1, 1, 0]) * d > 0.1); };
+  const nextC = seg && !seg.hold ? EDIT[si + 1] : undefined, rc = nextC && isCard(nextC) ? titleRecede(nextC) : undefined;
+  const bridge = rc && t >= rc[1] - 0.45 ? Math.min(1, Math.max(0, 1 - recedeAt(t) / rc[2])) : 0;
+  const kb = Math.max(k, bridge, isCard(seg) && titleRecede(seg!) && tn < seg!.n0 + 0.3 ? 1 : 0);
   const cards = EDIT.filter((s) => s.hold && !s.card?.top && !s.card?.build && !s.card?.cut && !s.panels && !s.clip && tn >= s.n0 - 0.05 && tn < s.n1 + 0.4);
   const top = EDIT.find((s) => s.hold && s.card?.top && !s.clip && tn >= s.n0 && tn < (s.until ?? s.n1));
   // the mascot keeps to the corner while a panel shot or film clip replaces the window
@@ -73,21 +80,28 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
       {L("audio") ? (() => {
         const m = music, at = m.offset, loop = m.loopToDrop;
         const endVol = (o: number) => transform(o, [VIDEO_END - m.endFade, VIDEO_END - m.endFade + Math.max(0.01, m.endFade)], [1, 0]);
+        // the file plays straight through to MUSIC_CUT, skips it (bar line to bar line, a few ms of fade either side), then plays
+        // on to where it loops back to the drop; output time after the cut = file time − its length
+        const [c0, c1] = MUSIC_CUT, loopOut = MUSIC.loopAfter - (c1 - c0), xf = 0.04;
         return <>
-          <Sequence from={Math.round(Math.max(0, at) * FPS)} durationInFrames={loop ? Math.round((MUSIC.loopAfter + Math.min(0, at)) * FPS) + 4 : undefined} layout="none">
+          <Sequence from={Math.round(Math.max(0, at) * FPS)} durationInFrames={Math.round((c0 + Math.min(0, at)) * FPS)} layout="none">
             <Audio src={staticFile(MUSIC.file)} trimBefore={at < 0 ? Math.round(-at * FPS) : undefined}
-              volume={(f) => m.volume * endVol(f / FPS + Math.max(0, at)) * (loop ? transform(f / FPS, [MUSIC.loopAfter + Math.min(0, at), MUSIC.loopAfter + Math.min(0, at) + 0.13], [1, 0]) : 1)} />
+              volume={(f) => m.volume * endVol(f / FPS + Math.max(0, at)) * transform(f / FPS, [c0 + Math.min(0, at) - xf, c0 + Math.min(0, at)], [1, 0])} />
           </Sequence>
-          {loop ? <Sequence from={Math.round((MUSIC.loopAfter + at) * FPS)} layout="none">
-            <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(MUSIC.drop * FPS)} volume={(f) => m.volume * endVol(f / FPS + MUSIC.loopAfter + at)} />
+          <Sequence from={Math.round((c0 + at) * FPS)} durationInFrames={loop ? Math.round((loopOut - c0) * FPS) + 4 : undefined} layout="none">
+            <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(c1 * FPS)}
+              volume={(f) => m.volume * endVol(f / FPS + c0 + at) * transform(f / FPS, [0, xf], [0, 1]) * (loop ? transform(f / FPS, [loopOut - c0, loopOut - c0 + 0.13], [1, 0]) : 1)} />
+          </Sequence>
+          {loop ? <Sequence from={Math.round((loopOut + at) * FPS)} layout="none">
+            <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(MUSIC.drop * FPS)} volume={(f) => m.volume * endVol(f / FPS + loopOut + at)} />
           </Sequence> : null}
         </>;
       })() : null}
       {L("base") ? <Background /> : null}
       <Freeze frame={Math.round(t * FPS)}>
         {/* the editor's titles carry a wash in place of the window's recede */}
-        {layer === "titles" ? <div style={{ position: "absolute", inset: 0, background: "#EEF4FF", opacity: 0.6 * Math.max(k, t >= M.B2 && t < M.D2 + 0.1 ? 0 : recedeAt(t)) * (1 - trio) }} /> : null}
-        <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: plate ? undefined : `scale(${(1 - motion.recedeCards.shrink * k).toFixed(4)})`, opacity: (plate ? 1 : 1 - motion.recedeCards.dim * k) * (1 - trio) * (fromClip ? 0 : 1), filter: k > 0.02 && !plate ? `blur(${(motion.recedeCards.blur * k).toFixed(2)}px)` : undefined }}>
+        {layer === "titles" ? <div style={{ position: "absolute", inset: 0, background: "#EEF4FF", opacity: 0.6 * Math.max(kb, t >= M.B2 && t < M.D2 + 0.1 ? 0 : recedeAt(t)) * (1 - trio) }} /> : null}
+        <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: plate ? undefined : `scale(${(1 - motion.recedeCards.shrink * kb).toFixed(4)})`, opacity: (plate ? 1 : 1 - motion.recedeCards.dim * kb) * (1 - trio) * (fromClip ? 0 : 1), filter: kb > 0.02 && !plate ? `blur(${(motion.recedeCards.blur * kb).toFixed(2)}px)` : undefined }}>
           {L("base") ? <div style={{ position: "absolute", inset: 0, ...splitStyle(t) }}>
             <AppWindow t={t} tn={tn} plate={plate} />
           </div> : layer === "tabs" ? <div style={{ position: "absolute", inset: 0, ...splitStyle(t) }}><AppWindow t={t} tn={tn} plate chromeOnly /></div> : null}

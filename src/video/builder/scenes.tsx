@@ -3,7 +3,6 @@
 // covers the film's canvas exactly (window px), fades with the film's own cuts and tab flips, and carries the film
 // cursor's tracked path (filmTrack.ts) moved onto the redrawn cards. Add a shot here when the film shows the builder.
 import React from "react";
-import { ContinueJourney, Flashes, FourUp, TagWorkflow } from "./introShots";
 import { PriorityAssignment, PriorityInMaps } from "./linkedShots";
 import { RunShots } from "./runShots";
 import { MapShots } from "../map3d/MapShots";
@@ -13,12 +12,11 @@ export const BuilderScenes: React.FC<{ ft: number }> = ({ ft }) => <><MapShots f
 
 const BuilderShotsAt: React.FC<{ ft: number }> = ({ ft }) => {
   if (ft >= 185.8 && ft <= 193.5) return <><PriorityAssignment ft={ft} /><PriorityInMaps ft={ft} /></>;
-  if ((ft >= 128.6 && ft <= 143.35) || (ft >= 150.3 && ft <= 153.65)) return <RunShots ft={ft} />;
-  if (ft < 9.4 || ft > 42.8) return null;
-  return <>
-    <ContinueJourney ft={ft} />
-    <TagWorkflow ft={ft} />
-    <FourUp ft={ft} />
-    <Flashes ft={ft} />
-  </>;
+  // the run in "errors" (film 150.3–153.65 s); the run scene itself (film 128.6–143.35 s) was rebuilt from staging (film v30:
+  // taylor reynolds' run) and the redraw still shows Jordan's old one, so it stays off there until it is redrawn for v30
+  if (ft >= 150.3 && ft <= 153.65) return <RunShots ft={ft} />;
+  // The intro's builder shots (film 9.4–42.8 s) are off: that stretch of the film was rebuilt (the Lead Management hand-off
+  // glide, the restyled form windows and the wall of tabs replace Continue Client Journey / Tag workflow, the four-up and the
+  // flashes), so ContinueJourney, TagWorkflow, FourUp and Flashes no longer match what is under them.
+  return null;
 };

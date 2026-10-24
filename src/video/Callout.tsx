@@ -15,22 +15,23 @@ const PLACE: Record<CalloutSide, (ax: number) => { dx: number; dy: number; tr: s
   none: () => ({ dx: 0, dy: 0, tr: "", origin: "0 0" }),
 };
 
-/** `html`: lines split by <br/>. `k`: the card's entrance (0–1, may overshoot), `lineK(i, n)`: each later line's (line i of n). */
-export const Callout: React.FC<{ x: number; y: number; side?: CalloutSide; ax?: number; html: string; k: number; opacity?: number; lineK: (i: number, n: number) => number }> = ({
-  x, y, side = "top", ax = 104, html, k, opacity = 1, lineK,
+/** `html`: lines split by <br/>. `k`: the card's entrance (0–1, may overshoot), `lineK(i, n)`: each later line's (line i of n).
+ * `compact`: the intro's size (smaller, lighter type, tighter card), so the callout reads at a glance without covering the app. */
+export const Callout: React.FC<{ x: number; y: number; side?: CalloutSide; ax?: number; html: string; k: number; opacity?: number; lineK: (i: number, n: number) => number; compact?: boolean }> = ({
+  x, y, side = "top", ax = 104, html, k, opacity = 1, lineK, compact,
 }) => {
   const { style } = useCfg();
   const p = PLACE[side](ax), lines = html.split(/<br\s*\/?>/);
   return (
     <div className="poppins" style={{
-      position: "absolute", left: x + p.dx, top: y + p.dy, padding: "16px 24px 18px", borderRadius: 16, background: "#fff",
+      position: "absolute", left: x + p.dx, top: y + p.dy, padding: compact ? "11px 16px 12px" : "16px 24px 18px", borderRadius: compact ? 12 : 16, background: "#fff",
       boxShadow: `0 18px 40px rgba(16,44,102,.22), 0 0 0 1px ${EDGE}`, opacity: opacity * k,
       transform: `${p.tr}translateY(${((1 - k) * 14).toFixed(1)}px) scale(${(0.94 + 0.06 * k).toFixed(3)})`, transformOrigin: p.origin,
     }}>
       {p.arrow ? <div style={{ position: "absolute", width: 18, height: 18, background: "#fff", transform: "rotate(45deg)", ...p.arrow }} /> : null}
       {lines.map((l, i) => { const lk = i === 0 ? 1 : lineK(i, lines.length); return (
-        <div key={i} style={{ position: "relative", fontSize: i === 0 ? style.sizes.topLine * 0.6 : style.sizes.topLine * 0.82, fontWeight: i === 0 ? 600 : 800, letterSpacing: "-0.01em", color: INK, whiteSpace: "nowrap",
-          lineHeight: 1.25, marginTop: i ? 4 : 0, opacity: lk, transform: `translateY(${((1 - lk) * 10).toFixed(1)}px)` }} dangerouslySetInnerHTML={{ __html: l }} />); })}
+        <div key={i} style={{ position: "relative", fontSize: style.sizes.topLine * (compact ? (i === 0 ? 0.46 : 0.56) : i === 0 ? 0.6 : 0.82), fontWeight: compact ? (i === 0 ? 500 : 700) : i === 0 ? 600 : 800, letterSpacing: "-0.01em", color: INK, whiteSpace: "nowrap",
+          lineHeight: 1.25, marginTop: i ? (compact ? 2 : 4) : 0, opacity: lk, transform: `translateY(${((1 - lk) * 10).toFixed(1)}px)` }} dangerouslySetInnerHTML={{ __html: l }} />); })}
     </div>
   );
 };

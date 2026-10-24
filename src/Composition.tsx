@@ -37,11 +37,12 @@ export const MyComposition = () => {
             reimagine: "…and reimagine how you *see your workflows?*",
           },
           introCallouts: {
-            buriedInFolders: "As you grow, workflows end up\nBuried in *folders, inside folders.*",
-            handsOffContact: "This step hands the contact to another workflow.\nWhat happens next lives *in another tab.*",
-            flipBackAndForth: "Nothing connects the two.\nSo you *flip back and forth.*",
+            buriedInFolders: "As you grow, workflows end up\nBuried in *folders.*",
+            handsOffContact: "This step sends the contact to another workflow.\nWhat happens next is *in another tab.*",
+            everyHandOffTab: "Every hand-off opens\n*another tab.*",
+            whichTab: "Five tabs for one contact.\n*Which one was it?*",
             oneFormFourWorkflows: "The same form\nStarts *four workflows,* in four folders.",
-            fourWorkflowsBreak: "Delete the form, and nothing warns you.\n*Four workflows break.*",
+            fourWorkflowsBreak: "Delete one form, and four workflows break.\n*And the impact stays invisible.*",
           },
           titleDrop: {
             kicker: "INTRODUCING",
@@ -76,25 +77,17 @@ export const MyComposition = () => {
               kicker: "PLAN IT",
               text: "Follow one contact *across every workflow.*",
             },
-            findAnything: {
-              kicker: "PLAN IT",
-              text: "Find anything, *fast.*",
-            },
             organiseAndDocument: {
               kicker: "ORGANISE IT",
-              text: "Organise your map, *and document it.*",
+              text: "Organise and document your workflows, *right on the map.*",
             },
             makeItYourOwn: {
               kicker: "ORGANISE IT",
               text: "Make the map *your own.*",
             },
-            documentIt: {
-              kicker: "ORGANISE IT",
-              text: "Document how it works, *right on the map.*",
-            },
             writeItOnce: {
               kicker: "ORGANISE IT",
-              text: "Write it once. *Your whole team reads it.*",
+              text: "Notes your whole team reads, *right on the map.*",
             },
             customerJourney: {
               kicker: "ORGANISE IT",
@@ -150,10 +143,6 @@ export const MyComposition = () => {
             tidyOutro: "All of it, *right on the map.*",
           },
           titleCards: {
-            makeItYours: {
-              kicker: "ORGANISE IT",
-              text: "Make it *yours*",
-            },
             traceContact: {
               kicker: "TROUBLESHOOT IT",
               text: "Trace any *contact*",
@@ -170,7 +159,7 @@ export const MyComposition = () => {
           breaksHeadline: "And when something *breaks?*",
           mapBuild: {
             kicker: "HOW THE MAP WORKS",
-            headline: "Your list,\n*drawn as a map.*",
+            headline: "Your same workflows,\n*now drawn as a map.*",
             step1: "Folders become islands",
             step1List: "Workflows list · Home",
             step1Count: "7 folders",
@@ -193,16 +182,11 @@ export const MyComposition = () => {
             tagline: "See every connection.",
           },
           browserTabs: [
-            "Continue Client Journey",
-            "Tag workflow",
-            "Tag New Enquiries",
-            "Consultation Booking Goal",
-            "contact tag - form 7",
-            "Opportunity Status Routing",
-            "Program Application Submitted",
-            "Course Progress & Completion",
-            "no filter tag",
-            "Sales Stage Follow-up",
+            "Lead Management | Priority Assignment",
+            "Lead Management | High Priority Nurture",
+            "Lead Management | Medium Priority Nurture",
+            "Lead Management | Low Priority Nurture",
+            "Lead Management | Consultation Handoff",
           ],
         },
         style: {

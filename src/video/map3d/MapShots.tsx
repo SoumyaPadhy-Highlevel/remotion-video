@@ -4,7 +4,8 @@
 // sticky notes, and the map under them is the product's.
 import React from "react";
 import { transform } from "motion";
-import { springAt } from "../anim";
+import { easeInOut, springAt } from "../anim";
+import { BUILD } from "../script";
 import { EdgeLook, MapPlane, MapView, NodeLook } from "./MapScene";
 import { FILM_MAP_SHOTS, FILM_WORLDS, FilmMapShot } from "./filmMap";
 import { carriedPlane, organiseNodes, organiseRig } from "./organise";
@@ -37,6 +38,15 @@ const runAt = (states: string, i: number) => {
 
 /** A value easing from its previous state's level to the current one's (the product's springs, no bounce). */
 const ease = (from: number, to: number, age: number, duration: number) => from + (to - from) * Math.min(1, springAt(age, 0, duration, 0));
+
+/** The map build ("How the map works", script.ts BUILD; film scene "map", bT = 0 at BUILD.at): the film keeps the drop's
+ *  map up until bT 0.6, then its nodes clear while the folders dim to 0.45 (never a blank window, scene-map.js clrB/islIn) and
+ *  come back up as each one lands. The film analysis was taken before that change (nodes and folders gone from bT 0), so the
+ *  clear is redrawn here: `k` 0 → 1 over bT 0.6–1.25. */
+const buildClear = (ft: number) => {
+  const bT = ft + 3.9 - BUILD.at;
+  return bT >= 0 && bT < 9.6 ? { bT, k: transform(bT, [0.6, 1.25], [0, 1], { ease: easeInOut }) } : null;
+};
 
 const shotAt = (ft: number) => FILM_MAP_SHOTS.find((s) => ft >= s.from - 1e-6 && ft < s.from + s.frames / 30);
 
@@ -97,6 +107,12 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean }> = ({ ft, curso
   const [cx, cy, s] = shot.cams.slice(i * 3, i * 3 + 3);
   if (!s) return null;
   const { looks, state } = looksAt(shot, i);
+  // the build's clear (buildClear): until bT 1.25 the nodes keep their look from just before it, fading out with `k`
+  const build = buildClear(ft);
+  if (build && build.bT < 1.25) {
+    const pre = looksAt(shot, Math.max(0, i - Math.round(build.bT * 30) - 1));
+    for (const [id, l] of Object.entries(pre.looks)) { looks[id] = { ...l, opacity: (l.opacity ?? 1) * (1 - build.k) }; state[id] = pre.state[id]; }
+  }
   for (const [id, l] of Object.entries(organiseNodes(ft))) looks[id] = { ...looks[id], ...l };
   // a carried folder moves faster than the film can be read: its nodes keep the look they had when it was picked up
   const carried = carriedPlane(ft);
@@ -108,6 +124,8 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean }> = ({ ft, curso
   const planeLooks = planeLooksAt(shot, i, state);
   for (const [id, rig] of Object.entries(organiseRig(ft))) planeLooks[id] = { ...planeLooks[id], ...rig };
   if (carried) planeLooks[carried.plane] = { ...planeLooks[carried.plane], opacity: 1 };
+  // the build's folders: dimmed, not gone, until each lands (the film's islIn)
+  if (build) for (const id of Object.keys(planeLooks)) planeLooks[id] = { ...planeLooks[id], opacity: Math.max(planeLooks[id].opacity ?? 1, 1 - 0.55 * build.k) };
   const left = unrle(shot.left).charCodeAt(i) - 65, right = unrle(shot.right).charCodeAt(i) - 65;
   const ui = [
     ...FIXED_UI,

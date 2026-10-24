@@ -7,6 +7,9 @@ After the intro the output is an edit of that timeline: `FEATURE_CARDS` (script.
 visual plays at 0.85× with no caption on top. All other times stay on the timeline; `editTime()` maps output time onto it (~4:14).
 The app window plays one Claude Motion film (`public/footage/app-motion-vN.mp4`, from 3.9 s); every beat uses `from = start − 3.9`.
 Give each re-render a new file name (browsers cache half-written files).
+The window actually plays `EDITED_FILE` (script.ts): the film rendered at the exact timeline moment of every video frame, so
+slowed or sped-up stretches don't repeat frames (judder). It is built from the film and these timings, so after changing either,
+rebuild it: `node scripts/edited-footage.mjs <film folder> app-edited-vN.mp4` and point `EDITED_FILE` at the new name.
 
 ## Structure
 

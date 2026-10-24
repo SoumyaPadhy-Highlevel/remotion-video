@@ -12,7 +12,7 @@ export const RECEDES: [number, number, number][] = [
   ...INTRO_CARDS.map((c): [number, number, number] => [c.a - 0.05, c.b, c.depth ?? 0.9]), // the intro's statement cards
   [54.25, 58.1, 0.45], // behind the exploding title (held until the map build); the map still shows through
   [M.B2, M.D2 + 0.1, 1], // build to drop 2
-  ...[M.D2, 122.04, M.D3].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
+  ...[122.04, M.D3].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
   [M.GAP, M.D3 + 0.1, 0.8], // "and when something breaks?"
   [M.FIN - 0.05, 163.1, 0.9], // "One more thing: just ask your map"
 ];

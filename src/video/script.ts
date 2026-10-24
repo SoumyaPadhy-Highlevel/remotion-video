@@ -35,6 +35,10 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
+/** The app window's footage as the edit shows it: one film frame per video frame (scripts/edited-footage.mjs), so the
+ * stretches played slower or faster than the film show fresh frames instead of repeated ones (judder). Built from the film
+ * and the timings in this file: rebuild it whenever either changes. null = play APP_FILE per beat, as before. */
+export const EDITED_FILE: string | null = "app-edited-v2.mp4";
 export const APP_FILE = "app-motion-v36.mp4";   // v36: the Workflow Maps pop and click after the reimagine line; v35: browse from 0:36 with a slow Workflow Maps click; v34: the Workflow Maps button pops up before the click; v33: shorter Organise notes (orgdoc, from the Organise session) + scene "browse" (the intro's list browsing, from frame 7764); v30: the run cuts back on its close click; v29: Trace any contact re-cut (enrollment → run → timeline); v28: v27 with Trace any contact rebuilt from staging (taylor reynolds, wait for condition user); v27: v26 without the offer lines while highlighting; v26: v25 + scene "act" (the Assistant acting on the map, from frame 7084); v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
@@ -124,7 +128,6 @@ export const CHAPTERS: { a: number; b: number; n: string; text: string }[] = [
 
 /** Full-screen title cards (the window recedes behind them). */
 export const TITLE_CARDS: { a: number; b: number; kicker: string; html: string }[] = [
-  { a: M.D2, b: M.D2 + 1.25, kicker: "ORGANISE IT", html: `Make it <span class="grad-text">yours</span>` },
   { a: 122.04, b: 123.31, kicker: "TROUBLESHOOT IT", html: `Trace any <span class="grad-text">contact</span>` },
   { a: M.D3, b: M.D3 + 1.25, kicker: "TROUBLESHOOT IT", html: `Fix <span class="grad-text">errors</span> fast` },
   { a: M.FIN, b: 163.05, kicker: "ONE MORE THING", html: `Just <span class="grad-text">ask</span> your map` },
@@ -162,17 +165,20 @@ export const INTRO_CARDS: { a: number; b: number; html: string; depth?: number; 
  * `side: "none"` places the card's top-left at `x, y`. Shown from `a` to `b` (timeline); the scene holds still at `hold` for
  * `dur` s while the window pushes in toward `focus`. Each hold's time comes out of the rest of its stretch between two intro
  * cards, which plays a little faster (introTime), so the cards stay on the music. The film (v23 on) no longer draws these. */
-export type IntroCallout = { a: number; hold: number; dur: number; b: number; html: string; x: number; y: number; side: "top" | "bottom" | "left" | "right" | "none"; ax?: number; focus: [number, number] };
+export type IntroCallout = { a: number; hold: number; dur: number; b: number; html: string; x: number; y: number; side: "top" | "bottom" | "left" | "right" | "none"; ax?: number; focus: [number, number];
+  /** keep the window still (no push-in), e.g. while the cursor goes up to the browser tabs */
+  noPush?: boolean };
 export const INTRO_CALLOUTS: IntroCallout[] = [
-  // the list, drilled into 02 › 06: points at the workflow row
-  { a: 9.95, hold: 10.75, dur: 1.4, b: 11.45, html: `As you grow, workflows end up<br/>Buried in <span class="grad-text">folders, inside folders.</span>`, x: 380, y: 412, side: "top", focus: [420, 330] },
-  // Continue Client Journey: under its Add to Workflow step (the panel on the right shows Tag workflow)
-  { a: 14.85, hold: 15.6, dur: 1.3, b: 16.95, html: `This step hands the contact to another workflow.<br/>What happens next lives <span class="grad-text">in another tab.</span>`, x: 840, y: 561, side: "top", ax: 560, focus: [840, 0] },
-  // the two tabs flipping: points up at the tab strip
-  { a: 22.15, hold: 24.45, dur: 1.1, b: 25.05, html: `Nothing connects the two.<br/>So you <span class="grad-text">flip back and forth.</span>`, x: 356, y: 6, side: "top", ax: 104, focus: [356, 0] },
-  // one form, four workflows: under the Coaching Enquiry form
-  { a: 28.6, hold: 29.5, dur: 0.9, b: 30.95, html: `The same form<br/>Starts <span class="grad-text">four workflows,</span> in four folders.`, x: 810, y: 490, side: "top", ax: 300, focus: [810, 0] },
-  { a: 32.3, hold: 33.25, dur: 0.9, b: 34.3, html: `Delete the form, and nothing warns you.<br/><span class="grad-text">Four workflows break.</span>`, x: 810, y: 490, side: "top", ax: 300, focus: [810, 0] },
+  // the list, in staging's Lead Management | Priority Routing folder: points at the Priority Assignment row
+  { a: 9.95, hold: 10.75, dur: 1.4, b: 11.45, html: `As you grow, workflows end up<br/>Buried in <span class="grad-text">folders.</span>`, x: 380, y: 690, side: "top", focus: [420, 560] },
+  // Priority Assignment: under its High branch's Add to workflow step (the panel on the right picks High Priority Nurture)
+  { a: 14.85, hold: 15.6, dur: 0.7, b: 16.95, html: `This step sends the contact to another workflow.<br/>What happens next is <span class="grad-text">in another tab.</span>`, x: 446, y: 672, side: "top", ax: 120, focus: [446, 500] },
+  // the hand-off glide (film scene "list"): every hand-off opens another tab; no push-in, so the window stays put while it glides
+  { a: 19.0, hold: 19.6, dur: 0, b: 20.6, html: `Every hand-off opens<br/><span class="grad-text">another tab.</span>`, x: 342, y: 6, side: "top", ax: 104, focus: [342, 0], noPush: true },
+  { a: 24.3, hold: 24.75, dur: 0.8, b: 25.15, html: `Five tabs for one contact.<br/><span class="grad-text">Which one was it?</span>`, x: 600, y: 6, side: "top", ax: 120, focus: [600, 0], noPush: true },
+  // one form, four workflows: under the Coaching Enquiry form, once all four windows have landed (the last settles at 29.25)
+  { a: 29.3, hold: 29.6, dur: 0.9, b: 30.95, html: `The same form<br/>Starts <span class="grad-text">four workflows,</span> in four folders.`, x: 810, y: 490, side: "top", ax: 300, focus: [810, 0] },
+  { a: 32.3, hold: 33.25, dur: 0.9, b: 34.3, html: `Delete one form, and four workflows break.<br/><span class="grad-text">And the impact stays invisible.</span>`, x: 810, y: 490, side: "top", ax: 300, focus: [810, 0] },
 ];
 /** Window jolts on the scramble's hits. */
 export const SHAKES = [43.05, 43.41, 43.89, 44.975, 45.595];
@@ -184,16 +190,16 @@ export const BUILD_LINES_START = 94.91;
 /** Client message bubble: shown in the build, then again top-right during the journey. */
 export const MESSAGE = { who: "Client · Summit Shield", initials: "SS", text: "Why hasn’t Taylor moved on yet?", answeredAt: 142.65, from: 123.36, to: 123.36 };   // off (user, 24 Oct: only the features)
 
-/** Browser tabs that pile up in the device's tab strip ("tab hell", Browser.tsx). */
+/** Browser tabs that pile up in the device's tab strip ("tab hell", Browser.tsx). The film scene "list" keeps the same moments
+ * by hand: the hand-off glide opens one workflow per tab (its GL.open), then the wall of windows adds the rest (its PT). */
 export const TABS = {
   /** the one tab before the first workflow opens (in it, so its title changes) and after the rest close at `b` */
   home: "Workflows",
-  // one tab per workflow opened: the hand-off pair, then "open every workflow" on the hits; gone at the implosion
-  times: [13.5, 18.7, 43.05, 43.41, 43.89, 44.975, 45.595, 46.55, 46.92, 47.29],
+  times: [13.5, 18.6, 19.9, 21.2, 22.5],
   b: 42.55,   // gone when the list page takes over (INTRO_BROWSE)
-  /** the hand-off: flipping back and forth between the two open workflows ([time, tab index]) */
-  flips: [[22.0, 0], [22.75, 1], [23.5, 0], [24.25, 1]] as [number, number][],
-  names: ["Continue Client Journey", "Tag workflow", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],
+  /** [time, tab index]: switch the active tab back to an earlier one (none: the last one opened is active) */
+  flips: [] as [number, number][],
+  names: ["Lead Management | Priority Assignment", "Lead Management | High Priority Nurture", "Lead Management | Medium Priority Nurture", "Lead Management | Low Priority Nurture", "Lead Management | Consultation Handoff"],
 }
 
 /** The workflows the film's builder shots show, redrawn with the product's own canvas (src/video/builder, scenes.tsx).
@@ -395,6 +401,8 @@ export const BUILD = {
 const LM_CANVAS = 5675 / 30;
 /** Where the film's "orgdoc" scene starts (film seconds; frame 6245, right after "lm"). */
 const ORGDOC = 6245 / 30;
+/** The Organise title's hold (s): sized so the picture loses MUSIC_CUT's length (see MUSIC_CUT). */
+const HOLD_ORG = 3.727;
 /** The Assistant acting on the map (film scene "act", appended after "orgdoc"): its start and length in the film. */
 const ACT = 7084 / 30, ACT_LEN = 22.66;
 /** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
@@ -420,16 +428,16 @@ export const FEATURE_CARDS: FeatureCard[] = [
   // puts the "Fix errors fast" title on the soundtrack's loop back to its main drop (output 2:51.99)
   { at: 73.93, kicker: "PLAN IT", html: `Follow one contact ${g("across every workflow.")}`, top: true, clip: [199.74, 208.12], end: 73.93 },
   // search and filter, side by side; then the ORGANISE IT title (timeline 100.6–102.1)
-  { at: 100.6, kicker: "PLAN IT", html: `Find anything, ${g("fast.")}`, panels: "duo", end: 102.1 },
   // Organise, shortened: one main move (drag workflows, then drop a folder into a folder), then the three-panel shot
   // Organise and document (film scene "orgdoc", from ORGDOC): a card; the options as numbered sticky notes on the map (colour,
   // nest, rename); a card held over its last frame; the Lead Management folder documented (its sticky note, then each
   // workflow's note); Jordan through the journey, then Save. Then the TROUBLESHOOT title (timeline 122.05–124.05: from the
   // film's "contact" scene, so the old document scene's Saved canvas views panel never shows behind the fade).
-  { at: 105.65, kicker: "ORGANISE IT", html: `Organise your map, ${g("and document it.")}`, end: 105.65 },
+  // the section's title (it replaces the "Make it yours" title card); `hold` also makes the picture lose exactly MUSIC_CUT's
+  // length here, with "Find anything, fast." and the Document card gone
+  { at: 105.65, kicker: "ORGANISE IT", html: `Organise and document your workflows, ${g("right on the map.")}`, hold: HOLD_ORG, end: 105.65 },
   { at: 105.65, kicker: "ORGANISE IT", html: `Make the map ${g("your own.")}`, top: true, clip: [ORGDOC, ORGDOC + 11.0], end: 105.65 },
-  { at: 105.65, kicker: "ORGANISE IT", html: `Document how it works, ${g("right on the map.")}`, over: true, end: 105.65 },
-  { at: 105.65, kicker: "ORGANISE IT", html: `Write it once. ${g("Your whole team reads it.")}`, top: true, clip: [ORGDOC + 11.0, ORGDOC + 21.0], end: 105.65 },
+  { at: 105.65, kicker: "ORGANISE IT", html: `Notes your whole team reads, ${g("right on the map.")}`, top: true, clip: [ORGDOC + 11.0, ORGDOC + 21.0], end: 105.65 },
   { at: 122.05, kicker: "ORGANISE IT", html: `Notes that tell ${g("the customer journey.")}`, top: true, clip: [ORGDOC + 21.0, ORGDOC + 27.8] },
   { at: 124.05, kicker: "TROUBLESHOOT IT", html: `Pick any contact. See every workflow ${g("they’ve been in.")}` },
   // then it plays (user, 24 Oct: no full-screen cards here, faster): a line over her drawer; clicking her active enrollment cuts
@@ -517,6 +525,11 @@ export const MUSIC = {
 /** Cut from the intro (timeline = music-intro2 time here): "Now multiply that by a hundred" and its grid, plus 0.47 s of the
  * still frame before it, so that output time = timeline − CUT_LEN puts M.D1 on the soundtrack's drop. Output time before the
  * cut is unchanged; `tn` everywhere else in the code is the uncut ("music-intro2") output time. */
+/** A cut in the soundtrack after the intro, in music-file seconds (= output seconds before it): 5 bars from bar 29 after the drop
+ * are skipped, so "Find anything, fast." could go. The picture loses the same 9.6875 s (that card, its play and the Document card
+ * gone; the Organise title's hold makes up the rest), so everything after, the loop back to the drop and the lockup on the
+ * track's re-entry included, stays on the music. */
+export const MUSIC_CUT: [number, number] = [MUSIC.drop + 29 * 1.9375, MUSIC.drop + 34 * 1.9375];
 export const INTRO_CUT: [number, number] = [40.69 - (38.75 - MUSIC.originalAt), 40.69];
 export const CUT_LEN = INTRO_CUT[1] - INTRO_CUT[0];
 export const uncut = (out: number) => (out < INTRO_CUT[0] ? out : out + CUT_LEN);
