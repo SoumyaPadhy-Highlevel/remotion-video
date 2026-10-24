@@ -64,11 +64,15 @@ export const BEATS: { id: string; label: string; start: number; end: number; foo
 ];
 
 /** Big headlines. `top`/`size` in px; `center` spans the full width. */
-/** `{2,500}` in a headline is a counter: it counts up over `count` (timeline s) and drops into place at its end. */
-export const HEADLINES: { a: number; b: number; html: string; top: number; size: number; center?: boolean; count?: [number, number] }[] = [
+/** One beat of the soundtrack in timeline seconds where the visual plays at 0.85× (124 bpm: a bar is 1.9375 s of output). */
+export const BEAT_TL = (1.9375 / 4) * 0.85;
+/** `{20|50|100}` in a headline swaps through those values, each popping in at its time in `beats` (timeline s). A headline
+ * with a `kicker` is centred like the statement cards, with the kicker above it. */
+export const HEADLINES: { a: number; b: number; html: string; top: number; size: number; center?: boolean; kicker?: string; beats?: number[] }[] = [
   { a: 1.75, b: 3.85, html: `Your agency runs on<br/><span class="grad-text">hundreds of workflows.</span>`, top: 440, size: 96 },
-  // over the music's gap; the count lands on the drop (M.D3) and the line holds until the errors visual starts
-  { a: M.GAP + 0.45, b: 148.5, html: `What if something <span class="grad-text">breaks</span><br/>across your {2,500} workflows?`, top: 400, size: 84, count: [M.GAP + 0.7, M.D3] },
+  // over the music's gap: 20, 50, 100 on the beats into the drop (M.D3), where it lifts away for the errors visual
+  { a: M.D3 - 5.5 * BEAT_TL, b: M.D3 + 0.2, html: `What if something <span class="grad-text">breaks</span><br/>across {20|50|100} workflows?`, top: 410, size: 64,
+    center: true, kicker: "WHEN IT BREAKS", beats: [M.D3 - 5.5 * BEAT_TL, M.D3 - 4 * BEAT_TL, M.D3 - 2 * BEAT_TL] },
 ];
 
 /** Captions centred above the window. */
@@ -409,7 +413,7 @@ const ACT = 7084 / 30, ACT_LEN = 22.66;
 /** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
 export const LINKS_DROP = 100.86;
 /** How fast the visual plays after a card; the errors visual plays calmer (it took over the time of a card). */
-const PLAY_SPEED = 0.85, ERRORS_SPEED = 0.72;
+const PLAY_SPEED = 0.85, ERRORS_HOLD = 0.5;
 export const FEATURE_CARDS: FeatureCard[] = [
   // how the map works: the list is built into the map beside a shrunk window (BUILD; film scene "map"), no card
   { at: BUILD.at, kicker: "HOW THE MAP WORKS", html: "", build: true, speed: BUILD.speed, end: BUILD.end + 0.25 },
@@ -451,9 +455,11 @@ export const FEATURE_CARDS: FeatureCard[] = [
   { at: 132.54, kicker: "", html: "", cut: true, end: 140.49, speed: 1 },
   { at: 128.64, kicker: "TROUBLESHOOT IT", html: `Or follow every run ${g("on the timeline.")}`, top: true, hold: 0, end: 132.54, lineFor: 3.1 },
   { at: 144.749, kicker: "", html: "", cut: true },
-  // a line above the window, no full-screen card: it holds the opening frame briefly, then the errors visual plays a little
-  // calmer (0.72×) so the section keeps the 2.6 s card's length and every later music hit stays where it was
-  { at: 148.65, kicker: "WHEN IT BREAKS", html: `Catch errors ${g("quickly.")}`, top: true, hold: 2.6 + 6.5 / PLAY_SPEED - 6.5 / ERRORS_SPEED, speed: ERRORS_SPEED, lineFor: 3.2 },
+  // on the drop: a line above the window (no full-screen card), held 0.5 s, then the errors visual plays a little calmer so
+  // the stretch to the next card keeps its old length (D3 → 148.65 at 0.85, the 2.6 s card, 148.65 → 155.15 at 0.85) and
+  // every later music hit stays where it was
+  { at: M.D3, kicker: "WHEN IT BREAKS", html: `Catch it quickly, ${g("right on the map.")}`, top: true, hold: ERRORS_HOLD,
+    speed: (155.15 - M.D3) / ((148.65 - M.D3) / PLAY_SPEED + 2.6 + (155.15 - 148.65) / PLAY_SPEED - ERRORS_HOLD), lineFor: 3.2 },
   { at: 155.15, kicker: "WHEN IT BREAKS", html: `Jump straight to the ${g("failed step.")}` },
   { at: 158.05, kicker: "WHEN IT BREAKS", html: `Catch deleted assets ${g("still in use.")}` },
   { at: 163.15, kicker: "ASSISTANT", html: `Ask your map ${g("anything.")}` },

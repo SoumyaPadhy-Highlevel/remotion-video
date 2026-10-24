@@ -41,14 +41,13 @@ export const Background: React.FC = () => {
   );
 };
 
-/** `{2,500}` in a headline: counts up over `count` (timeline s) in tabular digits, then drops into place at the end of the count
- * (from 0.3 em above at 1.22×, a spring that bounces as it settles). The line grows with the digits, so no gap opens early on. */
-const counter = (h: string, count: [number, number] | undefined, t: number) => h.replace(/\{([\d,]+)\}/, (_, v: string) => {
-  const to = Number(v.replace(/,/g, "")), [c0, c1] = count ?? [0, 0];
-  const n = Math.round(to * transform(t, [c0, c1], [0, 1], { ease: easeOut }));
-  const d = t >= c1 ? 1 - springAt(t, c1, 0.5, 0.45) : 0;
-  return `<span class="grad-text" style="display:inline-block;font-variant-numeric:tabular-nums;transform-origin:50% 100%;`
-    + `transform:translateY(${(-0.3 * d).toFixed(4)}em) scale(${(1 + 0.22 * d).toFixed(4)})">${n.toLocaleString("en-US")}</span>`;
+/** `{20|50|100}` in a headline: one value at a time, each popping in on its beat (dropping 0.35 em into place from 1.25×, a
+ * spring that bounces as it settles). */
+const swapper = (h: string, beats: number[] | undefined, t: number) => h.replace(/\{([^}]+)\}/, (_, v: string) => {
+  const vals = v.split("|"), at = beats ?? [];
+  const i = Math.max(0, at.filter((b) => t >= b).length - 1), d = 1 - springAt(t, at[i] ?? 0, 0.35, 0.4);
+  return `<span class="grad-text" style="display:inline-block;transform-origin:50% 100%;`
+    + `transform:translateY(${(-0.35 * d).toFixed(4)}em) scale(${(1 + 0.25 * d).toFixed(4)})">${vals[Math.min(i, vals.length - 1)]}</span>`;
 });
 
 // ── Titles ───────────────────────────────────────────────────────────────────
@@ -61,10 +60,10 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
   const logoO = show.opening && t < 3.9 ? transform(t, [0.2, 0.8, 3.6, 3.9], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }) : 0;
   const pillO = show.opening && t < 3.9 ? transform(t, [0.5, 1.0, 3.6, 3.9], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }) : 0;
 
-  // the two headlines: the opening one and "What if something breaks across your 2,500 workflows?", each with its own text
-  // and switch
+  // the two headlines: the opening one and "What if something breaks across 20 / 50 / 100 workflows?", each with its own
+  // text and switch
   const hi = HEADLINES.findIndex((h, i) => (i === 0 ? show.opening : show.breaksHeadline) && transform(t, [h.a, h.a + 0.5, h.b - 0.35, h.b], [0, 1, 1, 0]) > 0);
-  const hl = hi >= 0 ? { ...HEADLINES[hi], html: counter(md(hi === 0 ? text.opening.headline : text.breaksHeadline), HEADLINES[hi].count, t) } : undefined;
+  const hl = hi >= 0 ? { ...HEADLINES[hi], html: swapper(md(hi === 0 ? text.opening.headline : text.breaksHeadline), HEADLINES[hi].beats, t) } : undefined;
   // after the intro the statement cards carry the text (WorkflowMapsVideo), so no caption or chapter pill competes with the visuals
   const cap = CAPTIONS.find((c) => c.a < M.D1 && transform(t, [c.a, c.a + 0.3, c.b - 0.25, c.b], [0, 1, 1, 0]) > 0);
   const chap = SHOW_CHAPTERS ? CHAPTERS.find((c) => transform(t, [c.a, c.a + 0.3, c.b - 0.3, c.b], [0, 1, 1, 0]) > 0) : undefined;
@@ -83,14 +82,16 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
         transform: `translateY(${(1 - springAt(t, 0.5, 0.5, 0.3)) * 20}px)`, ...hidden(pillO),
       }}>{text.opening.pill}</div>
 
-      {/* Headline */}
+      {/* Headline (a kicker makes it a centred statement in the cards' type: 800, -0.03em, 1.12 leading) */}
       {hl ? (
-        <div dangerouslySetInnerHTML={html(hl.html)} style={{
-          position: "absolute", left: hl.center ? 0 : 106, width: hl.center ? 1920 : 1400, textAlign: hl.center ? "center" : "left",
-          top: hl.top, fontSize: hl.size, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em",
-          transform: `translateY(${transform(t, [hl.a, hl.a + 0.6, hl.b - 0.35, hl.b], [60, 0, 0, -40], { ease: [easeOut, linear, easeIn] })}px)`,
+        <div style={{
+          position: "absolute", left: hl.center ? 0 : 106, width: hl.center ? 1920 : 1400, textAlign: hl.center ? "center" : "left", top: hl.top,
+          transform: `translateY(${transform(t, [hl.a, hl.a + 0.6, hl.b - 0.35, hl.b], [hl.kicker ? 30 : 60, 0, 0, -40], { ease: [easeOut, linear, easeIn] })}px)`,
           ...hidden(transform(t, [hl.a, hl.a + 0.5, hl.b - 0.35, hl.b], [0, 1, 1, 0])),
-        }} />
+        }}>
+          {hl.kicker ? <div style={{ fontSize: Math.max(22, hl.size * 0.2), fontWeight: 600, color: BLUE, letterSpacing: "0.08em", marginBottom: hl.size * 0.12 }}>{hl.kicker}</div> : null}
+          <div dangerouslySetInnerHTML={html(hl.html)} style={{ fontSize: hl.size, fontWeight: 800, lineHeight: hl.kicker ? 1.12 : 1.04, letterSpacing: hl.kicker ? "-0.03em" : "-0.02em" }} />
+        </div>
       ) : null}
 
       {/* Caption above the window */}

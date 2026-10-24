@@ -22,11 +22,11 @@ import { EdgeLook, MapCamera, MapView, NodeLook, projectToCanvas } from "../map3
 import { FILM_WORLDS } from "../map3d/filmMap";
 import { depthForShape, hoverHeightScale } from "../map3d/geometry";
 
-/** The moments of the scene (film s). Holds: the "Spot what needs attention" card holds film 144.75, "Jump straight to the
- * failed step" holds 151.25, so the card is still collapsed at the first and the run is painted at the second. */
+/** The moments of the scene (film s). It opens on the drop (film 143.29) under "Catch it quickly, right on the map." and
+ * "Jump straight to the failed step" holds film 151.25, so the run is painted by then. */
 export const ERRORS = {
   from: 143.3, to: 153.6,
-  cardClick: 145.85, rowClick: 146.85, execClick: 149.7, logs: 150.1, stepClick: 151.9,
+  cardClick: 144.4, rowClick: 145.45, hoverRow: 147.0, execClick: 148.45, logs: 148.85, stepClick: 151.9,
 };
 const T = ERRORS;
 
@@ -516,8 +516,8 @@ const Modal: React.FC<{ ft: number; hoverStep: number }> = ({ ft, hoverStep }) =
 
 // ── the cursor: keyframes (film s → window px), eased between ──
 const CURSOR: [number, number, number][] = [
-  [143.3, 980, 520], [144.95, 980, 520], [145.75, 200, 160], [146.15, 200, 160], [146.75, 215, 276], [147.25, 215, 276],
-  [148.55, 1290, 598], [150.2, 1290, 598], [151.35, 1290, 598], [151.8, 215, 250], [152.3, 215, 250], [152.95, 1290, 600], [153.6, 1290, 600],
+  [143.3, 980, 520], [143.6, 980, 520], [144.3, 200, 160], [144.7, 200, 160], [145.35, 215, 276], [145.85, 215, 276],
+  [147.0, 1290, 598], [151.35, 1290, 598], [151.8, 215, 250], [152.3, 215, 250], [152.95, 1290, 600], [153.6, 1290, 600],
 ];
 const CLICKS = [T.cardClick, T.rowClick, T.execClick, T.stepClick];
 const cursorAt = (ft: number) => {
@@ -531,7 +531,7 @@ export const ErrorShots: React.FC<{ ft: number }> = ({ ft }) => {
   const picked = ft >= T.rowClick, modal = ft >= T.execClick + 0.05;
   const [cx, cy] = cursorAt(ft);
   const press = CLICKS.some((c) => ft >= c - 0.05 && ft < c + 0.08);
-  const hoverRow = transform(ft, [148.45, 148.6], [0, 1]);
+  const hoverRow = transform(ft, [T.hoverRow - 0.1, T.hoverRow + 0.05], [0, 1]);
   const hoverStep = transform(ft, [151.7, 151.8], [0, 1]);
   const canvasRight = PAGE.canvasLeft + (picked ? CANVAS_NARROW : CANVAS_FULL);
   return (

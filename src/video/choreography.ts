@@ -13,7 +13,7 @@ export const RECEDES: [number, number, number][] = [
   [54.25, 58.1, 0.45], // behind the exploding title (held until the map build); the map still shows through
   [M.B2, M.D2 + 0.1, 1], // build to drop 2
   ...[122.04].map((a): [number, number, number] => [a - 0.05, a + 1.25, 0.9]), // title cards
-  [M.GAP, 148.6, 0.8], // "what if something breaks across your 2,500 workflows?" (holds past the drop)
+  [M.GAP, M.D3 + 0.1, 0.8], // "what if something breaks across 20 / 50 / 100 workflows?"
   [M.FIN - 0.05, 163.1, 0.9], // "One more thing: just ask your map"
 ];
 
