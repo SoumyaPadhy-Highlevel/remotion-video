@@ -3,21 +3,22 @@ import { clamp, mix, spring, stagger, transform } from "motion";
 import { blend, easeInOut } from "./anim";
 import { STRUCTURE_OPENING as S } from "./script";
 import { STRUCTURE_ICONS } from "./StructureIcons";
+import { MAP_ASSET_TYPES, MAP_WORKFLOW } from "./builder/mapTokens";
 
 type Point = { x: number; y: number };
 type WorldPoint = { x: number; z: number };
 type MapNode = WorldPoint & { id: string; label: string; icon: string; color: string; workflow: boolean };
-const BLUE = "#4655F5";
+const BLUE = MAP_WORKFLOW.color;
 const NODES: MapNode[] = [
   { id: "application", x: 3, z: -1.5, label: S.workflowNames[0], icon: "workflow", color: BLUE, workflow: true },
   { id: "enquiry", x: .1, z: .4, label: S.workflowNames[1], icon: "workflow", color: BLUE, workflow: true },
   { id: "payment", x: 5.7, z: -3.5, label: S.workflowNames[2], icon: "workflow", color: BLUE, workflow: true },
   { id: "tags", x: 6.1, z: .5, label: S.workflowNames[3], icon: "workflow", color: BLUE, workflow: true },
   { id: "video", x: .3, z: -3.3, label: S.workflowNames[4], icon: "workflow", color: BLUE, workflow: true },
-  { id: "page", x: 1.3, z: -1.6, label: S.assetNames[0], icon: "file-document-multiple", color: "#EF725B", workflow: false },
-  { id: "product", x: 3.2, z: -3.2, label: S.assetNames[1], icon: "package-variant", color: "#36BB8D", workflow: false },
-  { id: "funnel", x: 5, z: -1, label: S.assetNames[2], icon: "filter", color: "#F79542", workflow: false },
-  { id: "enrolment", x: 2, z: .2, label: S.assetNames[3], icon: "package-variant-closed", color: "#E6B834", workflow: false },
+  { id: "page", x: 1.3, z: -1.6, label: S.assetNames[0], icon: "file-document-multiple", color: MAP_ASSET_TYPES.funnelPages.color, workflow: false },
+  { id: "product", x: 3.2, z: -3.2, label: S.assetNames[1], icon: "package-variant", color: MAP_ASSET_TYPES.globalProducts.color, workflow: false },
+  { id: "funnel", x: 5, z: -1, label: S.assetNames[2], icon: "filter", color: MAP_ASSET_TYPES.funnels.color, workflow: false },
+  { id: "enrolment", x: 2, z: .2, label: S.assetNames[3], icon: "package-variant-closed", color: MAP_ASSET_TYPES.funnelProducts.color, workflow: false },
 ];
 const ISLANDS = [
   { x: 3, z: -1.5, w: 8, h: 5.8, tint: "#EFF4FF", side: "#6B8BEE" },
@@ -79,7 +80,7 @@ const Node: React.FC<{ node: MapNode; t: number }> = ({ node: n, t }) => {
   const name = n.label.length > 27 ? `${n.label.slice(0, 25)}…` : n.label;
   const labelWidth = name.length * 7.3 + 22;
   return <g opacity={opacity}>
-    {n.workflow && <polygon points={pts(ring(r * 1.14, .03))} fill="#35C96E" opacity={.75 + .25 * emphasis} />}
+    {n.workflow && <polygon points={pts(ring(r * 1.14, .03))} fill={MAP_WORKFLOW.baseRing.published} opacity={.75 + .25 * emphasis} />}
     <ellipse cx={ground.x} cy={ground.y + 5} rx={r * scale * 1.05} ry={r * scale * .35} fill="#172E5C" opacity=".11" filter="url(#node-shadow)" />
     {n.id === "application" && <ellipse cx={ground.x} cy={ground.y} rx={50 + ripple * 95} ry={26 + ripple * 40} fill="none" stroke="#155EEF" strokeWidth="3" opacity={(1 - ripple) * selected} />}
     {top.map((p, j) => <polygon key={j} points={pts([bottom[j], bottom[(j + 1) % count], top[(j + 1) % count], p])} fill={shade(n.color, .60 + .22 * ((j + 3) % count) / count)} />)}

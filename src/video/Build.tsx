@@ -7,6 +7,7 @@ import { blend, easeInOut, springAt } from "./anim";
 import { WINDOW } from "./AppWindow";
 import { BUILD } from "./script";
 import { md, useCfg } from "./config";
+import { MAP_WORKFLOW } from "./builder/mapTokens";
 
 const INK = "var(--ink, #0B1B3A)";
 const BLUE = "var(--accent, #155EEF)";
@@ -42,7 +43,7 @@ const Folder = ({ c, s = 16 }: { c: string; s?: number }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
 );
 const Node = ({ s = 22 }: { s?: number }) => (
-  <svg width={s} height={s} viewBox="0 0 24 24"><path fill="#2455D6" d="M12 1.8 21.2 6.6v10.8L12 22.2 2.8 17.4V6.6z" /><path fill="#fff" d="M9 7v3h1.4v1.6H7.6c-.6 0-1 .4-1 1V14H5.4v3h3v-3H7.8v-1.2h3.4V14h-.8v3h3v-3h-.8v-1.2h3.4V14H15v3h3v-3h-1.2v-1.4c0-.6-.4-1-1-1h-2.8V10H14V7z" /></svg>
+  <svg width={s} height={s} viewBox="0 0 24 24"><polygon fill={MAP_WORKFLOW.color} points="12.00 1.80 18.56 4.19 22.05 10.23 20.83 17.10 15.49 21.58 8.51 21.58 3.17 17.10 1.95 10.23 5.44 4.19" /><path fill="#fff" d="M9 7v3h1.4v1.6H7.6c-.6 0-1 .4-1 1V14H5.4v3h3v-3H7.8v-1.2h3.4V14h-.8v3h3v-3h-.8v-1.2h3.4V14H15v3h3v-3h-1.2v-1.4c0-.6-.4-1-1-1h-2.8V10H14V7z" /></svg>
 );
 const GLYPH: Record<string, string> = {
   Tag: "M5.5 7A1.5 1.5 0 0 1 4 5.5A1.5 1.5 0 0 1 5.5 4A1.5 1.5 0 0 1 7 5.5A1.5 1.5 0 0 1 5.5 7m15.91 4.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.11 0-2 .89-2 2v7c0 .55.22 1.05.59 1.41l8.99 9c.37.36.87.59 1.42.59s1.05-.23 1.41-.59l7-7c.37-.36.59-.86.59-1.41c0-.56-.23-1.06-.59-1.42",

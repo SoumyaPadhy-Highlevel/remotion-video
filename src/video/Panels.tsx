@@ -12,6 +12,7 @@ import { KineticTitle } from "./Impact";
 import { md, useCfg } from "./config";
 import { Callout } from "./Callout";
 import { BuilderScenes } from "./builder/scenes";
+import { MapShots } from "./map3d/MapShots";
 
 const GAP = 30, TOP = 300;
 /** A clip callout's later lines follow the card 0.6 s apart. */
@@ -54,6 +55,8 @@ export const Panels: React.FC<{ cfg: PanelShot; lt: number; kicker: string; html
                 <Freeze frame={Math.round(ft * FPS)}>
                   <OffthreadVideo src={staticFile(`footage/${pc ? "organise-panels.mp4" : APP_FILE}`)} muted style={{ width: 1620, height: 880 }} />
                 </Freeze>
+                {/* the map in the panel, redrawn like the window's (the cursor-less panel clips are cuts of the same film) */}
+                <MapShots ft={pc ? pc.from + (ft - pc.offset) : ft} cursor={!pc} />
               </div>
             </div>
           </div>

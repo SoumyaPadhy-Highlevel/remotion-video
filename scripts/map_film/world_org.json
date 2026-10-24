@@ -1,0 +1,667 @@
+{
+ "_comment": "The film's map after Organise (film 104–118 s): 08 · Tag-Based Routing nested into 07 · Contact Segmentation (moved +1.4 in z, 07 grown around it), 04 coloured yellow. Otherwise as world_main.json.",
+ "planes": [
+  {
+   "id": "lead",
+   "label": "01 · Lead Capture",
+   "color": "blue",
+   "rect": [
+    0,
+    0,
+    10,
+    8
+   ]
+  },
+  {
+   "id": "consult",
+   "label": "02 · Consultation Booking",
+   "color": "teal",
+   "rect": [
+    11.5,
+    0,
+    18,
+    5.5
+   ]
+  },
+  {
+   "id": "sales",
+   "label": "03 · Sales Pipeline",
+   "color": "purple",
+   "rect": [
+    0,
+    -7.5,
+    8,
+    -1.5
+   ]
+  },
+  {
+   "id": "onboard",
+   "label": "04 · Client Onboarding & Learning",
+   "color": "yellow",
+   "rect": [
+    9.5,
+    -7,
+    17.5,
+    -1.5
+   ]
+  },
+  {
+   "id": "retention",
+   "label": "05 · Retention & Feedback",
+   "color": "orange",
+   "rect": [
+    -7.5,
+    0,
+    -1.5,
+    6
+   ]
+  },
+  {
+   "id": "segment",
+   "label": "07 · Contact Segmentation",
+   "color": "cyan",
+   "rect": [
+    -7.8,
+    8.4,
+    7,
+    15.2
+   ]
+  },
+  {
+   "id": "tagroute",
+   "label": "08 · Tag-Based Routing",
+   "color": "rose",
+   "rect": [
+    -7,
+    8.9,
+    -1.5,
+    14.4
+   ],
+   "parent": "segment"
+  }
+ ],
+ "workflows": [
+  {
+   "id": "opportunity-routing",
+   "label": "Opportunity Status Routing",
+   "at": [
+    2.12,
+    -5.48
+   ],
+   "plane": "sales",
+   "status": "published"
+  },
+  {
+   "id": "sales-follow-up",
+   "label": "Sales Stage Follow-up",
+   "at": [
+    5.74,
+    -3.28
+   ],
+   "plane": "sales",
+   "status": "published"
+  },
+  {
+   "id": "client-feedback",
+   "label": "Client Feedback Submitted",
+   "at": [
+    -5.62,
+    1.8
+   ],
+   "plane": "retention",
+   "status": "published"
+  },
+  {
+   "id": "course-access-removed",
+   "label": "Course Access Removed",
+   "at": [
+    -3.24,
+    4.39
+   ],
+   "plane": "retention",
+   "status": "draft"
+  },
+  {
+   "id": "training-video",
+   "label": "Training Video Engagement",
+   "at": [
+    1.91,
+    1.41
+   ],
+   "plane": "lead",
+   "status": "published"
+  },
+  {
+   "id": "new-enquiry-form",
+   "label": "New Enquiry Form Submitted",
+   "at": [
+    1.8,
+    6.2
+   ],
+   "plane": "lead",
+   "status": "published"
+  },
+  {
+   "id": "program-application",
+   "label": "Program Application Submitted",
+   "at": [
+    5.21,
+    3.62
+   ],
+   "plane": "lead",
+   "status": "published"
+  },
+  {
+   "id": "program-payment",
+   "label": "Program Payment Received",
+   "at": [
+    8.31,
+    1.31
+   ],
+   "plane": "lead",
+   "status": "published"
+  },
+  {
+   "id": "tag-new-enquiries",
+   "label": "Tag New Enquiries",
+   "at": [
+    8.54,
+    6.35
+   ],
+   "plane": "lead",
+   "status": "published"
+  },
+  {
+   "id": "contact-tag-form-7",
+   "label": "contact tag - form 7",
+   "at": [
+    -5.21,
+    10.64
+   ],
+   "plane": "tagroute",
+   "status": "published"
+  },
+  {
+   "id": "contact-tag-remove",
+   "label": "contact tag remove filter",
+   "at": [
+    -3.04,
+    12.9
+   ],
+   "plane": "tagroute",
+   "status": "draft"
+  },
+  {
+   "id": "grant-course-access",
+   "label": "Grant Course Access",
+   "at": [
+    11.53,
+    -5.18
+   ],
+   "plane": "onboard",
+   "status": "published"
+  },
+  {
+   "id": "course-progress",
+   "label": "Course Progress & Completion",
+   "at": [
+    15.36,
+    -2.97
+   ],
+   "plane": "onboard",
+   "status": "published"
+  },
+  {
+   "id": "consultation-goal",
+   "label": "Consultation Booking Goal",
+   "at": [
+    13.23,
+    1.63
+   ],
+   "plane": "consult",
+   "status": "published"
+  },
+  {
+   "id": "continue-journey",
+   "label": "Continue Client Journey",
+   "at": [
+    12.62,
+    4.32
+   ],
+   "plane": "consult",
+   "status": "published"
+  },
+  {
+   "id": "consultation-status",
+   "label": "Consultation Status Routing",
+   "at": [
+    16.45,
+    3.92
+   ],
+   "plane": "consult",
+   "status": "published"
+  },
+  {
+   "id": "contact-changed-tag",
+   "label": "Contact changed tag added",
+   "at": [
+    1.59,
+    11.02
+   ],
+   "plane": "segment",
+   "status": "published"
+  },
+  {
+   "id": "no-filter-tag",
+   "label": "no filter tag",
+   "at": [
+    4.67,
+    10.59
+   ],
+   "plane": "segment",
+   "status": "draft"
+  },
+  {
+   "id": "wait-for-tag",
+   "label": "wait for tag",
+   "at": [
+    2.31,
+    13.75
+   ],
+   "plane": "segment",
+   "status": "published"
+  },
+  {
+   "id": "tag-workflow",
+   "label": "Tag workflow",
+   "at": [
+    5.57,
+    13.51
+   ],
+   "plane": "segment",
+   "status": "draft"
+  }
+ ],
+ "assets": [
+  {
+   "id": "a-feedback-form",
+   "label": null,
+   "type": "forms",
+   "at": [
+    -3.32,
+    1.49
+   ],
+   "plane": "retention"
+  },
+  {
+   "id": "a-course-removed-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    -6.04,
+    4.58
+   ],
+   "plane": "retention"
+  },
+  {
+   "id": "a-sales-pipeline",
+   "label": null,
+   "type": "pipelines",
+   "at": [
+    3.48,
+    -3.05
+   ],
+   "plane": "sales"
+  },
+  {
+   "id": "a-sales-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    6.48,
+    -6.15
+   ],
+   "plane": "sales"
+  },
+  {
+   "id": "a-training-video",
+   "label": null,
+   "type": "videos",
+   "at": [
+    0.78,
+    3.08
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-training-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    3.28,
+    0.58
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-program-application",
+   "label": "Program Application",
+   "type": "funnelPages",
+   "at": [
+    2.87,
+    3.48
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-coaching-program",
+   "label": "Coaching Program",
+   "type": "globalProducts",
+   "at": [
+    5.57,
+    1.29
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-enrolment",
+   "label": "Coaching Program Enrolment",
+   "type": "funnelProducts",
+   "at": [
+    4.29,
+    5.89
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-application-funnel",
+   "label": "Coaching Program Application",
+   "type": "funnels",
+   "at": [
+    7.49,
+    3.88
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-coaching-enquiry",
+   "label": "Coaching Enquiry",
+   "type": "forms",
+   "at": [
+    6.16,
+    5.17
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-follow-up",
+   "label": "follow-up",
+   "type": "tags",
+   "at": [
+    9.28,
+    4.27
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-interest-membership",
+   "label": "interest-membership",
+   "type": "tags",
+   "at": [
+    6.87,
+    7.18
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-new-lead",
+   "label": null,
+   "type": "tags",
+   "at": [
+    9.4,
+    7.41
+   ],
+   "plane": "lead"
+  },
+  {
+   "id": "a-form-7",
+   "label": null,
+   "type": "forms",
+   "at": [
+    -2.86,
+    10.2
+   ],
+   "plane": "tagroute"
+  },
+  {
+   "id": "a-routing-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    -5.67,
+    13.27
+   ],
+   "plane": "tagroute"
+  },
+  {
+   "id": "a-course-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    13.81,
+    -5.94
+   ],
+   "plane": "onboard"
+  },
+  {
+   "id": "a-course-product",
+   "label": "Coaching Program",
+   "type": "globalProducts",
+   "at": [
+    15.99,
+    -5.64
+   ],
+   "plane": "onboard"
+  },
+  {
+   "id": "a-course-video",
+   "label": null,
+   "type": "videos",
+   "at": [
+    12.29,
+    -2.73
+   ],
+   "plane": "onboard"
+  },
+  {
+   "id": "a-consult-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    12.27,
+    2.56
+   ],
+   "plane": "consult"
+  },
+  {
+   "id": "a-consult-calendar",
+   "label": null,
+   "type": "calendars",
+   "at": [
+    14.39,
+    4.29
+   ],
+   "plane": "consult"
+  },
+  {
+   "id": "a-consult-status-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    16.89,
+    1.26
+   ],
+   "plane": "consult"
+  },
+  {
+   "id": "a-segment-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    3.36,
+    11.99
+   ],
+   "plane": "segment"
+  },
+  {
+   "id": "a-segment-user",
+   "label": "IZ5qNnLlsdJ4Lp02nU6m",
+   "type": "users",
+   "at": [
+    0.85,
+    14.28
+   ],
+   "plane": "segment"
+  },
+  {
+   "id": "a-tag-workflow-tag",
+   "label": null,
+   "type": "tags",
+   "at": [
+    6.26,
+    11.78
+   ],
+   "plane": "segment"
+  }
+ ],
+ "links": [
+  [
+   "a-feedback-form",
+   "client-feedback"
+  ],
+  [
+   "course-access-removed",
+   "a-course-removed-tag"
+  ],
+  [
+   "a-sales-pipeline",
+   "opportunity-routing"
+  ],
+  [
+   "a-sales-pipeline",
+   "sales-follow-up"
+  ],
+  [
+   "sales-follow-up",
+   "a-sales-tag"
+  ],
+  [
+   "a-training-video",
+   "training-video"
+  ],
+  [
+   "training-video",
+   "a-training-tag"
+  ],
+  [
+   "a-program-application",
+   "program-application"
+  ],
+  [
+   "a-enrolment",
+   "program-application"
+  ],
+  [
+   "a-coaching-program",
+   "program-application"
+  ],
+  [
+   "a-coaching-program",
+   "program-payment"
+  ],
+  [
+   "a-application-funnel",
+   "program-application"
+  ],
+  [
+   "a-coaching-enquiry",
+   "tag-new-enquiries"
+  ],
+  [
+   "tag-new-enquiries",
+   "a-interest-membership"
+  ],
+  [
+   "tag-new-enquiries",
+   "a-follow-up"
+  ],
+  [
+   "tag-new-enquiries",
+   "a-new-lead"
+  ],
+  [
+   "a-form-7",
+   "contact-tag-form-7"
+  ],
+  [
+   "contact-tag-form-7",
+   "a-routing-tag"
+  ],
+  [
+   "contact-tag-remove",
+   "a-routing-tag"
+  ],
+  [
+   "grant-course-access",
+   "a-course-tag"
+  ],
+  [
+   "a-course-product",
+   "grant-course-access"
+  ],
+  [
+   "a-course-video",
+   "course-progress"
+  ],
+  [
+   "continue-journey",
+   "a-consult-tag"
+  ],
+  [
+   "a-consult-calendar",
+   "consultation-goal"
+  ],
+  [
+   "a-consult-calendar",
+   "consultation-status"
+  ],
+  [
+   "consultation-status",
+   "a-consult-status-tag"
+  ],
+  [
+   "a-segment-tag",
+   "contact-changed-tag"
+  ],
+  [
+   "no-filter-tag",
+   "a-segment-tag"
+  ],
+  [
+   "a-segment-tag",
+   "wait-for-tag"
+  ],
+  [
+   "wait-for-tag",
+   "a-segment-user"
+  ],
+  [
+   "tag-workflow",
+   "a-tag-workflow-tag"
+  ],
+  [
+   "continue-journey",
+   "tag-workflow"
+  ]
+ ]
+}

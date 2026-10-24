@@ -10,10 +10,12 @@
   "private": true,
   "dependencies": {
     "@remotion/cli": "4.0.537",
+    "@types/three": "^0.185.0",
     "motion": "^14.6.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.537",
+    "three": "^0.185.1",
     "zod": "4.5.4"
   },
   "devDependencies": {
@@ -31,7 +33,7 @@
     "lint": "eslint src && tsc",
     "resolve:export": "esbuild scripts/resolve-export.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-export.cjs && node out/.resolve-export.cjs && python3 scripts/resolve_fcpxml.py",
     "resolve:dissect": "esbuild scripts/resolve-export.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-export.cjs && node out/.resolve-export.cjs out/resolve-dissect && esbuild scripts/resolve-dissect.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-dissect.cjs && node out/.resolve-dissect.cjs && python3 scripts/resolve_dissect.py",
-    "test": "esbuild src/video/builder/*.test.ts --bundle --platform=node --log-level=warning --outdir=out/.tests && node --test out/.tests/*.test.js"
+    "test": "esbuild src/video/builder/*.test.ts src/video/map3d/*.test.ts --bundle --platform=node --log-level=warning --outdir=out/.tests && node --test out/.tests/*/*.test.js"
   },
   "allowScripts": {
     "esbuild": false
