@@ -11,6 +11,7 @@ import { WINDOW } from "./AppWindow";
 import { KineticTitle } from "./Impact";
 import { md, useCfg } from "./config";
 import { Callout, CalloutSide } from "./Callout";
+import { PlanAssets } from "./builder/PlanAssets";
 import { BuilderScenes } from "./builder/scenes";
 import { MapShots } from "./map3d/MapShots";
 
@@ -111,7 +112,7 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
 /** A film clip in place of the window, with its card as the top line, as a callout in the footage (`callout`, window px) or as
  * a title that pops in (`pop`, clip seconds). */
 export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number; dur: number; callout?: [number, number]; pop?: number;
-  calloutTip?: { x: number; y: number; side: CalloutSide; ax?: number } }> = ({ film, lt, kicker, html, fade, dur, callout, pop, calloutTip }) => {
+  calloutTip?: { x: number; y: number; side: CalloutSide; ax?: number }; plan?: number }> = ({ film, lt, kicker, html, fade, dur, callout, pop, calloutTip, plan }) => {
   const { show, style } = useCfg();
   const capOut = callout || calloutTip || pop != null ? 0 : 1;
   const co = springAt(lt, 1.05, 0.4, 0.3);
@@ -125,7 +126,7 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
       <Freeze frame={0}>
         <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted trimBefore={Math.round(film * FPS)} style={{ width: WINDOW.width, height: WINDOW.height }} />
       </Freeze>
-      <BuilderScenes ft={film} />
+      {plan != null ? <PlanAssets t={plan} /> : <BuilderScenes ft={film} />}
     </div>
     <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * transform(lt, [0.1, 0.5, dur - 0.35, dur - 0.05], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }), transform: `translateY(${((1 - springAt(lt, 0.1, 0.45, 0.2)) * 20).toFixed(1)}px)` }}>
       <div style={{ fontSize: 17, fontWeight: 600, color: BLUE, letterSpacing: "0.12em", marginBottom: 2 }}>{kicker}</div>

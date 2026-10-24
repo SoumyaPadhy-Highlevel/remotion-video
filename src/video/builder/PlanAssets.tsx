@@ -10,7 +10,7 @@ import { AssetDrawer, AssetEntry, DrawerCard, UsingWorkflow, WorkflowDrawer } fr
 import { layoutMaps } from "./mapsLayout";
 import { MODAL, MODAL_CANVAS, PaneStep, PreviewModal } from "./PreviewModal";
 import { Cursor } from "./shotKit";
-import { BUILDER_WORKFLOWS } from "../script";
+import { BUILDER_WORKFLOWS, PLAN_SHOT } from "../script";
 
 const seg = (t: number, a: number, b: number) => Math.min(1, Math.max(0, (t - a) / (b - a)));
 const eo = (x: number) => 1 - Math.pow(1 - x, 3);
@@ -35,10 +35,11 @@ const QUERY = "follow-up";
 const TAG_STEP: PaneStep = { kind: "action", title: "Add contact tag", icon: "heroicons-solid:tag", tone: "primary",
   fields: [{ label: "Action name", input: "Add Contact Tag" }, { label: "Tags", chips: ["follow-up", "interest-membership"] }] };
 
-/** Moments (s into the shot). */
+/** Moments (s into the shot; it is PLAN_SHOT.len long and the asset part starts at PLAN_SHOT.split, under its top line). */
 export const PLAN = {
-  selTNE: 0.62, search: 1.3, typeFrom: 1.45, typeTo: 2.05, stepHover: 2.55, btnHover: 2.85, view: 3.0, modalIn: [3.05, 3.3], pan: [3.15, 3.35],
-  ring: [3.35, 3.65], pane: [3.1, 3.3], close: 5.35, modalOut: [5.35, 5.55], selForm: 6.2, open2: [7.3, 7.5], draft: 8.5, end: 9.6,
+  selTNE: 1.15, search: 2.65, typeFrom: 2.85, typeTo: 3.55, stepHover: 4.45, btnHover: 4.75, view: 4.95, modalIn: [5.0, 5.25], pan: [5.1, 5.3],
+  ring: [5.3, 5.6], pane: [5.05, 5.25], close: 7.7, modalOut: [7.7, 7.9],
+  selForm: PLAN_SHOT.split + 0.6, open2: [PLAN_SHOT.split + 2.6, PLAN_SHOT.split + 2.8], step2: PLAN_SHOT.split + 3.3, draft: PLAN_SHOT.split + 4.55, end: PLAN_SHOT.len,
 };
 
 const C0 = { wx: 6.6, wz: 5.4, sx: 560, sy: 470, z: 1.05 };   // Lead Capture, Tag New Enquiries left of the drawer
@@ -57,16 +58,18 @@ const MAP: AssetsPlan = {
 const tne = filmProject(C0, 8.54, 0.3, 6.35), form = filmProject(C1, 6.16, 0.3, 5.17);
 const D = (x: number, y: number): [number, number] => [1158 + x, 76 + y];
 const AT = { search: D(150, 406), step: D(150, 579 + 60), viewBtn: D(392, 579 + 60), close: [MODAL.left + MODAL.width - MODAL.pad - 16, MODAL.top + MODAL.pad + 16] as [number, number],
-  row2: D(250, 521), draftTab: D(180, 404) };
+  row2: D(250, 521), step2: D(150, 601), draftTab: D(180, 404) };
+const P0 = PLAN;
 const CURSOR: { t: number; at: [number, number]; bow?: number }[] = [
-  { t: 0, at: [900, 700] }, { t: 0.55, at: [tne[0] + 3, tne[1] + 4], bow: 0.12 }, { t: 0.95, at: [tne[0] + 3, tne[1] + 4] },
-  { t: 1.25, at: AT.search, bow: 0.08 }, { t: 2.3, at: [AT.search[0] + 2, AT.search[1] + 1] },
-  { t: 2.55, at: AT.step, bow: 0.06 }, { t: 2.85, at: AT.viewBtn, bow: 0.02 }, { t: 3.05, at: AT.viewBtn },
-  { t: 5.25, at: AT.close, bow: 0.08 }, { t: 5.4, at: AT.close },
-  { t: 6.15, at: [form[0] + 3, form[1] + 4], bow: 0.1 }, { t: 6.35, at: [form[0] + 3, form[1] + 4] },
-  { t: 7.25, at: AT.row2, bow: 0.08 }, { t: 7.5, at: AT.row2 }, { t: 8.45, at: AT.draftTab, bow: 0.08 }, { t: PLAN.end, at: [AT.draftTab[0] + 2, AT.draftTab[1] + 2] },
+  { t: 0, at: [900, 700] }, { t: 0.5, at: [900, 700] }, { t: P0.selTNE - 0.05, at: [tne[0] + 3, tne[1] + 4], bow: 0.12 }, { t: 2.2, at: [tne[0] + 3, tne[1] + 4] },
+  { t: P0.search - 0.05, at: AT.search, bow: 0.08 }, { t: 4.1, at: [AT.search[0] + 2, AT.search[1] + 1] },
+  { t: P0.stepHover, at: AT.step, bow: 0.06 }, { t: P0.btnHover, at: AT.viewBtn, bow: 0.02 }, { t: P0.view + 0.05, at: AT.viewBtn },
+  { t: 7.0, at: [AT.viewBtn[0] - 120, 560], bow: 0.05 }, { t: P0.close - 0.1, at: AT.close, bow: 0.08 }, { t: P0.close + 0.05, at: AT.close },
+  { t: P0.selForm - 0.05, at: [form[0] + 3, form[1] + 4], bow: 0.1 }, { t: P0.selForm + 0.4, at: [form[0] + 3, form[1] + 4] },
+  { t: P0.open2[0] - 0.05, at: AT.row2, bow: 0.08 }, { t: P0.open2[0] + 0.3, at: AT.row2 }, { t: P0.step2, at: AT.step2, bow: 0.05 }, { t: P0.step2 + 0.7, at: [AT.step2[0] + 4, AT.step2[1]] },
+  { t: P0.draft - 0.05, at: AT.draftTab, bow: 0.08 }, { t: PLAN.end, at: [AT.draftTab[0] + 2, AT.draftTab[1] + 2] },
 ];
-const CLICKS = [0.6, PLAN.search, PLAN.view, PLAN.close, PLAN.selForm, PLAN.open2[0], PLAN.draft];
+const CLICKS = [P0.selTNE, P0.search, P0.view, P0.close, P0.selForm, P0.open2[0], P0.draft];
 
 /** The macOS cursor with its click (the film's: a slight press and a ring). */
 const ClickCursor: React.FC<{ t: number }> = ({ t }) => {
@@ -101,8 +104,8 @@ export const PlanAssets: React.FC<{ t: number }> = ({ t }) => {
       </DrawerCard>
       <DrawerCard k={assetDrawer ? seg(t, P.selForm, P.selForm + 0.2) : 0}>
         <AssetDrawer type="forms" name="Coaching Enquiry" workflows={FORM_USERS} triggers={4} actions={0} usage tab={t >= P.draft ? "draft" : "published"}
-          open="contact tag - form 7" openK={eio(seg(t, P.open2[0], P.open2[1]))} rowHover={t > 7.2 && t < P.draft - 0.3 ? "contact tag - form 7" : undefined}
-          tabHover={t > 8.4 && t < P.draft ? "draft" : undefined} />
+          open="contact tag - form 7" openK={eio(seg(t, P.open2[0], P.open2[1]))} rowHover={t > P.open2[0] - 0.1 && t < P.step2 - 0.1 ? "contact tag - form 7" : undefined}
+          stepHover={t >= P.step2 && t < P.draft - 0.3 ? eo(seg(t, P.step2, P.step2 + 0.15)) : 0} tabHover={t > P.draft - 0.1 && t < P.draft ? "draft" : undefined} />
       </DrawerCard>
       <PreviewModal k={modalK} name="Tag New Enquiries" wf={wf} view={view} pane={eo(seg(t, P.pane[0], P.pane[1]))} step={TAG_STEP} t={t}
         states={{ [act.id]: { selected: t >= P.ring[0], ring: ringK } }} />
@@ -110,5 +113,5 @@ export const PlanAssets: React.FC<{ t: number }> = ({ t }) => {
     </>
   );
 };
-export const PLAN_LEN = PLAN.end;
+export const PLAN_LEN = PLAN_SHOT.len;
 export { camAt };

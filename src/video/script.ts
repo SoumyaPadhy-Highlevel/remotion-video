@@ -370,6 +370,8 @@ export type FeatureCard = { at: number; kicker: string; html: string; hold?: num
   callout?: [number, number]; pop?: number;
   /** clip cards: hold the clip's first frame instead of playing it (for `hold` s) */
   still?: boolean;
+  /** clip cards: draw "Plan it" (builder/PlanAssets.tsx) over the held film frame, from `plan[0]` to `plan[1]` s of that shot */
+  plan?: [number, number];
   /** clip cards: a callout whose pointer's tip touches (x, y) in window px, on that card edge (`ax`: tip from the card's left) */
   calloutTip?: { x: number; y: number; side: "top" | "bottom" | "left" | "right"; ax?: number } };
 const g = (s: string) => `<span class="grad-text">${s}</span>`;
@@ -410,8 +412,14 @@ const ORGDOC = 6245 / 30;
 const HOLD_ORG = 3.727;
 /** The Assistant acting on the map (film scene "act", appended after "orgdoc"): its start and length in the film. */
 const ACT = 7084 / 30, ACT_LEN = 22.66;
+/** "Plan it" (FEATURE_CARDS) is this much longer than the film play it replaced (4 bars): everything after it moves on by
+ * this much, the shots landed on the music included. The soundtrack isn't moved yet (it is to be edited separately). */
+export const PLAN_INSERT = 4 * 1.9375;
+/** The Plan it shot: its length (the replaced play, (72.3 − 67.9) / 0.85 + 0.8 + (73.93 − 72.3) / 1.25, plus PLAN_INSERT), where
+ * the asset part starts, and the film frame of the map page it is drawn over. */
+export const PLAN_SHOT = { len: (72.3 - 67.9) / 0.85 + 0.8 + (73.93 - 72.3) / 1.25 + PLAN_INSERT, split: 8.1, film: 64.24 };
 /** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
-export const LINKS_DROP = 100.86;
+export const LINKS_DROP = 100.86 + PLAN_INSERT;
 /** How fast the visual plays after a card; the errors visual plays calmer (it took over the time of a card). */
 /** LOOP_CUT's length (8 bars): declared here because the errors cards above the window use it. */
 const LOOP_CUT_LEN = 8 * 1.9375;
@@ -424,8 +432,13 @@ const ERRORS_END = M.D3 + ((163.15 - M.D3) / PLAY_SPEED + 2.6 + 1.99 + 2.02 - LO
 export const FEATURE_CARDS: FeatureCard[] = [
   // how the map works: the list is built into the map beside a shrunk window (BUILD; film scene "map"), no card
   { at: BUILD.at, kicker: "HOW THE MAP WORKS", html: "", build: true, speed: BUILD.speed, end: BUILD.end + 0.25 },
-  { at: 67.9, kicker: "PLAN IT", html: `Select a workflow. See what’s inside, ${g("down to the exact trigger.")}` },
-  { at: 72.3, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, end: 73.93, speed: 1.25 },
+  // Plan it (user, 2026-10-25): the card, then the product's own panels drawn over the map page (builder/PlanAssets.tsx): a
+  // workflow's assets searched to a tag, View step into the preview; then a form's workflows, published and draft. It is
+  // PLAN_INSERT longer than the film play it replaced; the music is to be edited to match (4 bars inserted before 1:18)
+  { at: 67.9, kicker: "PLAN IT", html: `Select a workflow. See what’s inside, ${g("down to the exact trigger.")}`, end: 67.9 },
+  { at: 67.9, kicker: "", html: "", clip: [PLAN_SHOT.film, PLAN_SHOT.film], still: true, plan: [0, PLAN_SHOT.split], hold: PLAN_SHOT.split, end: 67.9 },
+  { at: 73.93, kicker: "PLAN IT", html: `Click any asset. See ${g("everywhere it’s used.")}`, top: true, clip: [PLAN_SHOT.film, PLAN_SHOT.film], still: true,
+    plan: [PLAN_SHOT.split, PLAN_SHOT.len], hold: PLAN_SHOT.len - PLAN_SHOT.split, end: 73.93 },
   // linked workflows, told as a story (film scene "lm"): on the music's stop (output 1:18) a card, then the builder with an Add to
   // Workflow action, a small push-in and a callout by the cursor (clip A), the "What if" card, then clip B, landed on the soundtrack: the Linked
   // badges pop on the first build-up hit (clip 0.65 s), the hand-off lines draw from the second (4.03 s) and connect on drop 2
@@ -533,7 +546,13 @@ export const EDIT_END = EDIT[EDIT.length - 1].n1;
  * drop; after the errors visual everything is LOOP_CUT_LEN earlier than when it was built, so it is read that much later.
  * Uncut output time in, uncut output time out. A rebuilt EDITED_FILE makes this the identity. */
 const ERRORS_OUT = EDIT.find((s) => s.hold && s.card?.at === M.D3)!.n0, AFTER_ERRORS_OUT = EDIT.find((s) => s.hold && s.src === 163.15)!.n0;
-export const editedFootageTime = (tn: number) => (tn < ERRORS_OUT ? tn : tn < AFTER_ERRORS_OUT ? ERRORS_OUT + 0.1 : tn + LOOP_CUT_LEN);
+/** …and after Plan it, everything is PLAN_INSERT later than when the footage was built, so it is read that much earlier. */
+const PLAN_END_OUT = EDIT.find((s) => s.hold && s.card?.plan?.[1] === PLAN_SHOT.len)!.n1;
+const builtTime = (tn: number) => (tn < PLAN_END_OUT ? tn : tn - PLAN_INSERT);
+export const editedFootageTime = (tn: number) => {
+  const b = builtTime(tn), e0 = builtTime(ERRORS_OUT), e1 = builtTime(AFTER_ERRORS_OUT);
+  return b < e0 ? b : b < e1 ? e0 + 0.1 : b + LOOP_CUT_LEN;
+};
 /** The soundtrack is one file: public/music-workflow-maps.mp3 ("Workflow Maps Audio", 174.4 s): "Percussion Drums" (Infraction,
  * no-copyright) under the intro, then the original track from 32.469 s on, unedited, so its first drop is at 47.989 s.
  * The video is synced to it: the intro cut below ends where the timeline's drop (M.D1) lands exactly on that drop, and

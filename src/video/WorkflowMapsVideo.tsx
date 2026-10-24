@@ -132,7 +132,7 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
           <ClipWindow film={fromClip.clip[1] - 1 / FPS} lt={fromClip.n1 - fromClip.n0} {...cardText(cfg, fromClip.card!)} fade={1} dur={fromClip.n1 - fromClip.n0} callout={fromClip.card!.callout} pop={fromClip.card!.pop} />
         </div> : null}
         {seg?.panels && (L("base") || layer === "panels") ? <Panels cfg={PANELS[seg.panels]} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={prevS?.clip ? Math.min(trio, transform(tn, [seg.n0 + 0.12, seg.n0 + 0.45], [0, 1])) : trio} /> : null}
-        {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.card!.still ? seg.clip[0] : seg.clip[0] + (tn - seg.n0) * (seg.card!.clipRate ?? 1)} lt={tn - seg.n0} calloutTip={seg.card!.calloutTip} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0}
+        {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.card!.still ? seg.clip[0] : seg.clip[0] + (tn - seg.n0) * (seg.card!.clipRate ?? 1)} lt={tn - seg.n0} plan={seg.card!.plan ? seg.card!.plan[0] + (tn - seg.n0) : undefined} calloutTip={seg.card!.calloutTip} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0}
           callout={seg.card!.callout} pop={seg.card!.pop} /> : null}
         {overClip?.clip && (L("base") || layer === "panels") ? (() => {
           const kk = transform(tn, [overSeg!.n0, overSeg!.n0 + 0.35], [0, 1]), r = motion.recedeCards, out = nextS?.clip ? 1 : transform(tn, [overSeg!.n1 - 0.3, overSeg!.n1], [1, 0]);

@@ -23,7 +23,7 @@ const FEATURE_KEYS = ["selectWorkflow", "clickAsset", "rememberHandOff", "linked
   "activeAndFinished", "onTheTimeline", "needsAttention", "failedStep", "deletedAssets", "askYourMap", "answersOnMap", "doesTheWork", "actsOnMap"] as const;
 const TITLE_CARD_KEYS = ["traceContact", "justAsk"] as const;
 export const CALLOUT_KEYS = ["buriedInFolders", "handsOffContact", "everyHandOffTab", "whichTab", "oneFormFourWorkflows", "fourWorkflowsBreak"] as const;
-const FEATURES = FEATURE_CARDS.filter((c) => !c.build && !c.cut);
+const FEATURES = FEATURE_CARDS.filter((c) => !c.build && !c.cut && !(c.plan && !c.html));   // a Plan it shot without a line has no text
 if (FEATURES.length !== FEATURE_KEYS.length || INTRO_CARDS.length !== INTRO_KEYS.length || TITLE_CARDS.length !== TITLE_CARD_KEYS.length || INTRO_CALLOUTS.length !== CALLOUT_KEYS.length) {
   throw new Error("config.tsx: the card names no longer match script.ts (cards were added or removed)");
 }
