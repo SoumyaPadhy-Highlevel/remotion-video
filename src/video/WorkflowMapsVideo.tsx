@@ -46,8 +46,10 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
   const contIn = !!seg?.clip && prevS?.clip?.[1] === seg.clip[0], contOut = !!seg?.clip && nextS?.clip?.[0] === seg.clip[1];
   const intoOver = !!seg?.clip && !!nextS?.card?.over, intoPanels = !!seg?.clip && !!nextS?.panels;
   const fromClip = seg?.panels && prevS?.clip && tn < seg.n0 + 0.4 ? prevS : undefined;
-  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, seg.n0, seg.n1, contIn ? 0.001 : 0.2, intoOver || contOut || intoPanels ? 0.001 : 0.25) : overSeg ? 1 : 0;
-  const k = seg?.hold && !seg.card?.top && !seg.panels && !seg.clip ? win(tn, seg.n0, seg.n1, 0.3, 0.35) : 0;
+  // a clip straight after a statement card cuts in (the card has finished leaving by then)
+  const afterCard = !!seg?.clip && !!prevS?.hold && !prevS.clip && !prevS.panels && !prevS.card?.top;
+  const trio = seg?.panels ? win(tn, seg.n0, seg.n1, 0.35, 0.35) : seg?.clip ? win(tn, seg.n0, seg.n1, contIn || afterCard ? 0.001 : 0.2, intoOver || contOut || intoPanels ? 0.001 : 0.25) : overSeg ? 1 : 0;
+  const k = seg?.hold && !seg.card?.top && !seg.panels && !seg.clip ? win(tn, seg.n0, seg.n1, 0.3, EDIT[EDIT.indexOf(seg) + 2]?.clip ? 0.001 : 0.35) : 0;   // stays receded into a cut to a clip
   const cards = EDIT.filter((s) => s.hold && !s.card?.top && !s.card?.build && !s.panels && !s.clip && tn >= s.n0 - 0.05 && tn < s.n1 + 0.4);
   const top = EDIT.find((s) => s.hold && s.card?.top && !s.clip && tn >= s.n0 && tn < (s.until ?? s.n1));
   // the mascot keeps to the corner while a panel shot or film clip replaces the window
@@ -100,19 +102,19 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
       </Freeze>
       {/* the statement before each feature (say), on output time */}
       <div className="poppins" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        {fromClip?.clip && (L("base") || layer === "panels") ? <div style={{ position: "absolute", inset: 0, opacity: 1 - trio }}>
+        {fromClip?.clip && (L("base") || layer === "panels") ? <div style={{ position: "absolute", inset: 0, opacity: 1 - clamp((tn - seg!.n0) / 0.22) }}>
           <ClipWindow film={fromClip.clip[1] - 1 / FPS} lt={fromClip.n1 - fromClip.n0} {...cardText(cfg, fromClip.card!)} fade={1} dur={fromClip.n1 - fromClip.n0} callout={fromClip.card!.callout} pop={fromClip.card!.pop} />
         </div> : null}
-        {seg?.panels && (L("base") || layer === "panels") ? <Panels cfg={PANELS[seg.panels]} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={trio} /> : null}
+        {seg?.panels && (L("base") || layer === "panels") ? <Panels cfg={PANELS[seg.panels]} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={prevS?.clip ? Math.min(trio, clamp((tn - seg.n0 - 0.12) / 0.33)) : trio} /> : null}
         {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.clip[0] + (tn - seg.n0)} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0}
           callout={seg.card!.callout} pop={seg.card!.pop} /> : null}
         {overClip?.clip && (L("base") || layer === "panels") ? (() => {
-          const kk = clamp((tn - overSeg!.n0) / 0.35), r = motion.recedeCards, out = 1 - clamp((tn - (overSeg!.n1 - 0.3)) / 0.3);
+          const kk = clamp((tn - overSeg!.n0) / 0.35), r = motion.recedeCards, out = nextS?.clip ? 1 : 1 - clamp((tn - (overSeg!.n1 - 0.3)) / 0.3);
           return <div style={{ position: "absolute", inset: 0, transformOrigin: "960px 560px", transform: `scale(${(1 - r.shrink * kk).toFixed(4)})`, opacity: (1 - r.dim * kk) * out, filter: kk > 0.02 ? `blur(${(r.blur * kk).toFixed(2)}px)` : undefined }}>
             <ClipWindow film={overClip.clip[1] - 1 / FPS} lt={overClip.n1 - overClip.n0} {...cardText(cfg, overClip.card!)} fade={1} dur={overClip.n1 - overClip.n0} callout={overClip.card!.callout} pop={overClip.card!.pop} />
           </div>;
         })() : null}
-        {L("titles") && show.featureCards && cards.map((s) => <KineticTitle key={s.n0} t={tn} at={s.n0} out={s.n1 - 0.3} {...cardText(cfg, s.card!)} size={style.sizes.featureCard} />)}
+        {L("titles") && show.featureCards && cards.map((s) => <KineticTitle key={s.n0} t={tn} at={s.n0} out={s.n1 - (EDIT[EDIT.indexOf(s) + 2]?.clip ? 0.75 : 0.3)} {...cardText(cfg, s.card!)} size={style.sizes.featureCard} />)}
         {/* or, where the visual is light, the line sits above the window and the animation plays under it */}
         {top && L("titles") && show.topLines ? (() => {
           const o = win(tn, top.n0, top.until!, 0.3, 0.3), y = (1 - clamp((tn - top.n0) / 0.4)) * motion.titles.topLineSlide, tx = cardText(cfg, top.card!);

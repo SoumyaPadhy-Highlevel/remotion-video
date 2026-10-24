@@ -78,13 +78,25 @@ export const MyComposition = () => {
               kicker: "PLAN IT",
               text: "Find anything, *fast.*",
             },
-            moveWorkflows: {
+            organiseAndDocument: {
               kicker: "ORGANISE IT",
-              text: "Move workflows and folders, *right on the map.*",
+              text: "Organise your map, *and document it.*",
             },
-            keepTidy: {
+            makeItYourOwn: {
               kicker: "ORGANISE IT",
-              text: "And keep it tidy, *right on the map.*",
+              text: "Make the map *your own.*",
+            },
+            documentIt: {
+              kicker: "ORGANISE IT",
+              text: "Document how it works, *right on the map.*",
+            },
+            writeItOnce: {
+              kicker: "ORGANISE IT",
+              text: "Write it once. *Your whole team reads it.*",
+            },
+            customerJourney: {
+              kicker: "ORGANISE IT",
+              text: "Notes that tell *the customer journey.*",
             },
             pickContact: {
               kicker: "TROUBLESHOOT IT",

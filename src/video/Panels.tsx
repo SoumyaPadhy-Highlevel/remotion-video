@@ -116,14 +116,14 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
         <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted style={{ width: WINDOW.width, height: WINDOW.height }} />
       </Freeze>
     </div>
-    <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * prog(lt, 0.1, 0.5, easeOut), transform: `translateY(${((1 - prog(lt, 0.1, 0.5, easeOut)) * 20).toFixed(1)}px)` }}>
+    <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * prog(lt, 0.1, 0.5, easeOut) * (1 - prog(lt, dur - 0.35, dur - 0.05)), transform: `translateY(${((1 - prog(lt, 0.1, 0.5, easeOut)) * 20).toFixed(1)}px)` }}>
       <div style={{ fontSize: 17, fontWeight: 600, color: BLUE, letterSpacing: "0.12em", marginBottom: 2 }}>{kicker}</div>
       <div style={{ fontSize: style.sizes.topLine, fontWeight: 700, letterSpacing: "-0.01em", color: INK }} dangerouslySetInnerHTML={{ __html: html }} />
     </div>
-    {callout && show.panelCaptions ? <Callout x={WINDOW.left + callout[0] + 113} y={WINDOW.top + callout[1] - 9} html={html} k={co} opacity={fade}
+    {callout && show.panelCaptions ? <Callout x={WINDOW.left + callout[0] + 113} y={WINDOW.top + callout[1] - 9} html={html} k={co} opacity={fade * (1 - prog(lt, dur - 0.4, dur - 0.1))}
       lineK={(i) => prog(lt, 1.65 + 0.6 * (i - 1), 2.0 + 0.6 * (i - 1), easeOut)} /> : null}
     {pop != null && show.panelCaptions ? <div className="poppins" style={{ position: "absolute", inset: 0, opacity: fade }}>
-      <KineticTitle t={lt} at={pop} out={dur - 0.35} kicker="" html={html} size={style.sizes.panelCaption + 6} pulse={[pop + 0.45]} offsetY={-478} />
+      <KineticTitle t={lt} at={pop} out={dur - 0.75} kicker="" html={html} size={style.sizes.panelCaption + 6} pulse={[pop + 0.45]} offsetY={-478} />
     </div> : null}
   </>;
 };

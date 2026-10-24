@@ -33,7 +33,7 @@ export const M = {
  * Everything around the window stays the same.
  */
 export type Footage = { file: string; from?: number; speed?: number };
-export const APP_FILE = "app-motion-v24.mp4";   // v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
+export const APP_FILE = "app-motion-v25.mp4";   // v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -277,6 +277,8 @@ export const BUILD = {
       .map(([n, k, c, l, x, z, w]) => ({ step: 2, name: n, land: l, x, y: 0.25, z, color: c, kind: k, group: w })),
   ],
 };
+/** Where the film's "orgdoc" scene starts (film seconds; frame 6245, right after "lm"). */
+const ORGDOC = 6245 / 30;
 /** The second drop of the music (output time): the hand-off lines draw in across the whole map on it. */
 export const LINKS_DROP = 100.86;
 export const FEATURE_CARDS: FeatureCard[] = [
@@ -300,8 +302,15 @@ export const FEATURE_CARDS: FeatureCard[] = [
   // search and filter, side by side; then the ORGANISE IT title (timeline 100.6–102.1)
   { at: 100.6, kicker: "PLAN IT", html: `Find anything, ${g("fast.")}`, panels: "duo", end: 102.1 },
   // Organise, shortened: one main move (drag workflows, then drop a folder into a folder), then the three-panel shot
-  { at: 105.65, kicker: "ORGANISE IT", html: `Move workflows and folders, ${g("right on the map.")}`, end: 111.25 },
-  { at: 121.95, kicker: "ORGANISE IT", html: `And keep it tidy, ${g("right on the map.")}`, panels: "trio" },
+  // Organise and document (film scene "orgdoc", from ORGDOC): a card; the options as numbered sticky notes on the map (colour,
+  // nest, rename); a card held over its last frame; the Lead Management folder documented (its sticky note, then each
+  // workflow's note); Jordan through the journey, then Save. Then the TROUBLESHOOT title (timeline 122.05–124.05: from the
+  // film's "contact" scene, so the old document scene's Saved canvas views panel never shows behind the fade).
+  { at: 105.65, kicker: "ORGANISE IT", html: `Organise your map, ${g("and document it.")}`, end: 105.65 },
+  { at: 105.65, kicker: "ORGANISE IT", html: `Make the map ${g("your own.")}`, top: true, clip: [ORGDOC, ORGDOC + 11.0], end: 105.65 },
+  { at: 105.65, kicker: "ORGANISE IT", html: `Document how it works, ${g("right on the map.")}`, over: true, end: 105.65 },
+  { at: 105.65, kicker: "ORGANISE IT", html: `Write it once. ${g("Your whole team reads it.")}`, top: true, clip: [ORGDOC + 11.0, ORGDOC + 21.0], end: 105.65 },
+  { at: 122.05, kicker: "ORGANISE IT", html: `Notes that tell ${g("the customer journey.")}`, top: true, clip: [ORGDOC + 21.0, ORGDOC + 27.8] },
   { at: 124.05, kicker: "TROUBLESHOOT IT", html: `Pick any contact. See every workflow ${g("they’ve been in.")}` },
   { at: 129.15, kicker: "TROUBLESHOOT IT", html: `Every run, ${g("newest first.")}` },
   { at: 132.75, kicker: "TROUBLESHOOT IT", html: `Open any run. See the exact path, ${g("and the email Jordan got.")}` },

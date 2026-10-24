@@ -32,7 +32,9 @@ export const StructureOpening: React.FC = () => {
   const startScale = .975 + .025 * settle(t, .1, fps);
   const shadowWave = Math.sin(morph * Math.PI);
   const activeIndex = t < 11.2 ? 0 : t < 16.2 ? 1 : t < 26.5 ? 2 : 3;
-  return <AbsoluteFill style={{ fontFamily: "Inter, sans-serif", color: "#0B1B3A", WebkitFontSmoothing: "antialiased", overflow: "hidden" }}>
+  return <AbsoluteFill
+    style={{ fontFamily: "Inter, sans-serif", color: "#0B1B3A", WebkitFontSmoothing: "antialiased", overflow: "hidden" }}
+  >
     <style>{GLOBAL_CSS}</style>
     <Background />
     <div className="poppins" style={{ position: "absolute", top: 24, width: 1920, textAlign: "center", opacity: titleOut }}>
