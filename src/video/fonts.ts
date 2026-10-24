@@ -6,12 +6,12 @@ const FACES: [string, number][] = [
   ["Poppins", 500], ["Poppins", 600], ["Poppins", 700], ["Poppins", 800],
 ];
 
-let started = false;
+let fontLoading: Promise<void> | undefined;
 export function loadFonts() {
-  if (started || typeof document === "undefined") return;
-  started = true;
+  if (typeof document === "undefined") return Promise.resolve();
+  if (fontLoading) return fontLoading;
   const handle = delayRender("Loading fonts");
-  Promise.all(
+  fontLoading = Promise.all(
     FACES.map(([family, weight]) => {
       const face = new FontFace(family, `url(${staticFile(`fonts/${family.toLowerCase()}-${weight}.woff2`)}) format("woff2")`, { weight: String(weight) });
       return face.load().then((f) => document.fonts.add(f));
@@ -22,6 +22,7 @@ export function loadFonts() {
       console.error("Font loading failed", err);
       continueRender(handle);
     });
+  return fontLoading;
 }
 
 export const GLOBAL_CSS = `

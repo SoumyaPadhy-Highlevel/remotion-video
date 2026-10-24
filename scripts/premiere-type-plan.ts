@@ -9,7 +9,7 @@ import { CUT_LEN, EDIT, editTime, FPS, HEADLINES, INTRO_CUT, INTRO_CARDS, MUSIC,
 import type { MusicSettings } from "../src/video/musicProps";
 import { transform } from "motion";
 
-const dir = resolve("out/premiere-computer-use/animated-type");
+const dir = resolve(process.argv[2] ?? "out/premiere-computer-use/animated-type");
 mkdirSync(resolve(dir, "media"), {recursive: true});
 const main = React.Children.toArray(MyComposition().props.children).find(
   (c) => React.isValidElement<{id: string}>(c) && c.props.id === "WorkflowMaps",
@@ -48,7 +48,7 @@ INTRO_CARDS.forEach((c, i) => {
 EDIT.filter((s) => s.hold && s.card && !s.card.top && !s.card.build && !s.card.cut && !s.panels && !s.clip && s.n1 > s.n0).forEach((s, i) => {
   const text = cardText(cfg, s.card!);
   cards.push({id: `statement-${i + 1}`, ...text, size: cfg.style.sizes.featureCard,
-    maxWidth: text.html.startsWith("Organise your map") ? 1000 : 1500,
+    maxWidth: 1500,
     offsetY: 0, start: fr(out(s.n0)), end: fr(out(s.n1)) - 3, kind: "support"});
 });
 TITLE_CARDS.forEach((c, i) => {
