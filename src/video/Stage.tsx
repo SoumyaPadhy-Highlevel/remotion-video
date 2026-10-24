@@ -89,6 +89,9 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
           transform: `translateY(${transform(t, [hl.a, hl.a + 0.6, hl.b - 0.35, hl.b], [hl.kicker ? 30 : 60, 0, 0, -40], { ease: [easeOut, linear, easeIn] })}px)`,
           ...hidden(transform(t, [hl.a, hl.a + 0.5, hl.b - 0.35, hl.b], [0, 1, 1, 0])),
         }}>
+          {/* a soft glow of the page's sky behind a statement, so it reads over the receded map */}
+          {hl.kicker ? <div style={{ position: "absolute", left: "50%", top: "50%", width: 1500, height: 520, marginLeft: -750, marginTop: -260, zIndex: -1,
+            background: "radial-gradient(ellipse 50% 50% at 50% 50%, rgba(244,248,255,0.94) 0%, rgba(244,248,255,0.86) 45%, rgba(244,248,255,0) 100%)" }} /> : null}
           {hl.kicker ? <div style={{ fontSize: Math.max(22, hl.size * 0.2), fontWeight: 600, color: BLUE, letterSpacing: "0.08em", marginBottom: hl.size * 0.12 }}>{hl.kicker}</div> : null}
           <div dangerouslySetInnerHTML={html(hl.html)} style={{ fontSize: hl.size, fontWeight: 800, lineHeight: hl.kicker ? 1.12 : 1.04, letterSpacing: hl.kicker ? "-0.03em" : "-0.02em" }} />
         </div>
