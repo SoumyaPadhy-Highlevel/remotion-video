@@ -21,6 +21,7 @@ Give each re-render a new file name (browsers cache half-written files).
 | `src/video/Mascot.tsx` | Mascot artwork with animated SVG eyes (normal, happy, wow, worried, star, squint), sparkles, speed streak, question mark. |
 | `src/video/WorkflowMapsVideo.tsx` | Layer order and the music. |
 | `public/footage/` | What the app shows during each beat. Defaults to `<beat-id>.mp4` (1620×880, 30 fps, exactly the beat's length). |
+| `src/video/builder/` | The workflow builder, drawn as the product draws it. `tokens.ts` (colours, sizes from the real `WorkflowTreeV2.vue` canvas), `layout.ts` (node and edge positions, ported from `canvas_helper.ts`), `Nodes.tsx` / `Canvas.tsx` (trigger card, Add new trigger, action card, If/Else branch, END, "+", grid, controls, minimap), `icons.ts` (generated). Workflow Maps' own canvas (its workflow view and a contact's runs, `AdvancedWorkflowCanvas` in vertical mode): `mapsLayout.ts` / `MapsCanvas.tsx` (240 × 72 cards, handles, arrowed edges, Linked badges, the run's green path, chips). `scenes.tsx` redraws every builder and Maps-canvas shot of the film over it (`introShots`, `linkedShots`, `runShots`); `BuilderShots` composition shows film + redraw on film time. |
 
 ## Rules for edits
 
@@ -38,6 +39,16 @@ Give each re-render a new file name (browsers cache half-written files).
 - Keep text in `script.ts`. Components read from it.
 - Positions are in 1920×1080 frame pixels; inside the window they are window pixels (1620×880).
 - The footage is the app only. Titles, mascot, tabs and the client message are drawn here, not in the footage.
+- Anything that shows the workflow builder (triggers, actions, branches, edges, the canvas) uses `src/video/builder`, never
+  hand-picked styles: `<WorkflowCanvas wf={...} view={...} />` with a workflow from `BUILDER_WORKFLOWS` in `script.ts`. Colours and
+  sizes come from `builder/tokens.ts`, which mirrors automation-workflows-frontend (`WorkflowTreeV2.vue` and the
+  `workflow-canvas/` node components); when the product's builder changes, update the tokens there, not in a scene.
+  The film's builder shots carry the film's old styling; `builder/scenes.tsx` redraws each one over it (window px, film time).
+  A new film with builder shots needs its shots added there, with cursor paths from `scripts/track_builder_film.py`.
+  Workflow Maps' modal canvas is a different component (`AdvancedWorkflowCanvas`, `workflow-canvas-modal/`): draw it with
+  `<MapsCanvas>`, not `<WorkflowCanvas>`. Not redrawn: the 2.3 s "open every workflow" montage of half-size windows (film
+  42.65–45.1 s) and the multi-workflow linked view (film 193.4–208.1 s, camera moving across frames), which is the film's own
+  and close to the product except for square corners where branches fan out.
 
 ## Common tasks
 
@@ -52,3 +63,7 @@ Give each re-render a new file name (browsers cache half-written files).
 - Preview: `npm run dev`, then open the `WorkflowMaps` composition.
 - Render: `npx remotion render src/index.ts WorkflowMaps out/workflow-maps.mp4` (renders serve on port 3021, set in `remotion.config.ts`, because Studio holds 3000)
 - Render one range: `npx remotion render WorkflowMaps out/clip.mp4 --frames=2640-2910`
+- Check a builder redraw against the film: `npx remotion still src/index.ts BuilderShots out/check.png --frame=<film s × 30>`
+  (pass `--props='{"overlay":false}'` for the bare film).
+- Tests (builder layout and shot helpers): `npm test`.
+- Builder icons: add the Iconify / ghl-icons name to `scripts/builder-icons.mjs`, then `node scripts/builder-icons.mjs ../automation-workflows-frontend`.

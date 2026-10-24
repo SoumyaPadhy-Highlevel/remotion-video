@@ -11,6 +11,7 @@ import { WINDOW } from "./AppWindow";
 import { KineticTitle } from "./Impact";
 import { md, useCfg } from "./config";
 import { Callout } from "./Callout";
+import { BuilderScenes } from "./builder/scenes";
 
 const GAP = 30, TOP = 300;
 /** A clip callout's later lines follow the card 0.6 s apart. */
@@ -118,6 +119,7 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
       <Freeze frame={Math.round(film * FPS)}>
         <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted style={{ width: WINDOW.width, height: WINDOW.height }} />
       </Freeze>
+      <BuilderScenes ft={film} />
     </div>
     <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * transform(lt, [0.1, 0.5, dur - 0.35, dur - 0.05], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }), transform: `translateY(${((1 - springAt(lt, 0.1, 0.45, 0.2)) * 20).toFixed(1)}px)` }}>
       <div style={{ fontSize: 17, fontWeight: 600, color: BLUE, letterSpacing: "0.12em", marginBottom: 2 }}>{kicker}</div>

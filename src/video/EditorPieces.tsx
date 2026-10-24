@@ -6,6 +6,7 @@ import { APP_FILE, editTime, FPS, uncut } from "./script";
 import { WINDOW } from "./AppWindow";
 import { GLOBAL_CSS, loadFonts } from "./fonts";
 import { Background } from "./Stage";
+import { BuilderScenes } from "./builder/scenes";
 
 loadFonts();
 
@@ -35,6 +36,7 @@ export const FootageAsEdited: React.FC = () => {
         <Sequence from={Math.round(3.9 * FPS)} layout="none">
           <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted style={{ width: 1620, height: 880, display: "block" }} />
         </Sequence>
+        {t >= 3.9 ? <div style={{ position: "absolute", inset: 0 }}><BuilderScenes ft={t - 3.9} /></div> : null}
       </Freeze>
     </AbsoluteFill>
   );

@@ -4,6 +4,8 @@
 // Edit this file to change wording or timing; the components read from here.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { WorkflowSpec } from "./builder/layout";
+
 export const FPS = 30;
 
 /** Music markers on public/music-intro2.mp3, a placeholder: the uncut track with 20 bars added to the intro (bars 0–3 four times,
@@ -161,7 +163,7 @@ export const INTRO_CALLOUTS: IntroCallout[] = [
   // the list, drilled into 02 › 06: points at the workflow row
   { a: 9.95, hold: 10.75, dur: 1.4, b: 11.45, html: `As you grow, workflows end up<br/>Buried in <span class="grad-text">folders, inside folders.</span>`, x: 380, y: 412, side: "top", focus: [420, 330] },
   // Continue Client Journey: under its Add to Workflow step (the panel on the right shows Tag workflow)
-  { a: 14.85, hold: 15.6, dur: 1.3, b: 16.95, html: `This step hands the contact to another workflow.<br/>What happens next lives <span class="grad-text">in another tab.</span>`, x: 840, y: 432, side: "top", ax: 560, focus: [840, 0] },
+  { a: 14.85, hold: 15.6, dur: 1.3, b: 16.95, html: `This step hands the contact to another workflow.<br/>What happens next lives <span class="grad-text">in another tab.</span>`, x: 840, y: 561, side: "top", ax: 560, focus: [840, 0] },
   // the two tabs flipping: points up at the tab strip
   { a: 22.15, hold: 24.45, dur: 1.1, b: 25.05, html: `Nothing connects the two.<br/>So you <span class="grad-text">flip back and forth.</span>`, x: 356, y: 6, side: "top", ax: 104, focus: [356, 0] },
   // one form, four workflows: under the Coaching Enquiry form
@@ -189,6 +191,102 @@ export const TABS = {
   flips: [[22.0, 0], [22.75, 1], [23.5, 0], [24.25, 1]] as [number, number][],
   names: ["Continue Client Journey", "Tag workflow", "Tag New Enquiries", "Consultation Booking Goal", "contact tag - form 7", "Opportunity Status Routing", "Program Application Submitted", "Course Progress & Completion", "no filter tag", "Sales Stage Follow-up"],
 }
+
+/** The workflows the film's builder shots show, redrawn with the product's own canvas (src/video/builder, scenes.tsx).
+ * Trigger `title` is the trigger type, `name` the name the user gave it; filters read as the builder writes them. */
+const tagTrigger = { id: "contact-tag", title: "Contact Tag", name: "Tag added: follow-up", icon: "heroicons-outline:tag", tone: "primary", filters: [`Tag Added is "follow-up"`] } as const;
+export const BUILDER_WORKFLOWS: Record<"continueJourney" | "tagWorkflow" | "formToTag" | "consultationGoal" | "opportunityRouting" | "programApplication" | "priorityAssignment" | "runApplication" | "runTagEnquiries" | "runPayment", WorkflowSpec> = {
+  continueJourney: {
+    triggers: [{ ...tagTrigger, filters: [...tagTrigger.filters] }], addTrigger: true,
+    steps: [{ kind: "action", id: "add-to-workflow", label: "Add to Workflow", icon: "entypo:add-to-list", tone: "purple" }],
+  },
+  tagWorkflow: {
+    triggers: [
+      { ...tagTrigger, filters: [...tagTrigger.filters] },
+      { id: "opportunity-changed", title: "Opportunity Changed", name: "Opportunity changed", icon: "heroicons-outline:switch-horizontal", tone: "primary", filters: [`Pipeline is "Sales Pipeline"`] },
+    ],
+    addTrigger: true,
+    steps: [
+      { kind: "action", id: "note", label: "Note", icon: "ic:round-sticky-note-2", tone: "primary" },
+      { kind: "ifElse", id: "condition", label: "Condition", branches: [
+        { id: "branch", title: "Branch", text: `If "Tags" includes "vip"`, steps: [] },
+        { id: "none", title: "None", text: "When none of the conditions are met", steps: [] },
+      ] },
+    ],
+  },
+  // the one form that starts four workflows (four-up, film 23.7–39.2 s), and Tag New Enquiries / contact tag - form 7
+  formToTag: {
+    triggers: [{ id: "form-submitted", title: "Form Submitted", icon: "heroicons-outline:clipboard-list", tone: "green", filters: [`Form is "Coaching Enquiry"`] }],
+    addTrigger: true,
+    steps: [{ kind: "action", id: "add-contact-tag", label: "Add Contact Tag", icon: "heroicons-solid:tag", tone: "primary" }],
+  },
+  consultationGoal: {
+    triggers: [{ id: "appointment", title: "Appointment Status", icon: "heroicons-outline:calendar", tone: "primary", filters: [`Status is "Booked"`] }],
+    addTrigger: true,
+    steps: [
+      { kind: "action", id: "add-contact-tag", label: "Add Contact Tag", icon: "heroicons-solid:tag", tone: "primary" },
+      { kind: "action", id: "goal", label: "Goal Event", icon: "bx:bxs-flag-checkered", tone: "purple" },
+    ],
+  },
+  opportunityRouting: {
+    triggers: [{ id: "opportunity-status", title: "Opportunity Status Changed", icon: "heroicons-outline:switch-horizontal", tone: "primary", filters: [`Pipeline is "Sales Pipeline"`] }],
+    addTrigger: true,
+    steps: [
+      { kind: "action", id: "update-opportunity", label: "Update Opportunity", icon: "ant-design:dollar-circle-filled", tone: "primary" },
+      { kind: "ifElse", id: "if-else", label: "If / Else", branches: [
+        { id: "won", title: "Won", text: `If "Status" is "Won"`, steps: [] },
+        { id: "none", title: "None", text: "When none of the conditions are met", steps: [] },
+      ] },
+    ],
+  },
+  programApplication: {
+    triggers: [{ id: "order-submitted", title: "Order Submitted", icon: "heroicons-outline:clipboard-list", tone: "primary", filters: [`Form is "Program Application"`] }],
+    addTrigger: true,
+    steps: [
+      { kind: "action", id: "add-contact-tag", label: "Add Contact Tag", icon: "heroicons-solid:tag", tone: "primary" },
+      { kind: "action", id: "create-opportunity", label: "Create Opportunity", icon: "ant-design:dollar-circle-filled", tone: "primary" },
+      { kind: "action", id: "send-email", label: "Send Email", icon: "heroicons-solid:mail-open", tone: "green" },
+    ],
+  },
+  // Lead Management | Priority Assignment (the linked-workflows story, film 185.9–189.14 s): each lane hands off to another
+  priorityAssignment: {
+    triggers: [{ id: "contact-changed", title: "Contact Changed", name: "Lead Priority Updated", icon: "heroicons-outline:users", tone: "primary", filters: ["Lead Priority has changed"] }],
+    addTrigger: true,
+    steps: [{ kind: "ifElse", id: "route", label: "Route leads by priority", branches: [
+      { id: "high", title: "High Priority", text: `If "Lead Priority" is "High"`, steps: [{ kind: "action", id: "start-high", label: "Start high-priority nurturing", icon: "entypo:add-to-list", tone: "purple" }] },
+      { id: "medium", title: "Medium Priority", text: `If "Lead Priority" is "Medium"`, steps: [{ kind: "action", id: "start-medium", label: "Start medium-priority nurturing", icon: "entypo:add-to-list", tone: "purple" }] },
+      { id: "low", title: "Low Priority", text: `If "Lead Priority" is "Low"`, steps: [{ kind: "action", id: "start-low", label: "Start low-priority nurturing", icon: "entypo:add-to-list", tone: "purple" }] },
+      { id: "not-set", title: "Priority Not Set | Review", text: "When none of the conditions are met", steps: [{ kind: "action", id: "review", label: "Review lead priority before nurture", icon: "ic:round-sticky-note-2", tone: "primary" }] },
+    ] }],
+  },
+  // Jordan's runs, as Workflow Maps' run view draws them (Troubleshoot, film 128.7–153.5 s)
+  runApplication: {
+    triggers: [{ id: "order-submitted", title: "Order Submitted", icon: "heroicons-outline:clipboard-list", tone: "primary", filters: [] }],
+    steps: [
+      { kind: "action", id: "add-contact-tag", label: "Add Contact Tag", icon: "heroicons-solid:tag", tone: "primary" },
+      { kind: "action", id: "create-opportunity", label: "Create Opportunity", icon: "ant-design:dollar-circle-filled", tone: "primary" },
+      { kind: "ifElse", id: "if-else", label: "Qualified applicant?", branches: [
+        { id: "yes", title: "Qualified", text: `If "Qualified" is "Yes"`, steps: [{ kind: "action", id: "send-email", label: "Send Email", icon: "heroicons-solid:mail-open", tone: "green" }] },
+        { id: "none", title: "None", text: "When none of the conditions are met", steps: [{ kind: "action", id: "add-to-workflow", label: "Add to Workflow", icon: "entypo:add-to-list", tone: "purple" }] },
+      ] },
+    ],
+  },
+  runTagEnquiries: {
+    triggers: [{ id: "contact-tag", title: "Contact Tag", icon: "heroicons-outline:tag", tone: "primary", filters: [] }],
+    steps: [
+      { kind: "action", id: "add-contact-tag", label: "Add Contact Tag", icon: "heroicons-solid:tag", tone: "primary" },
+      { kind: "action", id: "send-sms", label: "Send SMS", icon: "heroicons-solid:chat-alt", tone: "green" },
+    ],
+  },
+  runPayment: {
+    triggers: [{ id: "payment-received", title: "Payment Received", icon: "heroicons-outline:clipboard-list", tone: "primary", filters: [] }],
+    steps: [
+      { kind: "action", id: "add-contact-tag", label: "Add Contact Tag", icon: "heroicons-solid:tag", tone: "primary" },
+      { kind: "action", id: "send-email", label: "Send Email", icon: "heroicons-solid:mail-open", tone: "green" },
+      { kind: "action", id: "grant-access", label: "Grant Course Access", icon: "entypo:add-to-list", tone: "purple" },
+    ],
+  },
+};
 
 /** Final lockup. */
 export const LOCKUP = { name: "Workflow", accent: "Maps", badge: "BETA", tagline: "See every connection." };

@@ -10,6 +10,7 @@ import { Callout } from "./Callout";
 import { windowAt } from "./choreography";
 import { introCalloutHtml, useCfg } from "./config";
 import { BEATS, FPS, INTRO_CALLOUTS, introCalloutAt } from "./script";
+import { BuilderScenes } from "./builder/scenes";
 
 export const WINDOW = { left: 150, top: 118, width: 1620, height: 880 };
 /** The intro callouts' later lines follow the card 0.45 s in, 0.5 s apart. */
@@ -53,6 +54,8 @@ export const AppWindow: React.FC<{ t: number; tn?: number; plate?: boolean; chro
           </Sequence>
         );
       })}
+      {/* the builder, redrawn over the film's builder shots (film time = t − 3.9) */}
+      {t >= 3.9 ? <BuilderScenes ft={t - 3.9} /> : null}
       {co && !plate ? (() => {
         const lt = tn! - co.o0;
         return <Callout x={co.c.x} y={co.c.y} side={co.c.side} ax={co.c.ax} html={introCalloutHtml(cfg, INTRO_CALLOUTS.indexOf(co.c))}
