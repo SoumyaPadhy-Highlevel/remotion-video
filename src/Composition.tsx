@@ -154,7 +154,7 @@ export const MyComposition = () => {
               text: "Just *ask* your map",
             },
           },
-          breaksHeadline: "What if something *breaks*\nacross {20|50|100} workflows?",
+          breaksHeadline: "What if something breaks\nacross {20|50|100} workflows?",
           mapBuild: {
             kicker: "HOW THE MAP WORKS",
             headline: "Your same workflows,\n*now drawn as a map.*",

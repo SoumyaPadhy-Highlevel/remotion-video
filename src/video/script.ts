@@ -71,7 +71,7 @@ export const BEAT_TL = (1.9375 / 4) * 0.85;
 export const HEADLINES: { a: number; b: number; html: string; top: number; size: number; center?: boolean; kicker?: string; beats?: number[] }[] = [
   { a: 1.75, b: 3.85, html: `Your agency runs on<br/><span class="grad-text">hundreds of workflows.</span>`, top: 440, size: 96 },
   // over the music's gap: 20, 50, 100 on the beats into the drop (M.D3); it has lifted away by the drop, when the map comes forward
-  { a: M.D3 - 5.5 * BEAT_TL, b: M.D3 - 0.02, html: `What if something <span class="grad-text">breaks</span><br/>across {20|50|100} workflows?`, top: 410, size: 64,
+  { a: M.D3 - 5.5 * BEAT_TL, b: M.D3 - 0.02, html: `What if something breaks<br/>across {20|50|100} workflows?`, top: 410, size: 64,
     center: true, kicker: "WHEN IT BREAKS", beats: [M.D3 - 5.5 * BEAT_TL, M.D3 - 4 * BEAT_TL, M.D3 - 2 * BEAT_TL] },
 ];
 

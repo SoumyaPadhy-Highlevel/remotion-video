@@ -46,7 +46,7 @@ export const Background: React.FC = () => {
 const swapper = (h: string, beats: number[] | undefined, t: number) => h.replace(/\{([^}]+)\}/, (_, v: string) => {
   const vals = v.split("|"), at = beats ?? [];
   const i = Math.max(0, at.filter((b) => t >= b).length - 1), d = 1 - springAt(t, at[i] ?? 0, 0.35, 0.4);
-  return `<span class="grad-text" style="display:inline-block;transform-origin:50% 100%;`
+  return `<span style="display:inline-block;transform-origin:50% 100%;`
     + `transform:translateY(${(-0.35 * d).toFixed(4)}em) scale(${(1 + 0.25 * d).toFixed(4)})">${vals[Math.min(i, vals.length - 1)]}</span>`;
 });
 
