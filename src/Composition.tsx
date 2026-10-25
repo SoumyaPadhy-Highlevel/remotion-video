@@ -178,6 +178,7 @@ export const MyComposition = () => {
             accent: "Maps",
             badge: "BETA",
             tagline: "See every connection.",
+            cta: "Live in Labs · Enable it today",
           },
           browserTabs: [
             "Lead Management | Priority Assignment",

@@ -43,7 +43,7 @@ export const textSchema = z.object({
   breaksHeadline: str("Before the errors section"),
   mapBuild: z.object({ kicker: z.string(), headline: str("Left panel headline"), step1: z.string(), step1List: z.string(), step1Count: z.string(), step2: z.string(), step2List: z.string(), step2Count: z.string(), step3: z.string(), step3List: z.string(), step3Count: z.string() }),
   clientMessage: z.object({ from: z.string(), initials: z.string(), text: z.string() }),
-  lockup: z.object({ name: z.string(), accent: str("Gradient word"), badge: z.string(), tagline: z.string() }),
+  lockup: z.object({ name: z.string(), accent: str("Gradient word"), badge: z.string(), tagline: z.string(), cta: str("Call to action under the tagline (empty = none)") }),
   browserTabs: z.array(z.string()).describe("Tab names, in the order they open"),
 });
 // colours: ink = main text, accent = kickers and accents, pill = opening pill, badge = lockup badge (no .describe on colours:

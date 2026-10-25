@@ -38,8 +38,8 @@ export type Footage = { file: string; from?: number; speed?: number };
 /** The app window's footage as the edit shows it: one film frame per video frame (scripts/edited-footage.mjs), so the
  * stretches played slower or faster than the film show fresh frames instead of repeated ones (judder). Built from the film
  * and the timings in this file: rebuild it whenever either changes. null = play APP_FILE per beat, as before. */
-export const EDITED_FILE: string | null = "app-edited-v2.mp4";
-export const APP_FILE = "app-motion-v36.mp4";   // v36: the Workflow Maps pop and click after the reimagine line; v35: browse from 0:36 with a slow Workflow Maps click; v34: the Workflow Maps button pops up before the click; v33: shorter Organise notes (orgdoc, from the Organise session) + scene "browse" (the intro's list browsing, from frame 7764); v30: the run cuts back on its close click; v29: Trace any contact re-cut (enrollment → run → timeline); v28: v27 with Trace any contact rebuilt from staging (taylor reynolds, wait for condition user); v27: v26 without the offer lines while highlighting; v26: v25 + scene "act" (the Assistant acting on the map, from frame 7084); v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
+export const EDITED_FILE: string | null = "app-edited-v3.mp4";   // v3: v2 with the intro (frames < 1100) re-rendered: the "Workflow Maps · Dallas" account and the mascot logo
+export const APP_FILE = "app-motion-v37.mp4";   // v37: the browse shot's rail with the mascot logo and the location pin; v36: the Workflow Maps pop and click after the reimagine line; v35: browse from 0:36 with a slow Workflow Maps click; v34: the Workflow Maps button pops up before the click; v33: shorter Organise notes (orgdoc, from the Organise session) + scene "browse" (the intro's list browsing, from frame 7764); v30: the run cuts back on its close click; v29: Trace any contact re-cut (enrollment → run → timeline); v28: v27 with Trace any contact rebuilt from staging (taylor reynolds, wait for condition user); v27: v26 without the offer lines while highlighting; v26: v25 + scene "act" (the Assistant acting on the map, from frame 7084); v25: v24 + scene "orgdoc" (Organise and document, from frame 6245); v24: v23 + the linked-workflows contact journey (scene "lm" to 22.26 s); v23: v22 without the intro's dark callouts (INTRO_CALLOUTS draws them)
 const APP: Footage = { file: APP_FILE }; // one Claude Motion film for the whole app track, from 3.90 s
 export const BEATS: { id: string; label: string; start: number; end: number; footage?: Footage }[] = [
   { id: "01-intro", label: "Intro", start: 0, end: 3.9 },
@@ -315,7 +315,7 @@ export const BUILDER_WORKFLOWS: Record<"tagNewEnquiries" | "continueJourney" | "
 };
 
 /** Final lockup. */
-export const LOCKUP = { name: "Workflow", accent: "Maps", badge: "BETA", tagline: "See every connection." };
+export const LOCKUP = { name: "Workflow", accent: "Maps", badge: "BETA", tagline: "See every connection.", cta: "Live in Labs · Enable it today" };
 
 /** Drops: the window punches in on the drop, title cards kick on the wall of sound that follows (measured onsets). */
 export const DROPS = [54.3, 100.86, 122.2, 147.41, 166.32];

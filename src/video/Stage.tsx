@@ -142,6 +142,22 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
           <span style={{ fontSize: 30, fontWeight: 700, color: "#fff", background: "var(--badge, #7F56D9)", borderRadius: 12, padding: "8px 14px", letterSpacing: ".04em", alignSelf: "flex-start", marginTop: 14 }}>{text.lockup.badge}</span>
         </div>
         <div style={{ marginTop: 32, fontSize: 44, fontWeight: 600, color: "#344054" }}>{text.lockup.tagline}</div>
+        {/* the call to action: a button that pops in just after the lockup */}
+        {text.lockup.cta ? (() => {
+          const k = springAt(t, M.LOGO + 0.6, 0.6, 0.3);
+          return (
+            <div style={{
+              marginTop: 44, display: "flex", alignItems: "center", gap: 14, height: 76, padding: "0 34px 0 26px", borderRadius: 38,
+              background: "linear-gradient(90deg, var(--grad-a, #155EEF), var(--grad-b, #2E90FA))", color: "#fff", fontSize: 32, fontWeight: 600,
+              boxShadow: "0 18px 40px -12px rgba(21,94,239,.55), inset 0 1px 0 rgba(255,255,255,.25)", whiteSpace: "nowrap",
+              opacity: Math.min(1, k * 1.4), transform: `translateY(${mix(26, 0, k)}px) scale(${mix(0.86, 1, k)})`,
+            }}>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6M10 3v6.2L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.2V3" /><path d="M7.5 14.5h9" /></svg>
+              {text.lockup.cta}
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </div>
+          );
+        })() : null}
       </div>
     </div>
   );
