@@ -10,6 +10,7 @@ import { EdgeLook, MapPlane, MapView, NodeLook, projectToCanvas } from "./MapSce
 import { FILM_MAP_SHOTS, FILM_WORLDS, FilmMapShot } from "./filmMap";
 import { carriedPlane, organiseNodes, organiseRig } from "./organise";
 import { Cursor } from "../builder/shotKit";
+import { sampleFilmTrack } from "./sampleFilmTrack";
 
 /** The map canvas in the 1620×880 window (measured on the film): its white board with 12 px corners. */
 const CANVAS = { left: 60, top: 76, width: 1548, height: 792, radius: 12 };
@@ -135,7 +136,8 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean; board?: typeof C
   const shot = shotAt(ft);
   if (!shot) return null;
   const i = Math.min(shot.frames - 1, Math.round((ft - shot.from) * 30));
-  const [cx, cy, s] = shot.cams.slice(i * 3, i * 3 + 3);
+  const sample = Math.max(0, Math.min(shot.frames - 1, (ft - shot.from) * 30));
+  const [cx, cy, s] = sampleFilmTrack(shot.cams, sample, 3);
   if (!s) return null;
   const { looks, state } = looksAt(shot, i);
   // the build's clear (buildClear): until bT 1.25 the nodes keep their look from just before it, fading out with `k`
@@ -168,7 +170,10 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean; board?: typeof C
     ...docRects,
   ].map(([x, y, w, h]) => [x - board.left, y - board.top, w, h]);
   const fade = Math.min(transform(ft, [shot.from, shot.from + 0.001], [0, 1]), 1);
-  const [mx, my] = shot.cursor.slice(i * 2, i * 2 + 2);
+  // Never interpolate a visible cursor into the film's hidden-cursor sentinel.
+  const ca = Math.floor(sample), cb = Math.min(shot.frames - 1, ca + 1);
+  const [mx, my] = shot.cursor[ca * 2] >= 0 && shot.cursor[cb * 2] >= 0
+    ? sampleFilmTrack(shot.cursor, sample, 2) : shot.cursor.slice(i * 2, i * 2 + 2);
   return (<>
     <div style={{ position: "absolute", left: board.left, top: board.top, width: board.width, height: board.height, borderRadius: board.radius,
       overflow: "hidden", opacity: fade, maskImage: holesMask(ui, board), maskSize: "100% 100%" }}>

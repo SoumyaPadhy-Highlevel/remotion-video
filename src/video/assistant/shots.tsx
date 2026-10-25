@@ -4,6 +4,7 @@
 // (product renderer), the map's notices, the header's Save cluster and the cursor are drawn here, as the product draws
 // them. Everything is a pure function of `ft`.
 import React from "react";
+import { sampleFilmTrack } from "../map3d/sampleFilmTrack";
 import { Freeze, OffthreadVideo, staticFile } from "remotion";
 import { mix, transform } from "motion";
 import { easeInOut, easeOut, springAt } from "../anim";
@@ -49,8 +50,8 @@ const blendCam = (a: MapCamera, b: MapCamera, k: number): MapCamera => {
 /** The film's map camera at film time `ft` (window px → canvas px beside the open panel). */
 const filmCam = (ft: number): MapCamera => {
   const shot = FILM_MAP_SHOTS.find((s) => ft >= s.from && ft < s.from + s.frames / 30)!;
-  const i = Math.min(shot.frames - 1, Math.round((ft - shot.from) * 30));
-  const [cx, cy, s] = shot.cams.slice(i * 3, i * 3 + 3);
+  const at = Math.max(0, Math.min(shot.frames - 1, (ft - shot.from) * 30));
+  const [cx, cy, s] = sampleFilmTrack(shot.cams, at, 3);
   return { cx: cx - MAP_CANVAS.left, cy: cy - MAP_CANVAS.top, s };
 };
 
@@ -257,4 +258,3 @@ export const AssistantShots: React.FC<{ ft: number }> = ({ ft }) => {
     </>
   );
 };
-

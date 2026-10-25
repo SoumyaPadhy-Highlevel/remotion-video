@@ -29,6 +29,9 @@ rebuild it: `node scripts/edited-footage.mjs <film folder> app-edited-vN.mp4` an
 ## Rules for edits
 
 - Everything is a pure function of time: `t = frame / 30`. Never use `Math.random()`, `Date`, timers or state; use `rand(i)` from `anim.ts` for variety.
+- Continuous camera/cursor tracks captured from the film use `map3d/sampleFilmTrack.ts` at fractional source frames. Do not
+  round those positions when a shot plays at 0.85× or 0.83×: that creates repeated-position judder. Discrete UI states and
+  shot visibility still use their existing frame selection; never interpolate across a cut or into a hidden cursor.
 - Animate with Motion's pure helpers (`motion` package): `transform(t, [a, b], [from, to], { ease })` for a timed move or fade,
   `transform(t, [a, a + fadeIn, b - fadeOut, b], [0, 1, 1, 0])` for a visibility window, `mix` to blend, `clamp`.
   Multi-step moves are one keyframe list with an ease per segment: `transform(t, [a, b, c, d], [60, 0, 0, -40], { ease: [easeOut, linear, easeIn] })`
