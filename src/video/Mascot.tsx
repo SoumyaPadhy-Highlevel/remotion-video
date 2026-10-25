@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import { Img, staticFile } from "remotion";
 import { clamp } from "motion";
 import { rand } from "./anim";
@@ -12,6 +12,10 @@ const EYES = [
 const SPARK_COLOURS = ["#FFBC00", "#37CA37", "#188BF6", "#22CCEE"];
 
 export const Mascot: React.FC<{ t: number; st: MascotState }> = ({ t, st }) => {
+  // Premounted and hidden scenes can contain other mascots. SVG paint-server
+  // references are document-wide, so every instance needs its own definitions.
+  const svgId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const eyeFillId = `mascot-eyefill-${svgId}`, eyeGlowId = `mascot-eyeglow-${svgId}`;
   const { x, y, s, r = 0, o = 1, eyes = "normal", look = [0, 0], sparkle = 0, streak = 0, q = 0 } = st;
   const bob = Math.sin(t * 2.2) * 8;
   const sway = Math.sin(t * 1.3) * 2;
@@ -26,7 +30,7 @@ export const Mascot: React.FC<{ t: number; st: MascotState }> = ({ t, st }) => {
     if (eyes === "happy") {
       return (
         <path key={i} d={`M ${cx - e.rx * 1.1} ${cy + 8} Q ${cx} ${cy - e.ry * 0.9} ${cx + e.rx * 1.1} ${cy + 8}`}
-          stroke="url(#eyefill)" strokeWidth={13} strokeLinecap="round" fill="none" transform={rot} />
+          stroke={`url(#${eyeFillId})`} strokeWidth={13} strokeLinecap="round" fill="none" transform={rot} />
       );
     }
     if (eyes === "star") {
@@ -38,7 +42,7 @@ export const Mascot: React.FC<{ t: number; st: MascotState }> = ({ t, st }) => {
         const rad = k % 2 ? rr : R;
         p += `${k ? "L" : "M"} ${cx + Math.cos(a) * rad} ${cy + Math.sin(a) * rad} `;
       }
-      return <path key={i} d={`${p}Z`} fill="url(#eyefill)" />;
+      return <path key={i} d={`${p}Z`} fill={`url(#${eyeFillId})`} />;
     }
     let sx = 1;
     let sy = 1;
@@ -48,7 +52,7 @@ export const Mascot: React.FC<{ t: number; st: MascotState }> = ({ t, st }) => {
     sy *= 1 - blink * 0.92;
     return (
       <g key={i}>
-        <ellipse cx={cx} cy={cy} rx={e.rx * sx} ry={e.ry * sy} fill="url(#eyefill)" transform={rot} />
+        <ellipse cx={cx} cy={cy} rx={e.rx * sx} ry={e.ry * sy} fill={`url(#${eyeFillId})`} transform={rot} />
         {eyes === "worried" ? (
           <path d={`M ${cx - e.rx * 1.3} ${cy - e.ry * (i ? 0.95 : 1.15)} L ${cx + e.rx * 1.2} ${cy - e.ry * (i ? 1.2 : 0.9)}`}
             stroke="#8FF2FF" strokeWidth={6} strokeLinecap="round" transform={rot} />
@@ -88,17 +92,17 @@ export const Mascot: React.FC<{ t: number; st: MascotState }> = ({ t, st }) => {
       <Img src={staticFile("brand/mascot-noeyes.png")} style={{ position: "absolute", left: 0, top: 0, width: 840, height: 580 }} />
       <svg viewBox="0 0 840 580" width={840} height={580} style={{ position: "absolute", left: 0, top: 0, overflow: "visible" }}>
         <defs>
-          <filter id="eyeglow" x="-80%" y="-80%" width="260%" height="260%">
+          <filter id={eyeGlowId} x="-80%" y="-80%" width="260%" height="260%">
             <feGaussianBlur stdDeviation="7" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
-          <radialGradient id="eyefill" cx="45%" cy="40%" r="70%">
+          <radialGradient id={eyeFillId} cx="45%" cy="40%" r="70%">
             <stop offset="0%" stopColor="#E9FFFF" />
             <stop offset="55%" stopColor="#8FF2FF" />
             <stop offset="100%" stopColor="#3FD3F5" />
           </radialGradient>
         </defs>
-        <g filter="url(#eyeglow)">{eyeEls}</g>
+        <g filter={`url(#${eyeGlowId})`}>{eyeEls}</g>
         <g>{sparks}</g>
       </svg>
       <div className="poppins" style={{
