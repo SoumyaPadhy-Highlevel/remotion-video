@@ -25,7 +25,7 @@ export type MapScene = { planes: MapPlane[]; nodes: MapNode[]; edges: MapEdge[] 
  * glow), `opacity` multiplies everything, `hidden` drops it, `label` 0–1 label opacity, `x`/`z`/`lift` override position. */
 export type NodeLook = { dim?: number; selected?: number; hover?: number; flatten?: number; opacity?: number; hidden?: boolean; label?: number;
   x?: number; z?: number; lift?: number };
-export type EdgeLook = { lit?: number; dim?: number; hidden?: boolean; selected?: number };
+export type EdgeLook = { lit?: number; dim?: number; hidden?: boolean; selected?: number; opacity?: number };
 /** World origin at canvas px (cx, cy), `s` canvas px per world unit (the product's zoom is s / (canvas height / 10)). */
 export type MapCamera = { cx: number; cy: number; s: number };
 
@@ -356,7 +356,7 @@ export const MapView: React.FC<{
       o.mesh.geometry = geo.geometry;
       const base = kind === "reference" ? MAP_EDGE.reference.color : MAP_EDGE.causal.color;
       o.mat.color.set(base).lerp(tmpColor.set(MAP_EDGE.pulse.line), lit).lerp(tmpColor.set(MAP_EDGE.selected.color), selected);
-      o.mat.opacity = (kind === "reference" ? 0.75 : 1) * (1 - (1 - 0.18) * (l.dim ?? 0));
+      o.mat.opacity = (kind === "reference" ? 0.75 : 1) * (1 - (1 - 0.18) * (l.dim ?? 0)) * (l.opacity ?? 1);
       if (lit > 0.01) {
         // one blue-500 triangle travelling 0.35 of the edge per second
         const len = Math.hypot(geo.end[0] - geo.start[0], geo.end[1] - geo.start[1]);

@@ -20,7 +20,7 @@ const NAMES = [
   "ghl:Expand05", "ghl:ZoomOut", "ghl:ZoomIn", "ghl:Download01", "ghl:ArrowLeft", "ghl:ArrowRight", "ghl:LogIn02", "ghl:LogOut02",
   "ghl:AlertTriangle", "ghl:FastForward", "ghl:Signal01", "ghl:ChevronDown",
   // Workflow Maps' 3D map (workflow-grid: get-grid-asset-style.ts, GridPlane.ts, GridErrorIndicatorRenderer.ts, GridBadge.ts)
-  "mdi:sitemap", "mdi:form-select", "heroicons-solid:calendar", "mdi:clipboard-list", "mdi:view-column", "mdi:filter",
+  "mdi:sitemap", "mdi:workflow", "mdi:form-select", "heroicons-solid:calendar", "mdi:clipboard-list", "mdi:view-column", "mdi:filter",
   "mdi:file-document-multiple", "mdi:package-variant-closed", "mdi:package-variant", "heroicons-solid:users", "mdi:play-circle",
   "mdi:file-document-edit", "mdi:folder", "mdi:alert-circle", "mdi:link-variant", "heroicons-solid:document-text",
   "mdi:ticket-percent",

@@ -1,7 +1,7 @@
 import { Composition } from "remotion";
-import { WorkflowMapsVideo } from "./video/WorkflowMapsVideo";
+import { MergedWorkflowMapsVideo, mergedWorkflowMapsSchema } from "./video/reveal/MergedWorkflowMapsVideo";
+import { mainEdit } from "./video/reveal/mainEdit";
 import { FPS, VIDEO_END } from "./video/script";
-import { workflowMapsSchema } from "./video/musicProps";
 import { StructureOpeningPreview } from "./video/StructureOpening";
 import { MapBuildMock } from "./video/MapBuildMock";
 import { EditorPieces, FootageAsEdited } from "./video/EditorPieces";
@@ -14,11 +14,20 @@ export const MyComposition = () => {
     <>
     <Composition
       id="WorkflowMaps"
-      component={WorkflowMapsVideo}
-      durationInFrames={Math.round(VIDEO_END * FPS)}
-      schema={workflowMapsSchema}
+      component={MergedWorkflowMapsVideo}
+      durationInFrames={6296}
+      calculateMetadata={({props}) => ({durationInFrames: mainEdit(props.intro.timing, props.intro.title.motion.duration).end})}
+      schema={mergedWorkflowMapsSchema}
       defaultProps={{
         steadyMotion: true,
+        intro: {
+          timing: {questionEndFrame: 111, imagineStartFrame: 115.5, foldersFrame: 220, workflowsFrame: 335, assetsFrame: 451, categoryFrames: 10, titleFrame: 684, titleHoldFrames: 104},
+          copy: {question: "What if we could change\n*all of this?*", imagine: "Where you could get a\n*bird's-eye view.*",
+            folders: "Where your folders become *islands.*", workflows: "Where your workflows become *bright blue nodes.*", assets: "Where every asset becomes a *connected node.*"},
+          title: {text: "Workflow *Maps*", kicker: "INTRODUCING", size: 168,
+            motion: {mode: "kinetic" as const, rise: .85, tilt: 7, blur: 8, letterDelay: .032, duration: .45, exitLift: .45, pulse: .045, topLineSlide: 24}},
+          mascot: {visible: true, scale: 1, offsetX: 0, offsetY: 0},
+        },
         music: {
           volume: 1,
           offset: 0,

@@ -19,7 +19,7 @@ export const MAP_WORKFLOW = {
   color: "#2455d6", baseRing: { published: "#22c55e", draft: "#9ca3af" },
   /** MeshStandard, metalness 0, roughness 0.45, emissive = own colour × intensity */
   material: { roughness: 0.45, metalness: 0, emissive: { rest: 0.35, selected: 1.1, dimmed: 0.12, hoverAdd: 0.14 } },
-  icon: { name: "mdi:sitemap", color: "#ffffff", size: 0.36 },
+  icon: { name: "mdi:workflow", color: "#ffffff", size: 0.36 },
   /** selected: lifted 0.12, XZ ×1.05, additive halo shell (×1.52 XZ, ×1.45 Y, opacity 0.16) and glow sprite (×1.65, 0.4) */
   selected: { lift: 0.12, xz: 1.05, halo: { xz: 1.52, y: 1.45, opacity: 0.16 }, glow: { scale: 1.65, opacity: 0.4 } },
   /** dimmed ("ghost"): colour → gray-400, opacity 0.3, emissive 0.12, over a 0.45 s spring; label hidden */
@@ -41,6 +41,7 @@ export const MAP_ASSET_TYPES: Record<string, { color: string; badge: string; ico
   users: { color: "#84cc16", badge: "#3f6212", icon: "heroicons-solid:users" },
   videos: { color: "#ef4444", badge: "#991b1b", icon: "mdi:play-circle" },
   templates: { color: "#8b5cf6", badge: "#5b21b6", icon: "mdi:file-document-edit" },
+  contactCustomFields: { color: "#20c5c7", badge: "#196568", icon: "mdi:code-braces" },
   customValues: { color: "#3ddc97", badge: "#177650", icon: "mdi:code-braces" },
 };
 

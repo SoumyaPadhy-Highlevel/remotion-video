@@ -11,10 +11,10 @@ const INK = "var(--ink, #0B1B3A)";
 const BLUE = "var(--accent, #155EEF)";
 /** Kinetic type: letters spring up one after another (a little blur and tilt), the accent word sweeps in
  *  as one piece, the kicker's tracking closes up; on `out` the letters lift away in the same order. */
-export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker: string; html: string; size: number; pulse?: number[]; offsetY?: number }> = ({ t, at, out, kicker, html, size, pulse = [], offsetY = 0 }) => {
+export const KineticTitle: React.FC<{ t: number; at: number; out: number; kickerAt?: number; kicker: string; html: string; size: number; pulse?: number[]; offsetY?: number }> = ({ t, at, out, kickerAt = at, kicker, html, size, pulse = [], offsetY = 0 }) => {
   const cfg = useCfg(), T = cfg.motion.titles;
   const calm = T.mode === "calm";
-  if (t < at - 0.05 || t > out + 0.6) return null;
+  if (t < Math.min(at, kickerAt) - 0.05 || t > out + 0.6) return null;
   const total = titleRuns(html).reduce((n, p) => n + p.text.length, 0);
   // the cascade: letters start `enter` apart (the whole line within 0.55 s) and lift away `leave` apart
   const enter = stagger(Math.min(T.letterDelay, 0.55 / Math.max(1, total)), { startDelay: 0.08 }), leave = stagger(Math.min(0.016, 0.3 / Math.max(1, total)));
@@ -26,7 +26,7 @@ export const KineticTitle: React.FC<{ t: number; at: number; out: number; kicker
       filter: !calm && (1 - p) * T.blur + q * 6 > 0.3 ? `blur(${((1 - p) * T.blur + q * 6).toFixed(1)}px)` : undefined };
   };
   const pul = calm ? 0 : pulse.reduce((s, w) => s + (t >= w && t < w + 0.35 ? T.pulse * transform(t, [w, w + 0.35], [1, 0]) ** 2 : 0), 0);
-  const kp = calm ? transform(t, [at, at + 0.3], [0, 1], { ease: easeOut }) : springAt(t, at, 0.5, 0.15), kq = transform(t, [out, out + (calm ? 0.2 : 0.25)], [0, 1]);
+  const kp = calm ? transform(t, [kickerAt, kickerAt + 0.3], [0, 1], { ease: easeOut }) : springAt(t, kickerAt, 0.5, 0.15), kq = transform(t, [out, out + (calm ? 0.2 : 0.25)], [0, 1]);
   return (
     <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", transform: `translateY(${offsetY}px) scale(${(1 + pul).toFixed(4)})` }}>
       {kicker ? <div style={{ fontSize: Math.max(22, size * 0.2), fontWeight: 600, color: BLUE, letterSpacing: `${calm ? 0.08 : mix(0.5, 0.08, kp).toFixed(3)}em`, opacity: kp * (1 - kq) }}>{kicker}</div> : null}

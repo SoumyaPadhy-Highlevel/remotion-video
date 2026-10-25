@@ -27,8 +27,8 @@ export type Layer = "all" | "base" | "titles" | "panel" | "flash" | "mascot" | "
   // single pieces for the full breakdown (scripts/resolve-dissect.ts): titles without the wash, the panel shots only,
   // the map-build panel only, one flying item (`item`), the client message only
   | "titles-clean" | "panels" | "buildpanel" | "flight" | "message" | "tabs";
-export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?: MusicSettings; text?: TextCfg; style?: StyleCfg; show?: ShowCfg; motion?: MotionCfg; fx?: FxCfg; steadyMotion?: boolean }> = ({
-  layer = "all", item = 0, music = DEFAULT_MUSIC, text = DEFAULT_CFG.text, style = DEFAULT_CFG.style, show = DEFAULT_CFG.show,
+export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?: MusicSettings; text?: TextCfg; style?: StyleCfg; show?: ShowCfg; motion?: MotionCfg; fx?: FxCfg; steadyMotion?: boolean; audioEnabled?: boolean; audioGain?: (outputFrame: number) => number }> = ({
+  layer = "all", item = 0, audioEnabled = true, audioGain, music = DEFAULT_MUSIC, text = DEFAULT_CFG.text, style = DEFAULT_CFG.style, show = DEFAULT_CFG.show,
   motion: authoredMotion = DEFAULT_CFG.motion, fx = DEFAULT_CFG.fx, steadyMotion = false,
 }) => {
   const motion = steadyMotion ? withSteadyMotion(authoredMotion) : authoredMotion;
@@ -77,7 +77,7 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
       <style>{GLOBAL_CSS}</style>
       {/* music: the one soundtrack file, its main drop on the video's drop; if the video outruns it, it jumps back to the drop
           on a bar line before its outro. Level, nudge, loop and end fade come from the `music` props (Studio's Props panel). */}
-      {L("audio") ? (() => {
+      {audioEnabled && L("audio") ? (() => {
         const m = music, at = m.offset, loop = m.loopToDrop;
         const endVol = (o: number) => transform(o, [VIDEO_END - m.endFade, VIDEO_END - m.endFade + Math.max(0.01, m.endFade)], [1, 0]);
         // the file plays straight through to MUSIC_CUT, skips it (bar line to bar line, a few ms of fade either side), then plays
@@ -86,11 +86,11 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
         return <>
           <Sequence from={Math.round(Math.max(0, at) * FPS)} durationInFrames={Math.round((c0 + Math.min(0, at)) * FPS)} layout="none">
             <Audio src={staticFile(MUSIC.file)} trimBefore={at < 0 ? Math.round(-at * FPS) : undefined}
-              volume={(f) => m.volume * endVol(f / FPS + Math.max(0, at)) * transform(f / FPS, [c0 + Math.min(0, at) - xf, c0 + Math.min(0, at)], [1, 0])} />
+              volume={(f) => m.volume * (audioGain?.(f + Math.round(Math.max(0, at) * FPS)) ?? 1) * endVol(f / FPS + Math.max(0, at)) * transform(f / FPS, [c0 + Math.min(0, at) - xf, c0 + Math.min(0, at)], [1, 0])} />
           </Sequence>
           <Sequence from={Math.round((c0 + at) * FPS)} durationInFrames={loop ? Math.round((loopOut - c0) * FPS) + 4 : undefined} layout="none">
             <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(c1 * FPS)}
-              volume={(f) => m.volume * endVol(f / FPS + c0 + at) * transform(f / FPS, [0, xf], [0, 1]) * (loop ? transform(f / FPS, [loopOut - c0, loopOut - c0 + 0.13], [1, 0]) : 1)} />
+              volume={(f) => m.volume * (audioGain?.(f + Math.round((c0 + at) * FPS)) ?? 1) * endVol(f / FPS + c0 + at) * transform(f / FPS, [0, xf], [0, 1]) * (loop ? transform(f / FPS, [loopOut - c0, loopOut - c0 + 0.13], [1, 0]) : 1)} />
           </Sequence>
           {/* after the loop: from the drop to LOOP_CUT, a skip (bar line to bar line, the same few ms of fade), then on */}
           {loop ? (() => {
@@ -98,10 +98,10 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
             return <>
               <Sequence from={Math.round((loopOut + at) * FPS)} durationInFrames={Math.round(head * FPS)} layout="none">
                 <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(MUSIC.drop * FPS)}
-                  volume={(f) => m.volume * endVol(f / FPS + loopOut + at) * transform(f / FPS, [head - xf, head], [1, 0])} />
+                  volume={(f) => m.volume * (audioGain?.(f + Math.round((loopOut + at) * FPS)) ?? 1) * endVol(f / FPS + loopOut + at) * transform(f / FPS, [head - xf, head], [1, 0])} />
               </Sequence>
               <Sequence from={Math.round((out1 + at) * FPS)} layout="none">
-                <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(l1 * FPS)} volume={(f) => m.volume * endVol(f / FPS + out1 + at) * transform(f / FPS, [0, xf], [0, 1])} />
+                <Audio src={staticFile(MUSIC.file)} trimBefore={Math.round(l1 * FPS)} volume={(f) => m.volume * (audioGain?.(f + Math.round((out1 + at) * FPS)) ?? 1) * endVol(f / FPS + out1 + at) * transform(f / FPS, [0, xf], [0, 1])} />
               </Sequence>
             </>;
           })() : null}
