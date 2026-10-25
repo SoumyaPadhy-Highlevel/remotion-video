@@ -33,7 +33,7 @@ const card = z.object({ kicker: str("Small line above (all caps)"), text: str("*
 const obj = <K extends readonly string[], V extends z.ZodTypeAny>(keys: K, v: V) => z.object(Object.fromEntries(keys.map((k) => [k, v])) as { [k in K[number]]: V });
 
 export const textSchema = z.object({
-  opening: z.object({ pill: str("The pill under the logo"), headline: str("Opening headline (*words* = gradient)") }),
+  opening: z.object({ pill: str("The pill under the logo (empty = no pill)"), headline: str("Opening headline (*words* = gradient)") }),
   introCards: obj(INTRO_KEYS, str("Intro statement (*words* = gradient)")),
   introCallouts: obj(CALLOUT_KEYS, str("Intro callout: small line, line break, big line (*words* = gradient)")),
   titleDrop: z.object({ kicker: str("Above the title"), title: str("The title on the drop") }),
@@ -111,7 +111,7 @@ export type Cfg = { text: TextCfg; style: StyleCfg; show: ShowCfg; motion: Motio
 const cardOf = (c: { kicker: string; html: string }) => ({ kicker: c.kicker, text: toMarkup(c.html) });
 export const DEFAULT_CFG: Cfg = {
   text: {
-    opening: { pill: "WORKFLOWS", headline: toMarkup(HEADLINES[0].html) },
+    opening: { pill: "", headline: toMarkup(HEADLINES[0].html) },
     introCards: Object.fromEntries(INTRO_KEYS.map((k, i) => [k, toMarkup(INTRO_CARDS[i].html)])) as TextCfg["introCards"],
     introCallouts: Object.fromEntries(CALLOUT_KEYS.map((k, i) => [k, toMarkup(INTRO_CALLOUTS[i].html)])) as TextCfg["introCallouts"],
     titleDrop: { kicker: "INTRODUCING", title: "Workflow *Maps*" },

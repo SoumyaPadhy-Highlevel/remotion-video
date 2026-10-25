@@ -2,7 +2,7 @@
 // of the app footage; all panels sit on screen together, their labels and animations start one after another.
 // Also the film clip window (a stretch of film shown in the app window, e.g. the hand-offs on the second drop).
 import React from "react";
-import { Freeze, OffthreadVideo, staticFile } from "remotion";
+import { Freeze, getRemotionEnvironment, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { clamp, mix, stagger, transform } from "motion";
 import { easeInOut, easeOut, linear, springAt } from "./anim";
 import { PANEL_CLIPS } from "./panelCursor";
@@ -110,9 +110,12 @@ const PanelCursor: React.FC<{ cfg: PanelShot; lt: number; x0: number }> = ({ cfg
 /** A stretch of film in the app window (same frame as AppWindow), with an optional line above it. */
 /** A film clip in place of the window, with its card as the top line, as a callout in the footage (`callout`, window px) or as
  * a title that pops in (`pop`, clip seconds). */
+/** `rate`: the clip plays (film seconds per output second), so in Studio its video plays from the clip's start instead of
+ *  being re-cut every frame; a re-cut changes the video's source each frame and the browser reloads it (flicker). */
 export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; html: string; fade: number; dur: number; callout?: [number, number]; pop?: number;
-  calloutTip?: { x: number; y: number; side: CalloutSide; ax?: number } }> = ({ film, lt, kicker, html, fade, dur, callout, pop, calloutTip }) => {
+  calloutTip?: { x: number; y: number; side: CalloutSide; ax?: number }; rate?: number }> = ({ film, lt, kicker, html, fade, dur, callout, pop, calloutTip, rate }) => {
   const { show, style } = useCfg();
+  const frame = useCurrentFrame(), playing = rate != null && !getRemotionEnvironment().isRendering;
   const capOut = callout || calloutTip || pop != null ? 0 : 1;
   const co = springAt(lt, 1.05, 0.4, 0.3);
   return <>
@@ -122,9 +125,11 @@ export const ClipWindow: React.FC<{ film: number; lt: number; kicker: string; ht
     }}>
       {/* the film frame comes from trimBefore, not the frozen frame: a frozen frame past the composition's own length is clamped
           to it (the film runs longer than the video) */}
-      <Freeze frame={0}>
+      {playing ? <Sequence from={Math.round(frame - lt * FPS)} layout="none">
+        <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted trimBefore={Math.round((film - lt * rate) * FPS)} playbackRate={rate} style={{ width: WINDOW.width, height: WINDOW.height }} />
+      </Sequence> : <Freeze frame={0}>
         <OffthreadVideo src={staticFile(`footage/${APP_FILE}`)} muted trimBefore={Math.round(film * FPS)} style={{ width: WINDOW.width, height: WINDOW.height }} />
-      </Freeze>
+      </Freeze>}
       <BuilderScenes ft={film} />
     </div>
     <div className="poppins" style={{ position: "absolute", left: 0, right: 0, top: 18, textAlign: "center", opacity: (show.panelCaptions ? 1 : 0) * fade * capOut * transform(lt, [0.1, 0.5, dur - 0.35, dur - 0.05], [0, 1, 1, 0], { ease: [easeOut, linear, easeInOut] }), transform: `translateY(${((1 - springAt(lt, 0.1, 0.45, 0.2)) * 20).toFixed(1)}px)` }}>

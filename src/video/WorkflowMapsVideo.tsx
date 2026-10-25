@@ -27,8 +27,9 @@ export type Layer = "all" | "base" | "titles" | "panel" | "flash" | "mascot" | "
   // single pieces for the full breakdown (scripts/resolve-dissect.ts): titles without the wash, the panel shots only,
   // the map-build panel only, one flying item (`item`), the client message only
   | "titles-clean" | "panels" | "buildpanel" | "flight" | "message" | "tabs";
-export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?: MusicSettings; text?: TextCfg; style?: StyleCfg; show?: ShowCfg; motion?: MotionCfg; fx?: FxCfg; steadyMotion?: boolean; audioEnabled?: boolean; audioGain?: (outputFrame: number) => number }> = ({
-  layer = "all", item = 0, audioEnabled = true, audioGain, music = DEFAULT_MUSIC, text = DEFAULT_CFG.text, style = DEFAULT_CFG.style, show = DEFAULT_CFG.show,
+/** `cutInAt`: an edit cuts into this video at that frame, on a statement card; the window is already receded there. */
+export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; cutInAt?: number; music?: MusicSettings; text?: TextCfg; style?: StyleCfg; show?: ShowCfg; motion?: MotionCfg; fx?: FxCfg; steadyMotion?: boolean; audioEnabled?: boolean; audioGain?: (outputFrame: number) => number }> = ({
+  layer = "all", item = 0, cutInAt, audioEnabled = true, audioGain, music = DEFAULT_MUSIC, text = DEFAULT_CFG.text, style = DEFAULT_CFG.style, show = DEFAULT_CFG.show,
   motion: authoredMotion = DEFAULT_CFG.motion, fx = DEFAULT_CFG.fx, steadyMotion = false,
 }) => {
   const motion = steadyMotion ? withSteadyMotion(authoredMotion) : authoredMotion;
@@ -59,7 +60,8 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
   const titleRecede = (c: (typeof EDIT)[number]) => { const tt = editTime(c.n0 - 1.4).t; return RECEDES.find(([a, b, d]) => transform(tt, [a, a + 0.45, b - 0.45, b], [0, 1, 1, 0]) * d > 0.1); };
   const nextC = seg && !seg.hold ? EDIT[si + 1] : undefined, rc = nextC && isCard(nextC) ? titleRecede(nextC) : undefined;
   const bridge = rc && t >= rc[1] - 0.45 ? Math.min(1, Math.max(0, 1 - recedeAt(t) / rc[2])) : 0;
-  const kb = Math.max(k, bridge, isCard(seg) && titleRecede(seg!) && tn < seg!.n0 + 0.3 ? 1 : 0);
+  const cutIn = cutInAt != null && isCard(seg) && Math.abs(seg!.n0 - uncut(cutInAt / FPS)) < 1 / FPS;
+  const kb = Math.max(k, bridge, isCard(seg) && (cutIn || titleRecede(seg!)) && tn < seg!.n0 + 0.3 ? 1 : 0);
   const cards = EDIT.filter((s) => s.hold && !s.card?.top && !s.card?.build && !s.card?.cut && !s.card?.plan && !s.panels && !s.clip && tn >= s.n0 - 0.05 && tn < s.n1 + 0.4);
   const top = EDIT.find((s) => s.hold && s.card?.top && !s.clip && tn >= s.n0 && tn < (s.until ?? s.n1));
   // the mascot keeps to the corner while a panel shot or film clip replaces the window
@@ -71,7 +73,7 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
   const ih = introCalloutAt(tn), held = ih && tn >= ih.h0 && tn < ih.h1 ? ih.h0 : seg?.hold && !seg.card?.top ? seg.n0 : undefined;
   return (
     <CfgProvider cfg={cfg}>
-    <AbsoluteFill
+    <AbsoluteFill showInTimeline={false}
       style={{ ...styleVars(style), background: L("base") ? "#F4F8FF" : "transparent", fontFamily: "var(--font-body, Inter), system-ui, sans-serif", WebkitFontSmoothing: "antialiased", overflow: "hidden" }}
     >
       <style>{GLOBAL_CSS}</style>
@@ -132,7 +134,7 @@ export const WorkflowMapsVideo: React.FC<{ layer?: Layer; item?: number; music?:
           <ClipWindow film={fromClip.clip[1] - 1 / FPS} lt={fromClip.n1 - fromClip.n0} {...cardText(cfg, fromClip.card!)} fade={1} dur={fromClip.n1 - fromClip.n0} callout={fromClip.card!.callout} pop={fromClip.card!.pop} />
         </div> : null}
         {seg?.panels && (L("base") || layer === "panels") ? <Panels cfg={PANELS[seg.panels]} lt={tn - seg.n0} {...cardText(cfg, seg.card!)} fade={prevS?.clip ? Math.min(trio, transform(tn, [seg.n0 + 0.12, seg.n0 + 0.45], [0, 1])) : trio} /> : null}
-        {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.card!.still ? seg.clip[0] : seg.clip[0] + (tn - seg.n0) * (seg.card!.clipRate ?? 1)} lt={tn - seg.n0} calloutTip={seg.card!.calloutTip} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0}
+        {seg?.clip && (L("base") || layer === "panels") ? <ClipWindow film={seg.card!.still ? seg.clip[0] : seg.clip[0] + (tn - seg.n0) * (seg.card!.clipRate ?? 1)} lt={tn - seg.n0} calloutTip={seg.card!.calloutTip} {...cardText(cfg, seg.card!)} fade={trio} dur={seg.n1 - seg.n0} rate={seg.card!.still ? undefined : seg.card!.clipRate ?? 1}
           callout={seg.card!.callout} pop={seg.card!.pop} /> : null}
         {overClip?.clip && (L("base") || layer === "panels") ? (() => {
           const kk = transform(tn, [overSeg!.n0, overSeg!.n0 + 0.35], [0, 1]), r = motion.recedeCards, out = nextS?.clip ? 1 : transform(tn, [overSeg!.n1 - 0.3, overSeg!.n1], [1, 0]);

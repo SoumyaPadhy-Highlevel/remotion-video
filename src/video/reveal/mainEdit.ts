@@ -9,8 +9,18 @@ const firstDemo = EDIT.find((s) => s.hold && s.card?.html.includes("Select a wor
 const repeatedSetup = EDIT.find((s) => s.hold && s.card?.html.includes("Remember having to jump"))!;
 const connectedCanvas = EDIT.find((s) => s.hold && s.card?.html.includes("All your linked workflows."))!;
 export const MAIN_RESUME_SOURCE = outputFrame(firstDemo.n0);
+/** The timeline moment held behind that card (what its window and mascot show). */
+export const MAIN_FIRST_CARD_T = firstDemo.src;
 export const MAIN_REPEAT_START = outputFrame(repeatedSetup.n0);
+/** The Plan it shot's last frame with its top line still fully up (the line fades over the 0.3 s before the next card); the
+ * shot has settled by then, so it holds on this frame into the dissolve to the linked workflows. */
+export const MAIN_PLAN_STILL = MAIN_REPEAT_START - Math.ceil(.3 * FPS) - 1;
+/** Frames of the dissolve from that still into the linked workflows, centred on the music's bar line (connectedFrom). */
+export const LINKED_DISSOLVE = 12;
 export const MAIN_CONNECTED_SOURCE = outputFrame(connectedCanvas.n0);
+/** The cut's music as one file in public/: MergedMusicEdit bounced. After changing any timing, rebuild it under a new name
+ * (`npx remotion render src/index.ts WorkflowMapsMusicEdit public/<name>.wav --codec=wav`) and point this at it. */
+export const MUSIC_MIX = "music-edit-v1.wav";
 export const MAIN_SOURCE_FRAMES = Math.round(VIDEO_END * FPS);
 export const mainEdit = (timing: RevealTiming, letterDuration = .45) => {
   const approvedEnd = MAIN_INTRO_FROM + reviewDuration(timing, letterDuration);
@@ -30,3 +40,10 @@ export const mainEdit = (timing: RevealTiming, letterDuration = .45) => {
   const end = connectedFrom + sourceEnd - MAIN_CONNECTED_SOURCE;
   return {approvedEnd, removedIntroBars, musicDemoFrom, demoFrom, firstDemoFrames, holdFrom, musicConnectedFrom, connectedFrom, sourceEnd, end};
 };
+/** The stretches of the main video the cut keeps, in seconds: output [out0, out1) shows main-video time src0 on. The music
+ * follows the same stretches (musicEdit.ts), on the music's exact bar positions. */
+export const cutStretches = (p: ReturnType<typeof mainEdit>) => [
+  {out0: 0, out1: p.musicDemoFrom / FPS, src0: 0},
+  {out0: p.musicDemoFrom / FPS, out1: p.musicConnectedFrom / FPS, src0: MAIN_RESUME_SOURCE / FPS},
+  {out0: p.musicConnectedFrom / FPS, out1: p.end / FPS, src0: MAIN_CONNECTED_SOURCE / FPS},
+];

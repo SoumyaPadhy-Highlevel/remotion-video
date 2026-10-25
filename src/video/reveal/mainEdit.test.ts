@@ -1,8 +1,8 @@
 import {strict as assert} from "node:assert";
 import {test} from "node:test";
-import {M} from "../script";
+import {EDIT, M, PLAN_SHOT, uncut} from "../script";
 import {DEFAULT_TIMING as T} from "./reviewProps";
-import {mainEdit, MAIN_CONNECTED_SOURCE, MAIN_INTRO_FROM, MAIN_REPEAT_START, MAIN_RESUME_SOURCE, MAIN_SOURCE_FRAMES} from "./mainEdit";
+import {LINKED_DISSOLVE, mainEdit, MAIN_CONNECTED_SOURCE, MAIN_INTRO_FROM, MAIN_PLAN_STILL, MAIN_REPEAT_START, MAIN_RESUME_SOURCE, MAIN_SOURCE_FRAMES} from "./mainEdit";
 test("approved intro frames and the music drop stay fixed in the main composition", () => {
   const p = mainEdit(T);
   assert.equal(MAIN_INTRO_FROM + T.titleFrame, 1440);
@@ -31,4 +31,13 @@ test("new Plan it footage and the entire later product edit retain their source 
   const spans = [[0, MAIN_INTRO_FROM], [MAIN_INTRO_FROM,p.demoFrom], [p.demoFrom,p.holdFrom], [p.holdFrom,p.connectedFrom], [p.connectedFrom,p.end]];
   for (let i=1;i<spans.length;i++) assert.equal(spans[i-1][1],spans[i][0]);
   assert.equal(p.end-p.connectedFrom,p.sourceEnd-MAIN_CONNECTED_SOURCE);
+});
+test("Plan it holds a frame with its line fully up and dissolves into the linked workflows on the bar line", () => {
+  const p = mainEdit(T), plan = EDIT.find((s) => s.hold && s.card?.plan?.[1] === PLAN_SHOT.len)!;
+  // the still is the last frame before the top line starts to fade (0.3 s before it goes), not one caught mid-fade
+  const t = uncut(MAIN_PLAN_STILL / 30), fadeFrom = plan.until! - .3;
+  assert(t <= fadeFrom + 1e-9 && t > fadeFrom - 2 / 30);
+  // the dissolve sits inside the old hold, around the music's bar line, and never reaches back into the Plan it play
+  assert(p.connectedFrom - LINKED_DISSOLVE / 2 > p.demoFrom + MAIN_PLAN_STILL - MAIN_RESUME_SOURCE);
+  assert(Math.abs(p.connectedFrom - p.musicConnectedFrom) <= .5);
 });

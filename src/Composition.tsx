@@ -1,9 +1,10 @@
 import { Composition } from "remotion";
-import { MergedWorkflowMapsVideo, mergedWorkflowMapsSchema } from "./video/reveal/MergedWorkflowMapsVideo";
+import { MergedMusicEdit, MergedWorkflowMapsVideo, mergedWorkflowMapsSchema } from "./video/reveal/MergedWorkflowMapsVideo";
+import { DEFAULT_TIMING } from "./video/reveal/reviewProps";
+import { DEFAULT_MUSIC } from "./video/musicProps";
 import { mainEdit } from "./video/reveal/mainEdit";
 import { FPS, VIDEO_END } from "./video/script";
 import { StructureOpeningPreview } from "./video/StructureOpening";
-import { MapBuildMock } from "./video/MapBuildMock";
 import { EditorPieces, FootageAsEdited } from "./video/EditorPieces";
 import { BuilderShots, PlanAssetsShot, PLAN_LEN } from "./video/builder/BuilderShots";
 import { AssistantStills } from "./video/assistant/AssistantStills";
@@ -36,7 +37,7 @@ export const MyComposition = () => {
         },
         text: {
           opening: {
-            pill: "WORKFLOWS",
+            pill: "",
             headline: "Your account runs on *hundreds of workflows.*",
           },
           introCards: {
@@ -364,6 +365,18 @@ export const MyComposition = () => {
       width={1920}
       height={1080}
     />
+    {/* the music as the cut edits it, bounced into the one soundtrack file (mainEdit.ts MUSIC_MIX); its timing and music
+        props must match WorkflowMaps' above */}
+    <Composition
+      id="WorkflowMapsMusicEdit"
+      component={MergedMusicEdit}
+      durationInFrames={6296}
+      calculateMetadata={({props}) => ({durationInFrames: mainEdit(props.intro.timing, props.intro.title.motion.duration).end})}
+      defaultProps={{intro: {timing: DEFAULT_TIMING, title: {motion: {duration: .45}}}, music: DEFAULT_MUSIC}}
+      fps={FPS}
+      width={1920}
+      height={1080}
+    />
     <Composition
       id="WorkflowMaps-Opening"
       component={StructureOpeningPreview}
@@ -378,7 +391,6 @@ export const MyComposition = () => {
     <Composition id="AssistantStills" component={AssistantStills} durationInFrames={1} fps={FPS} width={1620} height={880} defaultProps={{ still: "A1" }} />
     <Composition id="BuilderShots" component={BuilderShots} durationInFrames={Math.round(236 * FPS)} fps={FPS} width={1620} height={880} defaultProps={{ overlay: true }} />
     <Composition id="PlanAssets" component={PlanAssetsShot} durationInFrames={Math.round(PLAN_LEN * FPS)} fps={FPS} width={1620} height={880} defaultProps={{ film: 64.24 }} />
-    <Composition id="MapBuild-Mock" component={MapBuildMock} durationInFrames={1} fps={30} width={1920} height={1080} />
     </>
   );
 };

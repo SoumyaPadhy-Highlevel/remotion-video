@@ -76,11 +76,12 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
     <div className="poppins" style={{ position: "absolute", inset: 0, color: INK }}>
       {/* Opening brand */}
       <Img src={staticFile("brand/highlevel-logo-dark.png")} style={{ position: "absolute", left: 110, top: 78, height: 64, ...hidden(logoO) }} />
-      <div style={{
+      {/* the pill under the logo; leave its text empty for no pill */}
+      {text.opening.pill ? <div style={{
         position: "absolute", left: 110, top: 170, height: 56, padding: "0 34px", borderRadius: 999, background: "var(--pill, #4A90F7)", color: INK,
         fontSize: 26, fontWeight: 600, display: "flex", alignItems: "center", letterSpacing: ".02em",
         transform: `translateY(${(1 - springAt(t, 0.5, 0.5, 0.3)) * 20}px)`, ...hidden(pillO),
-      }}>{text.opening.pill}</div>
+      }}>{text.opening.pill}</div> : null}
 
       {/* Headline (a kicker makes it a centred statement in the cards' type: 800, -0.03em, 1.12 leading) */}
       {hl ? (

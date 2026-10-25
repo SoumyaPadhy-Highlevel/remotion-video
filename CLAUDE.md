@@ -88,4 +88,9 @@ rebuild it: `node scripts/edited-footage.mjs <film folder> app-edited-vN.mp4` an
 - Check a builder redraw against the film: `npx remotion still src/index.ts BuilderShots out/check.png --frame=<film s × 30>`
   (pass `--props='{"overlay":false}'` for the bare film).
 - Tests (builder layout and shot helpers): `npm test`.
+- Music: `WorkflowMaps` plays one soundtrack file, `MUSIC_MIX` (`reveal/mainEdit.ts`): the cut's music edit
+  (`reveal/musicEdit.ts`, pieces of `public/music-workflow-maps.mp3` on bar lines) bounced. After changing any timing or the
+  music props, rebuild it under a new name and point `MUSIC_MIX` at it (an audio-only `--codec=wav` render drops pieces):
+  `npx remotion render src/index.ts WorkflowMapsMusicEdit out/music-edit.mkv --codec=h264-mkv --audio-codec=pcm-16 --scale=0.25`,
+  then `npx remotion ffmpeg -i out/music-edit.mkv -vn -c:a copy public/music-edit-vN.wav`.
 - Builder icons: add the Iconify / ghl-icons name to `scripts/builder-icons.mjs`, then `node scripts/builder-icons.mjs ../automation-workflows-frontend`.
