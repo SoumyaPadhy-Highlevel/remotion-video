@@ -10,7 +10,8 @@ import { mix, transform } from "motion";
 import { easeInOut, easeOut, springAt } from "../anim";
 import { BIcon } from "../builder/Nodes";
 import { Cursor } from "../builder/shotKit";
-import { FILM_MAP_SHOTS, FILM_WORLDS } from "../map3d/filmMap";
+import { FILM_MAP_SHOTS } from "../map3d/filmMap";
+import { MAP_WORLDS, spacedCamera, toSpaced } from "../map3d/spacing";
 import { EdgeLook, MapCamera, MapPlane, MapScene, MapView, NodeLook, projectToCanvas } from "../map3d/MapScene";
 import { APP_FILE, ASSISTANT, FPS } from "../script";
 import { ACT_FROM, ACT_LEN, ACT_RATE, ASK_T, assistantShown, P, Pt, SAVE, TURNS } from "./timing";
@@ -47,31 +48,37 @@ const blendCam = (a: MapCamera, b: MapCamera, k: number): MapCamera => {
   return { cx: W / 2 - s * u, cy: H / 2 - s * v, s };
 };
 
-/** The film's map camera at film time `ft` (window px → canvas px beside the open panel). */
-const filmCam = (ft: number): MapCamera => {
+/** The film's map camera at film time `ft` (window px), as the film has it. */
+const rawFilmCam = (ft: number): MapCamera => {
   const shot = FILM_MAP_SHOTS.find((s) => ft >= s.from && ft < s.from + s.frames / 30)!;
   const at = Math.max(0, Math.min(shot.frames - 1, (ft - shot.from) * 30));
   const [cx, cy, s] = sampleFilmTrack(shot.cams, at, 3);
+  return { cx, cy, s };
+};
+/** The film's map camera at film time `ft` on the spaced map (map3d/spacing.ts), canvas px beside the open panel. */
+const filmCam = (ft: number): MapCamera => {
+  const { cx, cy, s } = spacedCamera(rawFilmCam(ft), MAP_CANVAS);
   return { cx: cx - MAP_CANVAS.left, cy: cy - MAP_CANVAS.top, s };
 };
 
 // ── the film's sticky note on 01 · Lead Capture, carried as an image pinned to its spot on the map ──
 const NOTE_FT = 159.6;
-/** Its card and pin in the film at NOTE_FT (window px). */
+/** Its card in the film at NOTE_FT (window px). */
 const NOTE_RECT = [838, 416, 116, 92];
-const NOTE_PIN: Pt = [851, 499];
 /** World point under a canvas point, on the ground. */
 const unproject = (cam: MapCamera, u: number, v: number) => {
   const [ox, oy] = projectToCanvas(cam, 0, 0, 0), [xx, xy] = projectToCanvas(cam, 1, 0, 0), [zx, zy] = projectToCanvas(cam, 0, 0, 1);
   const a = xx - ox, b = zx - ox, c = xy - oy, d = zy - oy, det = a * d - b * c, du = u - ox, dv = v - oy;
   return { x: (d * du - b * dv) / det, z: (a * dv - c * du) / det };
 };
-const NOTE_CAM = filmCam(NOTE_FT);
-const NOTE_AT = unproject(NOTE_CAM, NOTE_PIN[0] - MAP_CANVAS.left, NOTE_PIN[1] - MAP_CANVAS.top);
+// pinned by the film's map point under its card's middle, carried onto the spaced map (where spacing.ts keeps that spot
+// clear of nodes)
+const NOTE_CAM = filmCam(NOTE_FT), FILM_NOTE = unproject(rawFilmCam(NOTE_FT), NOTE_RECT[0] + NOTE_RECT[2] / 2, NOTE_RECT[1] + NOTE_RECT[3] / 2);
+const NOTE_AT = (([x, z]) => ({ x, z }))(toSpaced(FILM_NOTE.x, FILM_NOTE.z));
 const StickyNote: React.FC<{ cam: MapCamera; opacity: number }> = ({ cam, opacity }) => {
   if (opacity <= 0.01) return null;
   const [u, v] = projectToCanvas(cam, NOTE_AT.x, 0, NOTE_AT.z), k = cam.s / NOTE_CAM.s;
-  const [x, y, w, h] = NOTE_RECT, ox = NOTE_PIN[0] - x, oy = NOTE_PIN[1] - y;
+  const [x, y, w, h] = NOTE_RECT, ox = w / 2, oy = h / 2;
   return (
     <div style={{ position: "absolute", left: u - ox * k, top: v - oy * k, width: w, height: h, overflow: "hidden", transform: `scale(${k})`, transformOrigin: "0 0", opacity }}>
       <Freeze frame={0}>
@@ -95,7 +102,7 @@ const ask = ASSISTANT.ask;
 /** The workflow with errors (the errors section's "1 workflow · Need your attention"). */
 const ERR = ["program-payment"];
 /** Focus on it the way the product's focus frames one node: a little of its folder around it. */
-const ASK_FOCUS = fitCamera(FILM_WORLDS.main.nodes.filter((n) => ERR.includes(n.id)).flatMap((n) => [{ x: n.x - 4, z: n.z - 4 }, { x: n.x + 4, z: n.z + 4 }]), W, H, 0.1);
+const ASK_FOCUS = fitCamera(MAP_WORLDS.main.nodes.filter((n) => ERR.includes(n.id)).flatMap((n) => [{ x: n.x - 4, z: n.z - 4 }, { x: n.x + 4, z: n.z + 4 }]), W, H, 0.1);
 
 /** "Ask your map anything" (film time): the panel opens, the Map overview tile sends, the answer streams, Show on map. */
 const askFrame = (ft: number): Frame => {
@@ -112,15 +119,15 @@ const askFrame = (ft: number): Frame => {
   const cursor = cursorAt(ft, [[T.open, P.rail], [159.35, P.rail], [T.hover, P.tile], [T.reply + 0.6, P.tile], [T.reply + 1.4, [300, 560]], [T.toBtn, [300, 560]], [T.atBtn, P.showOnMap]]);
   const focus = ramp(ft, T.fly[0], T.fly[1]), dim = sp(ft, T.applied, 0.45);
   const looks: Record<string, NodeLook> = {};
-  for (const n of FILM_WORLDS.main.nodes) looks[n.id] = ERR.includes(n.id) ? { selected: dim } : { dim };
+  for (const n of MAP_WORLDS.main.nodes) looks[n.id] = ERR.includes(n.id) ? { selected: dim } : { dim };
   const edgeLooks: Record<string, EdgeLook> = {};
-  for (const e of FILM_WORLDS.main.edges) edgeLooks[`${e.from}>${e.to}`] = { dim };
+  for (const e of MAP_WORLDS.main.edges) edgeLooks[`${e.from}>${e.to}`] = { dim };
   return {
     panel: { empty: sent ? undefined : {}, items, loading: sent && !replied, history: ft >= T.applied,
       hover: ft >= T.hover && !sent ? "tile:summarize" : ft >= T.atBtn - 0.1 && status === "pending" ? "apply" : undefined,
       press: ft >= T.click && ft < T.sent ? "tile:summarize" : ft >= T.press && ft < T.run ? "apply" : undefined },
     panelK: transform(ft, [T.open, T.open + 0.2], [0, 1]),
-    map: { scene: FILM_WORLDS.main, cam: blendCam(filmCam(Math.min(Math.max(ft, 158.4), NOTE_FT)), ASK_FOCUS, focus), looks, edgeLooks, planeLooks: {}, note: 1 - dim * 0.7 },
+    map: { scene: MAP_WORLDS.main, cam: blendCam(filmCam(Math.min(Math.max(ft, 158.4), NOTE_FT)), ASK_FOCUS, focus), looks, edgeLooks, planeLooks: {}, note: 1 - dim * 0.7 },
     cursor, press: (ft >= T.click && ft < T.sent) || (ft >= T.press && ft < T.run) ? 1 : 0, toasts: [],
   };
 };

@@ -63,6 +63,11 @@ rebuild it: `node scripts/edited-footage.mjs <film folder> app-edited-vN.mp4` an
   look per frame, where the film's panels, notes, tooltips and contact chips sit (left to the film), and its cursor.
   The worlds (folder rects, node positions, links, names) are `scripts/map_film/world_*.json`; Organise's drags and recolours
   are `map3d/organise.ts` (mirrored in `organise.py`). A new film with map shots: see `scripts/map_film/README.md`.
+  Those are the film's positions, where labels overlap; the video draws the spaced map, `map3d/spacing.ts`: each folder a grid
+  of label-sized cells (`SPACED_FOLDERS` places the folders and sizes their grids), nodes in the cell nearest their film spot.
+  Draw maps from `MAP_WORLDS`, never `FILM_WORLDS`; carry anything traced from the film onto it (`toSpaced` for map points,
+  `spacedCamera` for a film camera, `spacedPoint` for its cursor). A node another scene adds to a folder needs a cell in
+  `MAP_EXTRAS`. `npm test` (spacing.test.ts) fails if any label touches another label or node.
   Not redrawn: the film's map-forming intro (film 45–49.3 s, dots morphing into the map).
 - The Assistant section (film 158.23–169.3 s and the act clip, film 236.13 s + 22.66 s at 0.83×) is redrawn whole by
   `src/video/assistant/`: the chat panel as `GridMapsChatPanel` draws it (master since #4766; `tokens.ts` lists the Vue

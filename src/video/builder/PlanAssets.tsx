@@ -6,8 +6,8 @@
 // window is drawn here over the film's map page (its header, rail, pills and toolbars stay): the map with the product's
 // renderer, the drawer and the preview from the product's components. `t` is seconds into the shot.
 import React from "react";
-import { AssetsMap, AssetsPlan, cursorPos, filmProject } from "../map3d/AssetsShot";
-import { FILM_WORLDS } from "../map3d/filmMap";
+import { AssetsMap, AssetsPlan, cursorPos, filmProject, frameCam, fromFilm } from "../map3d/AssetsShot";
+import { MAP_WORLDS } from "../map3d/spacing";
 import { AssetDrawer, AssetEntry, DrawerCard, UsingWorkflow, WorkflowDrawer } from "./GridDrawer";
 import { layoutMaps } from "./mapsLayout";
 import { MODAL, MODAL_CANVAS, PaneStep, PreviewModal } from "./PreviewModal";
@@ -47,11 +47,13 @@ export const PLAN = {
   selForm: S2 + 0.6, open2: [S2 + 2.6, S2 + 2.8], step2: S2 + 3.3, draft: S2 + 4.6, usage: S2 + 5.9, end: PLAN_SHOT.len,
 };
 
-const C0 = { wx: 6.6, wz: 5.4, sx: 560, sy: 470, z: 1.05 };   // Lead Capture, Tag New Enquiries left of the drawer
-const C1 = { wx: 6.2, wz: 5.2, sx: 560, sy: 470, z: 1.1 };    // the form centred in the map left of the drawer
-const C2 = { wx: 1.67, wz: 7.8, sx: 609, sy: 472, z: 0.7 };   // both copies of the form and their workflows (frameNodes)
-/** The map's world for this shot: the form's copy in 08 carries the form's name. */
-const WORLD = { ...FILM_WORLDS.main, nodes: FILM_WORLDS.main.nodes.map((n) => (n.id === "a-form-7" ? { ...n, label: "Coaching Enquiry" } : n)) };
+/** The map's world for this shot (spaced, map3d/spacing.ts): the form's copy in 08 carries the form's name. */
+const WORLD = { ...MAP_WORLDS.main, nodes: MAP_WORLDS.main.nodes.map((n) => (n.id === "a-form-7" ? { ...n, label: "Coaching Enquiry" } : n)) };
+const node = (id: string) => WORLD.nodes.find((n) => n.id === id)!;
+const C0 = fromFilm({ wx: 6.6, wz: 5.4, sx: 560, sy: 470, z: 1.05 });   // Lead Capture, Tag New Enquiries left of the drawer
+const C1 = fromFilm({ wx: 6.2, wz: 5.2, sx: 560, sy: 470, z: 1.1 });    // the form centred in the map left of the drawer
+// both copies of the form and their workflows (frameNodes), in the canvas left of the drawer (at 1158)
+const C2 = frameCam(["a-coaching-enquiry", "a-form-7", "contact-tag-form-7", "tag-new-enquiries"].map(node), 1158, 110, 0.7);
 const MAP: AssetsPlan = {
   cams: [{ t: 0, cam: C0 }, { t: PLAN.selForm + 0.75, from: PLAN.selForm + 0.05, cam: C1 }, { t: PLAN.usage + 0.75, from: PLAN.usage + 0.05, cam: C2 }],
   select: [[PLAN.selTNE, PLAN.selForm], [PLAN.selForm, null], [PLAN.usage, null]],
@@ -67,7 +69,7 @@ const MAP: AssetsPlan = {
 };
 
 // where things are (window px): map nodes under the camera, drawer rows from GridDrawer's layout (drawer at 1158, 76)
-const tne = filmProject(C0, 8.54, 0.3, 6.35), form = filmProject(C1, 6.16, 0.3, 5.17);
+const tne = filmProject(C0, node("tag-new-enquiries").x, 0.3, node("tag-new-enquiries").z), form = filmProject(C1, node("a-coaching-enquiry").x, 0.3, node("a-coaching-enquiry").z);
 const D = (x: number, y: number): [number, number] => [1158 + x, 76 + y];
 const AT = { search: D(150, 406), step: D(150, 639), viewBtn: D(392, 639), close: [MODAL.left + MODAL.width - MODAL.pad - 16, MODAL.top + MODAL.pad + 16] as [number, number],
   row2: D(250, 521), step2: D(150, 601), draftTab: D(180, 404), usage: D(225, 96) };

@@ -77,14 +77,29 @@ export const MergedWorkflowMapsVideo: React.FC<MergedProps> = ({intro, ...base})
     {/* one soundtrack for the whole video: the edited music, bounced to a single file (MergedMusicEdit) */}
     {showMusic ? <Audio name="Music" src={staticFile(MUSIC_MIX)} volume={music.volume} /> : null}
     {showVisuals ? <AbsoluteFill showInTimeline={false} style={{opacity: fade}}>
-      <Sequence name="Main opening · latest project" durationInFrames={MAIN_INTRO_FROM} premountFor={PREMOUNT}>
+      <Sequence
+        name="Main opening · latest project"
+        durationInFrames={MAIN_INTRO_FROM}
+        premountFor={PREMOUNT}
+        style={{
+          scale: 0.993
+        }}
+      >
         <WorkflowMapsVideo {...base} audioEnabled={false} />
       </Sequence>
       <Sequence name="Main · latest Plan it and asset interactions" from={edit.demoFrom} trimBefore={MAIN_RESUME_SOURCE} durationInFrames={planFrames} premountFor={PREMOUNT}>
         <WorkflowMapsVideo {...base} audioEnabled={false} cutInAt={MAIN_RESUME_SOURCE} />
       </Sequence>
       {/* over the main video, so its last frames fade out over the Plan it card's first ones */}
-      <Sequence name="Approved intro · editable text, map and mascot" from={MAIN_INTRO_FROM} durationInFrames={revealLen + HANDOFF.fade} premountFor={PREMOUNT}>
+      <Sequence
+        name="Approved intro · editable text, map and mascot"
+        from={MAIN_INTRO_FROM}
+        durationInFrames={revealLen + HANDOFF.fade}
+        premountFor={PREMOUNT}
+        style={{
+          translate: "-1px 0px"
+        }}
+      >
         <AbsoluteFill showInTimeline={false} style={{opacity: 1 - Math.max(0, Math.min(1, (frame - edit.demoFrom + 1) / (HANDOFF.fade + 1)))}}>
           {revealLayers.map((revealLayer) => <MapRevealTease key={revealLayer} {...intro} preview layer={revealLayer} audioEnabled={false}
             background={backdrop} brandStyle={base.style ?? DEFAULT_CFG.style} handoff={handoff}

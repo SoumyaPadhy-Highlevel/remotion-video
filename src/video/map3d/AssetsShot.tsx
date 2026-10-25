@@ -1,9 +1,10 @@
 // The map in "Plan it" (assets/PlanAssets.tsx), drawn with the product's renderer like the film's map shots (MapShots.tsx):
-// a plan gives its cameras (in the film's camera terms, so they read like the film's scenes), which node is selected when and
+// a plan gives its cameras (in the film's camera terms, so they read like the film's scenes, on the spaced map: `fromFilm`
+// carries a film camera over), which node is selected when and
 // what that lights, and where the drawer and the preview cover it. The film's filter pills and toolbars stay visible.
 import React from "react";
 import { EdgeLook, MapArc, MapPlane, MapScene, MapView, NodeLook } from "./MapScene";
-import { FILM_WORLDS } from "./filmMap";
+import { MAP_WORLDS, toSpaced } from "./spacing";
 
 /** The film's map canvas in the 1620×880 window (WM.CANVAS) and the right drawer's left edge (app.css .wd). */
 const CANVAS = { left: 60, top: 76, width: 1548, height: 792, radius: 8 };
@@ -69,11 +70,26 @@ export const filmProject = (c: FilmCam, x: number, y: number, z: number): [numbe
   return [c.sx + s * (0.753 * dx - 0.659 * dz), c.sy + s * (0.426 * dx + 0.486 * dz - 0.763 * y)];
 };
 export const camAt = (plan: AssetsPlan, t: number) => camPath(plan.cams, t);
+/** A film camera on the spaced map (spacing.ts): the map point it centres carried over, the same zoom. */
+export const fromFilm = (c: FilmCam): FilmCam => {
+  const [wx, wz] = toSpaced(c.wx, c.wz);
+  return { ...c, wx, wz };
+};
+/** The camera that frames world points (`frameNodes`) in the canvas left of `right` (window px), `pad` px in from its
+ * edges, no closer than zoom `maxZ`. */
+export const frameCam = (pts: { x: number; z: number }[], right: number, pad: number, maxZ: number): FilmCam => {
+  const us = pts.map((p) => 0.753 * p.x - 0.659 * p.z), vs = pts.map((p) => 0.426 * p.x + 0.486 * p.z);
+  const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
+  const z = Math.min(maxZ, (right - CANVAS.left - 2 * pad) / (79.2 * Math.max(u1 - u0, 1e-6)), (CANVAS.height - 2 * pad) / (79.2 * Math.max(v1 - v0, 1e-6)));
+  // the middle of the points' screen extent: solve 0.753x − 0.659z = um, 0.426x + 0.486z = vm
+  const um = (u0 + u1) / 2, vm = (v0 + v1) / 2, det = 0.753 * 0.486 + 0.659 * 0.426;
+  return { wx: (um * 0.486 + 0.659 * vm) / det, wz: (0.753 * vm - 0.426 * um) / det, sx: (CANVAS.left + right) / 2, sy: CANVAS.top + CANVAS.height / 2, z };
+};
 export { cursorPos };
 
 export const AssetsMap: React.FC<{ t: number; plan: AssetsPlan }> = ({ t, plan }) => {
   const cam = toCam(camPath(plan.cams, t));
-  const world = plan.world ?? FILM_WORLDS.main;
+  const world = plan.world ?? MAP_WORLDS.main;
   const sel = plan.select.map(([a, b]) => eo(seg(t, a, a + 0.3)) * (b == null ? 1 : 1 - eo(seg(t, b, b + 0.3))));
   const looks: Record<string, NodeLook> = {}, edgeLooks: Record<string, EdgeLook> = {}, planeLooks: Record<string, Partial<MapPlane>> = {};
   const anySel = Math.max(0, ...sel.map((k, i) => (plan.groups[i].dims ? k : 0)));
@@ -104,7 +120,7 @@ export type AssetsPlan = {
   select: [number, number | null][];
   groups: { selected: string; lit: string[]; dims: boolean }[];
   drawer: (t: number) => number;
-  /** the world to draw (default: the film's main map) — keep it one object, the renderer rebuilds when it changes */
+  /** the world to draw (default: the main map, spaced) — keep it one object, the renderer rebuilds when it changes */
   world?: MapScene;
   /** cross-folder usage arcs ("Show usage on map") */
   arcs?: (t: number) => MapArc[];

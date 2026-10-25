@@ -3,10 +3,11 @@ import {test} from "node:test";
 import {MAP_ASSET_TYPES, MAP_WORKFLOW} from "../builder/mapTokens";
 import {BUILDER_ICONS} from "../builder/icons";
 import {FILM_WORLDS} from "../map3d/filmMap";
+import {MAP_WORLDS, SPACED} from "../map3d/spacing";
 import {revealWorld} from "./world";
 
-test("platform styling preserves captured folder bounds, workflow status and actual links", () => {
-  const base = FILM_WORLDS.main, world = revealWorld(base);
+test("platform styling preserves the map's folder bounds, workflow status and actual links", () => {
+  const base = MAP_WORLDS.main, world = revealWorld(base);
   assert.equal(world.edges, base.edges);
   assert.equal(world.planes.length, base.planes.length);
   world.planes.forEach((p, i) => {
@@ -22,7 +23,8 @@ test("platform styling preserves captured folder bounds, workflow status and act
   assert.equal(world.nodes.filter((n) => n.kind === "workflow" && n.status === "draft").length,4);
 });
 test("field swatch and workflow glyph use the frontend's real palette and alias", () => {
-  const field = revealWorld(FILM_WORLDS.main).nodes.find((n) => n.id === "teaser-custom-fields")!;
+  const field = revealWorld(MAP_WORLDS.main).nodes.find((n) => n.id === "teaser-custom-fields")!;
+  assert.deepEqual([field.x, field.z], [SPACED.nodes["teaser-custom-fields"].x, SPACED.nodes["teaser-custom-fields"].z]);
   assert.equal(field.color,MAP_ASSET_TYPES.contactCustomFields.color);
   assert.equal(field.color,"#20c5c7");
   assert.deepEqual(BUILDER_ICONS["mdi:workflow"],BUILDER_ICONS["mdi:sitemap"]);

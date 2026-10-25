@@ -1,14 +1,16 @@
 // The film's 3D map, redrawn with the product's own renderer (MapScene.tsx) wherever the film shows it, keyed to film time
 // like the builder redraws (builder/scenes.tsx). The camera, every node's and folder's look, and where the film's own UI
 // sits over the map come from the film itself (scripts/map_film → filmMap.ts); the film keeps its panels, toolbars and
-// sticky notes, and the map under them is the product's.
+// sticky notes, and the map under them is the product's, laid out with room for every label (spacing.ts): the film's
+// camera and cursor are carried onto that layout.
 import React from "react";
 import { transform } from "motion";
 import { easeInOut, easeOut, springAt } from "../anim";
 import { BUILD } from "../script";
-import { EdgeLook, MapPlane, MapView, NodeLook, projectToCanvas } from "./MapScene";
+import { EdgeLook, MapCamera, MapPlane, MapScene, MapView, NodeLook, projectToCanvas } from "./MapScene";
 import { FILM_MAP_SHOTS, FILM_WORLDS, FilmMapShot } from "./filmMap";
-import { carriedPlane, organiseNodes, organiseRig } from "./organise";
+import { carriedPlane, spacedOrganiseNodes, spacedOrganiseRig } from "./organise";
+import { MAP_WORLDS, spacedCamera, spacedPoint } from "./spacing";
 import { Cursor } from "../builder/shotKit";
 import { sampleFilmTrack } from "./sampleFilmTrack";
 
@@ -60,15 +62,21 @@ const DOC_NOTES: { anchor: string; off: [number, number]; size: [number, number]
   { anchor: "medium-priority", off: [236, -130], size: [263, 154], color: "#facc15", at: 18.2, lit: 23.8 },
   { anchor: "consultation-handoff", off: [107, -20], size: [262, 131], color: "#60a5fa", at: 19.0, lit: 25.3 },
 ];
-const docNotes = (shot: FilmMapShot, ft: number, cam: { cx: number; cy: number; s: number }) => {
+/** Where a note's anchor sits (window px) in `scene` under `cam`. */
+const anchorAt = (scene: MapScene, anchor: string, cam: MapCamera): [number, number] => {
+  if (anchor.startsWith("plane:")) { const pl = scene.planes.find((p) => p.id === anchor.slice(6))!; return projectToCanvas(cam, pl.x0, 0, pl.z0) as [number, number]; }
+  const n = scene.nodes.find((m) => m.id === anchor)!;
+  return projectToCanvas(cam, n.x, 0.3, n.z) as [number, number];
+};
+/** The notes' cards stay where the film has them (anchored on the film's map under its camera); their lines start from the
+ * anchor on the spaced map (`spaced`, its camera). */
+const docNotes = (shot: FilmMapShot, ft: number, cam: MapCamera, spaced: MapCamera) => {
   if (shot.world !== "orgdoc") return [];
-  const t = ft - ORGDOC_T0, scene = FILM_WORLDS[shot.world];
+  const t = ft - ORGDOC_T0;
   const dim = transform(t, [21.0, 21.4], [0, 1], { ease: easeOut });
   return DOC_NOTES.filter((d) => t >= d.at - 0.25).map((d) => {
-    let b: [number, number];
-    if (d.anchor.startsWith("plane:")) { const pl = scene.planes.find((p) => p.id === d.anchor.slice(6))!; b = projectToCanvas(cam, pl.x0, 0, pl.z0) as [number, number]; }
-    else { const n = scene.nodes.find((m) => m.id === d.anchor)!; b = projectToCanvas(cam, n.x, 0.3, n.z) as [number, number]; }
-    const rect = [b[0] + d.off[0], b[1] + d.off[1], d.size[0], d.size[1]];
+    const f = anchorAt(FILM_WORLDS[shot.world], d.anchor, cam), b = anchorAt(MAP_WORLDS[shot.world], d.anchor, spaced);
+    const rect = [f[0] + d.off[0], f[1] + d.off[1], d.size[0], d.size[1]];
     // the card without its 3 px padding; the line runs from the workflow to the card's nearest point
     const [x, y, w, h] = [rect[0] + 3, rect[1] + 3, rect[2] - 6, rect[3] - 6];
     const c = [Math.min(Math.max(b[0], x), x + w), Math.min(Math.max(b[1], y), y + h)];
@@ -97,7 +105,7 @@ const edgeLooksAt = (shot: FilmMapShot, state: Record<string, string>) => {
   // a lit set (a selection, or a contact's route, which greys out everything else): its links animate
   const anySelected = Object.values(state).some((c) => c === "s") || (Object.values(state).includes("g") && Object.values(state).includes("c"));
   const looks: Record<string, EdgeLook> = {};
-  for (const e of FILM_WORLDS[shot.world].edges) {
+  for (const e of MAP_WORLDS[shot.world].edges) {
     const a = state[e.from], b = state[e.to];
     const lit = anySelected && (a === "s" || b === "s" || (a === "c" && b === "c")) && a !== "g" && b !== "g" && a !== "-" && b !== "-";
     looks[`${e.from}>${e.to}`] = { lit: lit ? 1 : 0, dim: (anySelected && !lit) || a === "g" || b === "g" ? 1 : 0 };
@@ -107,7 +115,7 @@ const edgeLooksAt = (shot: FilmMapShot, state: Record<string, string>) => {
 
 const planeLooksAt = (shot: FilmMapShot, i: number, state: Record<string, string>) => {
   const looks: Record<string, Partial<MapPlane>> = {};
-  const scene = FILM_WORLDS[shot.world];
+  const scene = MAP_WORLDS[shot.world];
   for (const [id, rl] of Object.entries(shot.planes)) {
     // a default-coloured folder has a white face, which the film can't tell from the ground: it is there while its nodes are
     if (!scene.planes.find((p) => p.id === id)?.color) {
@@ -137,8 +145,9 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean; board?: typeof C
   if (!shot) return null;
   const i = Math.min(shot.frames - 1, Math.round((ft - shot.from) * 30));
   const sample = Math.max(0, Math.min(shot.frames - 1, (ft - shot.from) * 30));
-  const [cx, cy, s] = sampleFilmTrack(shot.cams, sample, 3);
-  if (!s) return null;
+  const [fx, fy, fs] = sampleFilmTrack(shot.cams, sample, 3);
+  if (!fs) return null;
+  const film = { cx: fx, cy: fy, s: fs }, { cx, cy, s, labels } = spacedCamera(film, CANVAS, shot.world);
   const { looks, state } = looksAt(shot, i);
   // the build's clear (buildClear): until bT 1.25 the nodes keep their look from just before it, fading out with `k`
   const build = buildClear(ft);
@@ -146,21 +155,29 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean; board?: typeof C
     const pre = looksAt(shot, Math.max(0, i - Math.round(build.bT * 30) - 1));
     for (const [id, l] of Object.entries(pre.looks)) { looks[id] = { ...l, opacity: (l.opacity ?? 1) * (1 - build.k) }; state[id] = pre.state[id]; }
   }
-  for (const [id, l] of Object.entries(organiseNodes(ft))) looks[id] = { ...looks[id], ...l };
+  for (const [id, l] of Object.entries(spacedOrganiseNodes(ft))) looks[id] = { ...looks[id], ...l };
   // a carried folder moves faster than the film can be read: its nodes keep the look they had when it was picked up
   const carried = carriedPlane(ft);
   if (carried) {
     const before = looksAt(shot, Math.max(0, Math.round((carried.since - shot.from) * 30) - 1));
-    for (const n of FILM_WORLDS[shot.world].nodes) if (n.plane === carried.plane) { looks[n.id] = before.looks[n.id]; state[n.id] = before.state[n.id]; }
+    for (const n of MAP_WORLDS[shot.world].nodes) if (n.plane === carried.plane) { looks[n.id] = before.looks[n.id]; state[n.id] = before.state[n.id]; }
   }
-  const scene = FILM_WORLDS[shot.world];
+  const scene = MAP_WORLDS[shot.world];
+  // labels as the film shows them, though the spaced map may sit a little below the product's label zoom to fit
+  if (labels) for (const n of scene.nodes) looks[n.id] = { label: 1, ...looks[n.id] };
   const planeLooks = planeLooksAt(shot, i, state);
-  for (const [id, rig] of Object.entries(organiseRig(ft))) planeLooks[id] = { ...planeLooks[id], ...rig };
+  for (const [id, rig] of Object.entries(spacedOrganiseRig(ft))) planeLooks[id] = { ...planeLooks[id], ...rig };
   if (carried) planeLooks[carried.plane] = { ...planeLooks[carried.plane], opacity: 1 };
   // the build's folders: dimmed, not gone, until each lands (the film's islIn)
   if (build) for (const id of Object.keys(planeLooks)) planeLooks[id] = { ...planeLooks[id], opacity: Math.max(planeLooks[id].opacity ?? 1, 1 - 0.55 * build.k) };
+  // a folder label the film shows through one of its holes (a rename) is the film's: ours, elsewhere now, steps aside
+  const holes = shot.notes.filter((n) => n[0] === i);
+  for (const p of FILM_WORLDS[shot.world].planes) {
+    const [u, v] = projectToCanvas(film, p.x1, 0, p.z1 + 0.4);
+    if (holes.some(([, x, y, w, h]) => u > x && u < x + w && v > y && v < y + h)) planeLooks[p.id] = { ...planeLooks[p.id], label: "" };
+  }
   const left = unrle(shot.left).charCodeAt(i) - 65, right = unrle(shot.right).charCodeAt(i) - 65;
-  const doc = docNotes(shot, ft, { cx, cy, s }), docRects = doc.flatMap((d) => (d.rect ? [d.rect] : []));
+  const doc = docNotes(shot, ft, film, { cx, cy, s }), docRects = doc.flatMap((d) => (d.rect ? [d.rect] : []));
   const ui = [
     ...fixedUi,
     ...(left > 0 ? [[0, 0, left * 10 + 2, 880]] : []),
@@ -172,8 +189,10 @@ export const MapShots: React.FC<{ ft: number; cursor?: boolean; board?: typeof C
   const fade = Math.min(transform(ft, [shot.from, shot.from + 0.001], [0, 1]), 1);
   // Never interpolate a visible cursor into the film's hidden-cursor sentinel.
   const ca = Math.floor(sample), cb = Math.min(shot.frames - 1, ca + 1);
-  const [mx, my] = shot.cursor[ca * 2] >= 0 && shot.cursor[cb * 2] >= 0
+  const [fmx, fmy] = shot.cursor[ca * 2] >= 0 && shot.cursor[cb * 2] >= 0
     ? sampleFilmTrack(shot.cursor, sample, 2) : shot.cursor.slice(i * 2, i * 2 + 2);
+  // the cursor over the same map point on the spaced map
+  const [mx, my] = fmx >= 0 ? spacedPoint(film, { cx, cy, s }, fmx, fmy) : [fmx, fmy];
   return (<>
     <div style={{ position: "absolute", left: board.left, top: board.top, width: board.width, height: board.height, borderRadius: board.radius,
       overflow: "hidden", opacity: fade, maskImage: holesMask(ui, board), maskSize: "100% 100%" }}>

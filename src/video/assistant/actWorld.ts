@@ -1,12 +1,13 @@
 // The map the Assistant acts on (ASSISTANT cards, "It does the work"): the film's main map (filmMap.ts "main") plus what
 // the asks need. The Growth Foundations course: five workflows that use the "Growth Foundations Access" membership offer,
 // spread over four folders (two in 04 · Client Onboarding & Learning, as the reply says), and the folder they move into.
-// World units, like world_*.json; the folder bounds follow the product's rule (node centres + 1.0).
-import { FILM_WORLDS } from "../map3d/filmMap";
+// World units on the spaced map (map3d/spacing.ts, which keeps a cell for each of the five in its folder); the new
+// folder's bounds follow the product's rule (node centres + 1.0).
 import { MapCamera, MapNode, MapPlane, MapScene, projectToCanvas } from "../map3d/MapScene";
+import { MAP_WORLDS, SPACED } from "../map3d/spacing";
 
-const WF = (id: string, label: string, x: number, z: number, plane: string): MapNode =>
-  ({ id, kind: "workflow", x, z, label, plane, color: "#2455d6", icon: "mdi:sitemap", status: "published" });
+const WF = (id: string, label: string, plane: string): MapNode =>
+  ({ id, kind: "workflow", ...SPACED.nodes[id], label, plane, color: "#2455d6", icon: "mdi:sitemap", status: "published" });
 
 /** The offer they share (membershipOffers: sapphire-500 body, get-grid-asset-style.ts). */
 export const OFFER = "a-growth-offer";
@@ -15,16 +16,18 @@ export const GROWTH = ["grant-course-access", "course-offer-activated", "course-
 export const GROWTH_FOLDER = "growth";
 
 const added: MapNode[] = [
-  WF("revoke-course-access", "Revoke Course Access", -4.45, 2.95, "retention"),
-  WF("new-member-registration", "New Member Registration", 3.3, 7.25, "lead"),
-  WF("course-offer-activated", "Course Offer Activated", 13.9, -3.9, "onboard"),
-  WF("course-offer-revoked", "Course Offer Revoked", -4.4, 10.4, "tagroute"),
-  { id: OFFER, kind: "asset", x: 10.6, z: -3.3, label: "Growth Foundations Access", plane: "onboard", color: "#087bea", icon: "mdi:ticket-percent" },
+  WF("revoke-course-access", "Revoke Course Access", "retention"),
+  WF("new-member-registration", "New Member Registration", "lead"),
+  WF("course-offer-activated", "Course Offer Activated", "onboard"),
+  WF("course-offer-revoked", "Course Offer Revoked", "tagroute"),
+  { id: OFFER, kind: "asset", ...SPACED.nodes[OFFER], label: "Growth Foundations Access", plane: "onboard", color: "#087bea", icon: "mdi:ticket-percent" },
 ];
 
-/** Where they land in the new folder: the offer in the middle, the workflows on a ring around it (the product's layout
- * puts a shared asset among the workflows that use it). */
-const CENTRE = { x: 23, z: 2.6 }, RING = 2.4;
+/** Where they land in the new folder, right of 02 · Consultation Booking as on the film: the offer in the middle, the
+ * workflows on a ring around it (the product's layout puts a shared asset among the workflows that use it), wide enough
+ * for their labels. */
+const CONSULT = SPACED.planes.consult;
+const CENTRE = { x: CONSULT.x1 + 6, z: CONSULT.z0 + 2.6 }, RING = 3.4;
 export const MOVED: Record<string, { x: number; z: number }> = Object.fromEntries([
   [OFFER, CENTRE],
   ...GROWTH.map((id, i) => {
@@ -36,7 +39,7 @@ const xs = Object.values(MOVED).map((p) => p.x), zs = Object.values(MOVED).map((
 export const FOLDER: MapPlane = { id: GROWTH_FOLDER, label: "growth foundations", color: null,
   x0: Math.min(...xs) - 1, z0: Math.min(...zs) - 1, x1: Math.max(...xs) + 1, z1: Math.max(...zs) + 1 };
 
-const main = FILM_WORLDS.main;
+const main = MAP_WORLDS.main;
 export const ACT_WORLD: MapScene = {
   planes: [...main.planes, FOLDER],
   nodes: [...main.nodes, ...added],

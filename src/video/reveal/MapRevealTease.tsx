@@ -10,7 +10,7 @@ import {RevealProps, RevealTiming, settleFrame} from "./reviewProps";
 import {categoryOf} from "./assets";
 import {Mascot} from "../Mascot";
 import {BUILDER_ICONS} from "../builder/icons";
-import {FILM_WORLDS} from "../map3d/filmMap";
+import {MAP_WORLDS} from "../map3d/spacing";
 import {EdgeLook, MapCamera, MapNode, MapScene, MapView, NodeLook, projectToCanvas} from "../map3d/MapScene";
 import {MAP_REVEAL as R} from "./script";
 import {revealWorld} from "./world";
@@ -29,7 +29,7 @@ const APP_RECT: Rect = {left: APP.left, top: APP.top, width: APP.width, height: 
 /** The next scene's first frame (local frame): the window receded behind a statement card, at `window` with `blur`, and the
  * mascot's pose there. The reveal's last frames move onto it (handoff.ts). */
 export type RevealHandoff = {frame: number; window: Rect; blur: number; wash: number; mascot: MascotState};
-const scene: MapScene = revealWorld(FILM_WORLDS.main);
+const scene: MapScene = revealWorld(MAP_WORLDS.main);
 const workflows = scene.nodes.filter((n) => n.kind === "workflow");
 const points = scene.planes.flatMap((p) => [[p.x0, p.z0], [p.x1, p.z0], [p.x0, p.z1], [p.x1, p.z1]].map(([x, z]) => projectToCanvas({cx: 0, cy: 0, s: 1}, x, .2, z)));
 const u0 = Math.min(...points.map((p) => p[0])), u1 = Math.max(...points.map((p) => p[0]));
@@ -139,7 +139,8 @@ export const MapRevealTease: React.FC<RevealSceneProps> = ({preview, layer, timi
     } else {
       k = categoryProgress(frame, categoryOf(n), timing);
     }
-    looks[n.id] = {opacity: k, lift: (n.kind === "workflow" ? .8 : 2.4) * (1 - k)};
+    // labels arrive with their nodes: the whole map framed is below the product's 0.5 label zoom
+    looks[n.id] = {opacity: k, label: k, lift: (n.kind === "workflow" ? .8 : 2.4) * (1 - k)};
   }
   const planeLooks = Object.fromEntries(scene.planes.map((p, i) => {
     const at = folderAt(i, scene.planes.length, timing), k = smoothProgress(frame, at, Math.min(timing.workflowsFrame, at + (timing.workflowsFrame - timing.foldersFrame) * .5));

@@ -19,7 +19,7 @@ import { layoutMaps } from "../builder/mapsLayout";
 import { HR } from "../builder/tokens";
 import { Cursor } from "../builder/shotKit";
 import { EdgeLook, MapCamera, MapView, NodeLook, projectToCanvas } from "../map3d/MapScene";
-import { FILM_WORLDS } from "../map3d/filmMap";
+import { MAP_WORLDS, spacedCamera } from "../map3d/spacing";
 import { depthForShape, hoverHeightScale } from "../map3d/geometry";
 
 /** The moments of the scene (film s). It opens on the drop (film 143.29) under "Catch it quickly, right on the map.";
@@ -118,7 +118,7 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 // ── the map ──
 const DELETED = { id: "a-coaching-enquiry", formId: "kQ7mZ2xRw9LfT4bN8cVd", usedBy: ["tag-new-enquiries", "new-enquiry-form"] };
 const SCENE = (() => {
-  const w = FILM_WORLDS.main;
+  const w = MAP_WORLDS.main;
   return {
     ...w,
     nodes: w.nodes.map((n) => (n.id === DELETED.id ? { ...n, label: DELETED.formId } : n)),
@@ -127,9 +127,10 @@ const SCENE = (() => {
 })();
 const NODE = SCENE.nodes.find((n) => n.id === WF.id)!;
 const ASSET = SCENE.nodes.find((n) => n.id === DELETED.id)!;
-/** The overview the film holds (canvas px), and where the pan to the workflow ends: PAN_TO_NODE_ZOOM 1 (s = canvas h / 10),
- * the workflow in the middle of the canvas left of the panel. */
-const CAM0: MapCamera = { cx: 813.3 - PAGE.canvasLeft, cy: 333.1 - PAGE.top, s: 39.557 };
+/** The overview the film holds (canvas px, carried onto the spaced map), and where the pan to the workflow ends:
+ * PAN_TO_NODE_ZOOM 1 (s = canvas h / 10), the workflow in the middle of the canvas left of the panel. */
+const CAM0: MapCamera = (({ cx, cy, s }) => ({ cx, cy, s }))(spacedCamera({ cx: 813.3 - PAGE.canvasLeft, cy: 333.1 - PAGE.top, s: 39.557 },
+  { left: 0, top: 0, width: CANVAS_FULL, height: CANVAS_H }));
 const S1 = CANVAS_H / 10;
 const at = (cam: MapCamera, y = 0, n: { x: number; z: number } = NODE) => projectToCanvas(cam, n.x, y, n.z);
 /** The canvas pans (GridCameraController panToNode: 700 ms, cubic-bezier(0.22, 0.68, 0, 1), to zoom 1): to the workflow from the
