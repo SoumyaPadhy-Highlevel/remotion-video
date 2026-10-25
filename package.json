@@ -33,7 +33,7 @@
     "lint": "eslint src && tsc",
     "resolve:export": "esbuild scripts/resolve-export.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-export.cjs && node out/.resolve-export.cjs && python3 scripts/resolve_fcpxml.py",
     "resolve:dissect": "esbuild scripts/resolve-export.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-export.cjs && node out/.resolve-export.cjs out/resolve-dissect && esbuild scripts/resolve-dissect.ts --bundle --platform=node --log-level=warning --outfile=out/.resolve-dissect.cjs && node out/.resolve-dissect.cjs && python3 scripts/resolve_dissect.py",
-    "test": "esbuild src/video/builder/*.test.ts src/video/map3d/*.test.ts --bundle --platform=node --log-level=warning --outdir=out/.tests && node --test out/.tests/*/*.test.js",
+    "test": "node scripts/test.mjs",
     "premiere:clips": "esbuild scripts/premiere-clips.ts --bundle --platform=node --log-level=warning --outfile=out/.premiere-clips.cjs && node out/.premiere-clips.cjs"
   },
   "allowScripts": {

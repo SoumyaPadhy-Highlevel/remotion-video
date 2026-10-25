@@ -240,7 +240,7 @@ const Markdown: React.FC<{ blocks: ChatBlock[]; chars?: number }> = ({ blocks, c
   blocks.forEach((b, i) => {
     if (left <= 0) return;
     if (typeof b === "string") {
-      const s = cut(b.replace(/\*\*/g, "\u0000")).replace(/\u0000/g, "**");
+      const s = cut(b.replace(/\*\*/g, "\u0000")).split("\u0000").join("**");
       // a cut inside a bold run leaves an odd "**": close it so the part shown is still bold
       const fixed = (s.match(/\*\*/g)?.length ?? 0) % 2 ? `${s}**` : s;
       out.push(<p key={i} style={{ margin: i === blocks.length - 1 ? 0 : "0 0 8px", whiteSpace: "pre-line" }}>{runs(fixed)}</p>);
