@@ -87,7 +87,8 @@ export const MergedWorkflowMapsVideo: React.FC<MergedProps> = ({intro, ...base})
       <Sequence name="Approved intro · editable text, map and mascot" from={MAIN_INTRO_FROM} durationInFrames={revealLen + HANDOFF.fade} premountFor={PREMOUNT}>
         <AbsoluteFill showInTimeline={false} style={{opacity: 1 - Math.max(0, Math.min(1, (frame - edit.demoFrom + 1) / (HANDOFF.fade + 1)))}}>
           {revealLayers.map((revealLayer) => <MapRevealTease key={revealLayer} {...intro} preview layer={revealLayer} audioEnabled={false}
-            background={backdrop} brandStyle={base.style ?? DEFAULT_CFG.style} handoff={handoff} />)}
+            background={backdrop} brandStyle={base.style ?? DEFAULT_CFG.style} handoff={handoff}
+            lines={(base.show ?? DEFAULT_CFG.show).introCards} showTitle={(base.show ?? DEFAULT_CFG.show).titleDrop} />)}
         </AbsoluteFill>
       </Sequence>
       <Sequence name="Linked workflows · first frame under the dissolve" from={d0} durationInFrames={edit.connectedFrom - d0} premountFor={PREMOUNT}>

@@ -62,7 +62,7 @@ export const styleSchema = z.object({
   }),
 });
 export const showSchema = z.object({
-  opening: z.boolean(), introCards: z.boolean(), introCallouts: z.boolean().describe("White callouts in the intro's visuals"), titleDrop: z.boolean(), featureCards: z.boolean().describe("Full-screen statement cards"),
+  opening: z.boolean(), openingHeadline: z.boolean().optional().describe("The opening headline (the logo stays with Opening)"), introCards: z.boolean().describe("Intro statements, the reveal's lines included"), introCallouts: z.boolean().describe("White callouts in the intro's visuals"), titleDrop: z.boolean().describe("Introducing Workflow Maps"), featureCards: z.boolean().describe("Full-screen statement cards"),
   topLines: z.boolean().describe("Lines above the window"), panelCaptions: z.boolean(), titleCards: z.boolean(), breaksHeadline: z.boolean(),
   mapBuildPanel: z.boolean(), flights: z.boolean().describe("Map build: items flying into the map"), clientMessage: z.boolean(),
   browserTabs: z.boolean().describe("The intro's device frame and browser tabs"), flashes: z.boolean(), lockup: z.boolean(), mascot: z.boolean(),

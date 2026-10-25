@@ -123,8 +123,10 @@ const BaseTitle: React.FC<{frame: number; fps: number; timing: RevealTiming; set
   </CfgProvider>;
 };
 
-type RevealSceneProps = RevealProps & {audioEnabled?: boolean; background?: React.ReactNode; brandStyle?: StyleCfg; handoff?: RevealHandoff};
-export const MapRevealTease: React.FC<RevealSceneProps> = ({preview, layer, timing, title, mascot, copy = R, audioEnabled = true, background, brandStyle = DEFAULT_CFG.style, handoff}) => {
+/** `lines`: the reveal's statements and kicker, with the soft blur behind the first two; `showTitle`: "Introducing Workflow
+ * Maps" with the wash and blur behind it. Off, the map plays clean. */
+type RevealSceneProps = RevealProps & {audioEnabled?: boolean; background?: React.ReactNode; brandStyle?: StyleCfg; handoff?: RevealHandoff; lines?: boolean; showTitle?: boolean};
+export const MapRevealTease: React.FC<RevealSceneProps> = ({preview, layer, timing, title, mascot, copy = R, audioEnabled = true, background, brandStyle = DEFAULT_CFG.style, handoff, lines = true, showTitle = true}) => {
   const frame = useCurrentFrame(), {fps} = useVideoConfig(), t = R.start + frame / fps, camera = cameraAt(frame, timing);
   const settled = settleFrame(timing);
   const mapIn = smoothProgress(frame, timing.foldersFrame - 16, timing.foldersFrame);
@@ -152,8 +154,9 @@ export const MapRevealTease: React.FC<RevealSceneProps> = ({preview, layer, timi
   }));
   // into the hand-off the window recedes onto the next scene's receded window, as the title lifts away
   const hp = handoff ? smoothProgress(frame, handoff.frame - HANDOFF.lead, handoff.frame) : 0, fit = handoff ? fitRect(APP_RECT, handoff.window) : undefined;
-  const titleWash = mix(.65 * smoothProgress(frame, settled, timing.titleFrame), handoff?.wash ?? 0, hp);
-  const appBlur = mix(.65 * smoothProgress(frame, settled, timing.titleFrame) * 5, handoff?.blur ?? 0, hp);
+  const behindTitle = showTitle ? .65 * smoothProgress(frame, settled, timing.titleFrame) : 0, behindLines = lines ? smoothProgress(t, 25.2, 25.6) : 0;
+  const titleWash = mix(behindTitle, handoff?.wash ?? 0, hp);
+  const appBlur = mix(behindTitle * 5, handoff?.blur ?? 0, hp);
   const showMap = layer === "review" || layer === "map";
   // styling layers only: kept out of Studio's timeline, where every AbsoluteFill otherwise gets its own row
   return <AbsoluteFill showInTimeline={false} style={{...styleVars(brandStyle), background: showMap ? "linear-gradient(180deg,#fbfdff 0%,#f2f7ff 60%,#dceaff 100%)" : "transparent", overflow: "hidden", fontFamily: "Inter"}}>
@@ -161,17 +164,19 @@ export const MapRevealTease: React.FC<RevealSceneProps> = ({preview, layer, timi
     {preview && audioEnabled && layer === "review" ? <Audio src={staticFile("intro-music.wav")} trimBefore={Math.round(R.start * fps)} /> : null}
     {showMap ? <>
     <AbsoluteFill showInTimeline={false} style={{opacity: 1 - mapIn}}>
-      <AbsoluteFill showInTimeline={false} style={{filter: `blur(${2 * smoothProgress(t, 25.2, 25.6)}px)`}}>
+      <AbsoluteFill showInTimeline={false} style={{filter: `blur(${2 * behindLines}px)`}}>
         {background ?? <Img src={staticFile("captures/reveal/context.png")} style={{width: 1920, height: 1080}} />}
       </AbsoluteFill>
-      <AbsoluteFill showInTimeline={false} style={{background: "#f4f8ff", opacity: .3 * smoothProgress(t, 25.2, 25.6)}} />
+      <AbsoluteFill showInTimeline={false} style={{background: "#f4f8ff", opacity: .3 * behindLines}} />
     </AbsoluteFill>
     {/* the horizon sits behind the app window, as the main video's floor does, never across its toolbar */}
     <div style={{position: "absolute", left: "50%", top: 1010, width: 3400, height: 1400, marginLeft: -1700, borderRadius: "50%",
       background: "radial-gradient(ellipse 50% 35% at 50% 0%,rgba(255,255,255,.45),rgba(149,197,255,.38) 65%,rgba(129,182,255,.2))",
       borderTop: "3px solid rgba(255,255,255,.85)", opacity: mapIn}} />
+    {lines ? <>
     <TextCue t={t} a={R.start} b={R.start + (timing.questionEndFrame ?? 111) / fps} text={copy.question} size={88} center />
     <TextCue t={t} a={R.start + (timing.imagineStartFrame ?? 115.5) / fps} b={R.start + timing.foldersFrame / fps} text={copy.imagine} size={86} center />
+    </> : null}
     <AbsoluteFill showInTimeline={false} style={fit && hp > 0 ? {transformOrigin: `${APP_RECT.left + APP_RECT.width / 2}px ${APP_RECT.top + APP_RECT.height / 2}px`,
       transform: `translate(${(fit.dx * hp).toFixed(2)}px, ${(fit.dy * hp).toFixed(2)}px) scale(${mix(1, fit.scale, hp).toFixed(4)})`} : undefined}>
     <AppChrome opacity={mapIn} blur={appBlur} />
@@ -181,14 +186,16 @@ export const MapRevealTease: React.FC<RevealSceneProps> = ({preview, layer, timi
     </div>
     <ChromeControls timing={timing} frame={frame} opacity={mapIn} blur={appBlur} />
     </AbsoluteFill>
+    {lines ? <>
     <div style={{position: "absolute", left: 100, right: 100, top: 15, textAlign: "center", fontSize: 18, fontWeight: 650, letterSpacing: ".17em", color: "#155EEF", opacity: progress(frame, timing.foldersFrame, timing.foldersFrame + 10) * (1 - progress(frame, settled - 12, settled))}}>IMAGINE A NEW WAY TO SEE YOUR WORKFLOWS</div>
     <TextCue t={t} a={R.start + timing.foldersFrame / fps} b={R.start + timing.workflowsFrame / fps} text={copy.folders} size={58} />
     <TextCue t={t} a={R.start + timing.workflowsFrame / fps} b={R.start + timing.assetsFrame / fps} text={copy.workflows} size={60} />
     <TextCue t={t} a={R.start + timing.assetsFrame / fps} b={R.start + settled / fps} text={copy.assets} size={60} />
+    </> : null}
     <AssetLegend timing={timing} frame={frame} />
     <AbsoluteFill showInTimeline={false} style={{background: "#fff", opacity: titleWash}} />
     </> : null}
-    {preview && (layer === "review" || layer === "titles") ? <BaseTitle frame={frame} fps={fps} timing={timing} settings={title} brandStyle={brandStyle} handoffFrame={handoff?.frame} /> : null}
+    {preview && showTitle && (layer === "review" || layer === "titles") ? <BaseTitle frame={frame} fps={fps} timing={timing} settings={title} brandStyle={brandStyle} handoffFrame={handoff?.frame} /> : null}
     {preview && mascot.visible && (layer === "review" || layer === "mascot") ? <RevealMascot frame={frame} fps={fps} timing={timing} settings={mascot} handoff={handoff} /> : null}
   </AbsoluteFill>;
 };

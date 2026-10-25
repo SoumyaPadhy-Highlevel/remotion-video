@@ -62,7 +62,7 @@ export const Titles: React.FC<{ t: number }> = ({ t }) => {
 
   // the two headlines: the opening one and "What if something breaks across 20 / 50 / 100 workflows?", each with its own
   // text and switch
-  const hi = HEADLINES.findIndex((h, i) => (i === 0 ? show.opening : show.breaksHeadline) && transform(t, [h.a, h.a + 0.5, h.b - 0.35, h.b], [0, 1, 1, 0]) > 0);
+  const hi = HEADLINES.findIndex((h, i) => (i === 0 ? show.opening && show.openingHeadline !== false : show.breaksHeadline) && transform(t, [h.a, h.a + 0.5, h.b - 0.35, h.b], [0, 1, 1, 0]) > 0);
   const hl = hi >= 0 ? { ...HEADLINES[hi], html: swapper(md(hi === 0 ? text.opening.headline : text.breaksHeadline), HEADLINES[hi].beats, t) } : undefined;
   // after the intro the statement cards carry the text (WorkflowMapsVideo), so no caption or chapter pill competes with the visuals
   const cap = CAPTIONS.find((c) => c.a < M.D1 && transform(t, [c.a, c.a + 0.3, c.b - 0.25, c.b], [0, 1, 1, 0]) > 0);
